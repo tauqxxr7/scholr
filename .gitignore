@@ -1,9 +1,12 @@
-﻿node_modules
+node_modules
 .next
 venv
+backend/venv
 __pycache__
+**/__pycache__/
+*.pyc
 .env
 .env.local
 frontend/.env.local
 backend/.env
-*.pyc
+backend/scholr.db
