@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '') || ''
+const API_URL =
+  configuredApiUrl || (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:8000' : '')
 
 export type HistoryItem = {
   id: string
@@ -44,6 +46,17 @@ function describeHttpFailure(status: number) {
   return `The request could not be completed right now (status ${status}).`
 }
 
+function getApiUrl() {
+  if (API_URL) {
+    return API_URL
+  }
+
+  throw new StreamModuleError(
+    'The frontend is missing NEXT_PUBLIC_API_URL for this environment. Add the deployed backend URL and redeploy.',
+    false,
+  )
+}
+
 function describeNetworkFailure(error: unknown) {
   if (error instanceof StreamModuleError) {
     return error
@@ -67,7 +80,7 @@ export async function streamModuleResponse(
   let response: Response
 
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(`${getApiUrl()}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -162,7 +175,7 @@ export async function streamModuleResponse(
 }
 
 export async function getHistory(limit = 6): Promise<HistoryItem[]> {
-  const response = await fetch(`${API_URL}/api/history?limit=${limit}`, {
+  const response = await fetch(`${getApiUrl()}/api/history?limit=${limit}`, {
     cache: 'no-store',
   })
 
