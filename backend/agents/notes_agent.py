@@ -1,11 +1,4 @@
-﻿import google.generativeai as genai
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+from agents._generation import stream_gemini_response
 
 NOTES_PROMPT = """
 You are a study notes expert for Indian BTech engineering students.
@@ -33,17 +26,14 @@ List all relevant formulas with brief explanations.
 Bullet points for last-minute revision before exam.
 """
 
+
 async def generate_notes_response(topic: str):
     prompt = NOTES_PROMPT.format(topic=topic)
-    response = await model.generate_content_async(
-        prompt,
-        stream=True,
-        generation_config=genai.GenerationConfig(
-            temperature=0.5,
-            max_output_tokens=2048
-        )
-    )
 
-    async for chunk in response:
-        if getattr(chunk, "text", None):
-            yield chunk.text
+    async for chunk in stream_gemini_response(
+        model_name="gemini-2.5-flash",
+        prompt=prompt,
+        temperature=0.5,
+        max_output_tokens=2048,
+    ):
+        yield chunk

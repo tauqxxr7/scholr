@@ -1,11 +1,4 @@
-﻿import google.generativeai as genai
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.5-flash")
+from agents._generation import stream_gemini_response
 
 RESEARCH_PROMPT = """
 You are an expert research assistant for Indian BTech engineering students.
@@ -35,17 +28,14 @@ Keep language clear and accessible for a BTech student.
 Do not use overly academic jargon.
 """
 
+
 async def generate_research_response(topic: str):
     prompt = RESEARCH_PROMPT.format(topic=topic)
-    response = await model.generate_content_async(
-        prompt,
-        stream=True,
-        generation_config=genai.GenerationConfig(
-            temperature=0.7,
-            max_output_tokens=2048,
-        )
-    )
 
-    async for chunk in response:
-        if getattr(chunk, "text", None):
-            yield chunk.text
+    async for chunk in stream_gemini_response(
+        model_name="gemini-2.5-flash",
+        prompt=prompt,
+        temperature=0.7,
+        max_output_tokens=2048,
+    ):
+        yield chunk

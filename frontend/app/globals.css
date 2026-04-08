@@ -124,7 +124,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
     @apply font-sans;
@@ -133,7 +133,7 @@
 
 @layer components {
   .scholr-markdown {
-    @apply space-y-4 text-sm leading-7 text-slate-700;
+    @apply space-y-5 text-sm leading-7 text-slate-700 sm:text-[15px];
   }
 
   .scholr-markdown h1,
@@ -148,6 +148,10 @@
 
   .scholr-markdown h3 {
     @apply mt-6 text-xl;
+  }
+
+  .scholr-markdown p {
+    @apply text-slate-700;
   }
 
   .scholr-markdown ul,
@@ -167,7 +171,31 @@
     @apply font-semibold text-slate-900;
   }
 
+  .scholr-markdown blockquote {
+    @apply rounded-r-2xl border-l-4 border-amber-300 bg-amber-50/70 px-4 py-3 italic text-slate-600;
+  }
+
+  .scholr-markdown hr {
+    @apply my-8 border-slate-200;
+  }
+
+  .scholr-markdown a {
+    @apply font-medium text-slate-900 underline decoration-slate-300 underline-offset-4;
+  }
+
   .scholr-markdown code {
     @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-900;
+  }
+
+  .scholr-markdown pre {
+    @apply overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-slate-950 p-4 text-slate-100;
+  }
+
+  .scholr-markdown pre code {
+    @apply bg-transparent p-0 text-[13px] text-slate-100;
+  }
+
+  .scholr-streaming-cursor {
+    @apply ml-1 inline-block h-5 w-0.5 animate-pulse rounded-full bg-slate-900 align-middle;
   }
 }
