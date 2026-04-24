@@ -1,27 +1,30 @@
 # Scholr Deploy Checklist
 
-This checklist keeps the current MVP stable while preparing it for:
-- `frontend` on Vercel
-- `backend` on Railway
+This runbook is for shipping the current MVP on the cheapest practical path without changing product behavior.
 
-Do not deploy until local smoke tests are passing.
+Deploy order:
+1. backend on Render
+2. frontend on Vercel
+3. production smoke test
+
+Do not deploy until the full local smoke test passes.
 
 ## 1. Security First
 
 - Revoke any Gemini API key that was ever exposed.
 - Create one fresh Gemini key.
-- Put the new key only in `backend/.env` locally.
+- Put the new key only in `backend/.env` locally and in Render environment variables for production.
 - Never commit:
   - `backend/.env`
   - `frontend/.env.local`
-  - `backend/scholr.db`
-  - `backend/venv`
+  - `*.db`
+  - `venv`
+  - `.next`
+  - `__pycache__`
 
-## 2. Local Smoke Test
+## 2. Local Smoke Test Before Deployment
 
-Run this before every deploy attempt:
-
-### Backend
+### Start backend
 
 From `backend`:
 
@@ -31,13 +34,11 @@ python -m pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
 ```
 
-Check:
+Verify:
+- `http://127.0.0.1:8000/health`
+- `http://127.0.0.1:8000/docs`
 
-```text
-http://127.0.0.1:8000/health
-```
-
-### Frontend
+### Start frontend
 
 From `frontend`:
 
@@ -46,28 +47,18 @@ npm install
 npm run dev
 ```
 
-Check:
-- homepage
-- dashboard
-- research
-- notes
-- doubt
-- history appears after generating responses
-- backend unavailable state still shows a clean error
+Verify:
+- homepage loads
+- dashboard loads
+- Research works
+- Notes works
+- Doubt works
+- dashboard history appears after generation
+- backend unavailable state still shows a clean message
 
-## 3. Environment Files
+## 3. Local Environment Files
 
-### Local frontend
-
-Use `frontend/.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-```
-
-### Local backend
-
-Use `backend/.env`:
+### backend/.env
 
 ```env
 GEMINI_API_KEY=your_real_key_here
@@ -77,181 +68,215 @@ ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
-### Production frontend
-
-Set this in Vercel:
+### frontend/.env.local
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-backend.up.railway.app
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-Important:
-- `NEXT_PUBLIC_API_URL` is required in production.
-- The frontend now throws a clear error if this env var is missing after deployment.
+## 4. Render Backend Deployment
 
-### Production backend
+### Required service shape
 
-Set these in Railway:
+- GitHub repo: `tauqxxr7/scholr`
+- Root Directory: `backend`
+- Build Command:
+
+```text
+pip install -r requirements.txt
+```
+
+- Start Command:
+
+```text
+uvicorn main:app --host 0.0.0.0 --port $PORT
+```
+
+### Required backend environment variables
 
 ```env
 GEMINI_API_KEY=your_real_key_here
-DATABASE_URL=your_postgres_connection_string
+DATABASE_URL=your_render_postgres_connection_string
 FRONTEND_URL=https://your-vercel-project.vercel.app
 ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
 ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
 Notes:
-- `FRONTEND_URL` is added automatically to backend CORS.
-- `ALLOWED_ORIGINS` can be a comma-separated list if you have multiple frontend URLs.
-- `ALLOWED_ORIGIN_REGEX` supports Vercel preview deployments.
+- If you do not provision Render Postgres, the backend will fall back to SQLite.
+- That fallback is acceptable for local development only.
+- Render web services use an ephemeral filesystem, so SQLite data can be lost on redeploy, restart, or free-tier spin-down.
 
-## 4. Backend Deploy on Railway
+### Optional database path
 
-Recommended target:
-- one Railway service for `backend`
-- one Postgres database on Railway
+Preferred:
+- use Render PostgreSQL through `DATABASE_URL`
 
-### Files already prepared
+Fallback:
+- deploy without `DATABASE_URL` only if you are okay with non-persistent or temporary production history
 
-- `backend/Procfile`
-- `backend/.env.example`
+### Exact Render click order
 
-### Railway setup
+1. Open Render.
+2. Click `New +`.
+3. Choose `Web Service`.
+4. Connect GitHub if needed.
+5. Select `tauqxxr7/scholr`.
+6. Set the service name you want.
+7. Set `Root Directory` to `backend`.
+8. Set `Environment` to `Python`.
+9. Set `Build Command` to `pip install -r requirements.txt`.
+10. Set `Start Command` to `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+11. Set the required backend env vars.
+12. Choose the cheapest/free instance type available.
+13. Create the service.
+14. Open the public backend URL and verify `/health`.
 
-1. Create a new Railway project.
-2. Deploy the `backend` directory as the service root.
-3. Add a Postgres database.
-4. Copy the Postgres connection string into `DATABASE_URL`.
-5. Add the other env vars from the production backend section.
+### Render free-tier notes
 
-### Start command
+- Free web services can sleep after inactivity.
+- The next request can take roughly a minute to spin the service back up.
+- Free web services use an ephemeral filesystem.
+- If Render free Postgres is available, use it.
+- If free Postgres is not available, document clearly that production history persistence is optional or temporary.
+- Render’s free Postgres offering can have storage or lifetime limitations; check the current Render dashboard plan details before depending on it.
 
-The included Procfile uses:
+### Backend verification
 
-```text
-python -m uvicorn main:app --host 0.0.0.0 --port $PORT
-```
+Check:
+- `https://your-render-backend-url.onrender.com/health`
 
-### Backend checks after deploy
-
-Open:
-
-```text
-https://your-railway-backend.up.railway.app/health
-```
-
-Then test:
-- `/api/research`
-- `/api/notes`
-- `/api/doubt`
+Then manually confirm:
 - `/api/history`
+- `/docs`
 
-## 5. Frontend Deploy on Vercel
+## 5. Vercel Frontend Deployment
 
-Recommended target:
-- one Vercel project rooted at `frontend`
+### Required service shape
 
-### Files already prepared
+- GitHub repo: `tauqxxr7/scholr`
+- Root Directory: `frontend`
 
-- `frontend/.env.example`
+### Required frontend environment variables
 
-### Vercel setup
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
+```
 
-1. Create a new Vercel project.
-2. Select the repo.
-3. Set the project root to `frontend`.
-4. Add `NEXT_PUBLIC_API_URL` pointing to the Railway backend.
-5. Deploy.
+Important:
+- `NEXT_PUBLIC_API_URL` is required in production.
+- If you change it in Vercel later, create a new deployment so the new value is used.
 
-### Frontend checks after deploy
+### Exact Vercel click order
 
-Test:
-- landing page loads
-- dashboard loads
-- research streams
-- notes streams
-- doubt streams
-- history loads from production backend
+1. Open Vercel.
+2. Click `Add New...` then `Project`.
+3. Import `tauqxxr7/scholr`.
+4. Set `Root Directory` to `frontend`.
+5. Open `Environment Variables`.
+6. Add `NEXT_PUBLIC_API_URL` and set it to the Render backend URL.
+7. Deploy.
+8. If you update env vars later, redeploy.
 
-## 6. Database Rules
+## 6. Production Rules
 
-Local development:
-- SQLite is fine
-- the file is ignored by git
+### Database
+
+Local:
+- SQLite is allowed
 
 Production:
-- use Postgres
-- do not rely on SQLite in Railway production
+- Prefer PostgreSQL through `DATABASE_URL`
+- Do not rely on SQLite for persistent production history on Render
 
-Why:
-- SQLite on ephemeral production filesystems is fragile
-- Postgres gives persistence across deploys and restarts
+### CORS
 
-## 7. Known Deployment Risks To Check
+Backend CORS must include:
+- the deployed Vercel frontend URL through `FRONTEND_URL`
+- any explicit frontend origins through `ALLOWED_ORIGINS`
+- preview support through `ALLOWED_ORIGIN_REGEX`
 
-These are the main things that can break during deployment:
+### Frontend API base URL
 
-### Missing frontend API URL
+Local:
+- frontend can use `http://127.0.0.1:8000`
+
+Production:
+- frontend must use the deployed Render backend URL
+
+## 7. Common Errors And Fixes
+
+### Missing NEXT_PUBLIC_API_URL
 
 Symptom:
-- deployed frontend tries to hit nowhere or local backend
+- deployed frontend cannot reach the backend
 
 Fix:
-- set `NEXT_PUBLIC_API_URL` in Vercel
+- add `NEXT_PUBLIC_API_URL` in Vercel
+- redeploy
 
-### CORS errors
+### Incorrect CORS
 
 Symptom:
-- browser blocks requests from Vercel frontend to Railway backend
+- browser blocks requests from frontend to backend
 
 Fix:
 - set `FRONTEND_URL`
 - set `ALLOWED_ORIGINS`
-- keep `ALLOWED_ORIGIN_REGEX` for Vercel previews
+- keep `ALLOWED_ORIGIN_REGEX`
 
 ### Missing Gemini key
 
 Symptom:
-- streamed readable error from backend
+- readable streamed provider or config errors from backend
 
 Fix:
-- add valid `GEMINI_API_KEY` in Railway env vars
+- set `GEMINI_API_KEY` in Render
 
-### Production database not configured
+### Missing production database
 
 Symptom:
-- history route fails or does not persist
+- history does not persist or history route fails after restarts or redeploys
 
 Fix:
-- connect Railway Postgres and set `DATABASE_URL`
+- provision Render Postgres and set `DATABASE_URL`
 
-## 8. Final Post-Deploy Smoke Test
+### Cold start on free tier
 
-Test exactly like a student:
+Symptom:
+- first request after idle is slow
+
+Fix:
+- wait for Render to spin the service back up
+- document this in the demo walkthrough
+
+## 8. Production Smoke Test
+
+Run this in the live app after both deploys:
 
 1. Open landing page.
 2. Open dashboard.
-3. Run one Research query.
-4. Run one Notes query.
-5. Run one Doubt query.
+3. Run Research with `Machine Learning for traffic prediction`.
+4. Run Notes with `Operating System deadlock`.
+5. Run Doubt with:
+   - Subject: `DBMS`
+   - Question: `What is normalization and why do we use it?`
 6. Return to dashboard.
 7. Confirm recent history appears.
-8. Refresh browser.
+8. Refresh the page.
 9. Confirm history still appears.
-10. Stop backend locally and verify the frontend still shows the clean unavailable state in local development.
+10. Re-open the backend `/health` URL and confirm it still responds.
 
-## 9. Only After Deployment Is Stable
+## 9. After Deployment Stabilizes
 
 Then do:
-- screenshots for README
-- demo video
-- portfolio polish
-- LinkedIn launch
-- auth later
+- add screenshots to README
+- record a short demo video
+- polish the GitHub repo description
+- share the live demo
 
-Do not do these before deploy is stable:
-- Clerk auth
-- Placement module
-- Projects module
+Still do not do yet:
+- auth
+- placements
+- projects
 - analytics
