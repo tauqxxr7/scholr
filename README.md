@@ -10,32 +10,22 @@
 
 [![Source Code](https://img.shields.io/badge/Source_Code-111827?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tauqxxr7/scholr)
 
-## Overview
+## Problem
 
-Scholr is an AI-powered academic productivity platform built around a focused student workflow: research support, notes generation, and doubt solving. The goal is simple: help a learner turn a topic into useful academic output in under a minute.
+Students often switch between disconnected tools for researching a topic, generating notes, and resolving doubts. That breaks focus and makes academic workflows slower than they should be.
 
-Rather than shipping as a generic student chatbot, Scholr is positioned as a product-led AI application with a real frontend, a structured backend, streaming model responses, and saved activity history.
+## Solution
 
-## Product Positioning
+Scholr is an AI-powered academic productivity platform designed to help students generate notes, solve doubts, research faster, and track learning history. It brings multiple learning workflows into one product-style interface with persistent activity tracking and a scalable product direction.
 
-**Scholr is an India-first academic operating system for BTech students.**
+## Features
 
-It is designed to show how AI can be applied to practical educational workflows with better UX, faster output, and a more intentional product surface than a basic prompt box.
-
-## Current Capabilities
-
-- Research guidance
-- Exam-ready notes generation
-- Step-by-step doubt solving
+- Notes generation
+- Doubt solving
+- Research assistant workflow
+- Persistent history
 - Streaming AI responses
-- Activity history and dashboard view
-
-### Working Routes
-
-- `/research`
-- `/notes`
-- `/doubt`
-- `/dashboard`
+- Dashboard-based activity view
 
 ## Tech Stack
 
@@ -62,6 +52,14 @@ It is designed to show how AI can be applied to practical educational workflows 
 - Render or Railway for backend
 - PostgreSQL planned for production
 
+## Architecture
+
+```text
+User -> Next.js frontend -> FastAPI backend -> Gemini-powered agents -> response streaming -> persistent history -> dashboard UI
+```
+
+Scholr is built with production-style project structure, separate frontend/backend architecture, and a direction that can scale beyond a single MVP feature.
+
 ## Repository Structure
 
 ```text
@@ -81,7 +79,7 @@ scholr/
   README.md
 ```
 
-## Local Setup
+## Setup
 
 ### 1. Clone the repository
 
@@ -121,7 +119,7 @@ Frontend: `http://localhost:3000`
 ### `backend/.env`
 
 ```env
-GEMINI_API_KEY=replace_with_real_gemini_key
+GEMINI_API_KEY=your_api_key_here
 DATABASE_URL=sqlite:///./scholr.db
 FRONTEND_URL=http://localhost:3000
 ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
@@ -134,66 +132,30 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-## Demo Flow
+## Screenshots / Demo
 
-1. Open the landing page.
-2. Visit the dashboard.
-3. Run a research prompt.
-4. Generate notes for a technical concept.
-5. Use the doubt solver.
-6. Return to the dashboard and show saved history.
+- Landing page: `Add screenshot or demo GIF here`
+- Dashboard: `Add screenshot or demo GIF here`
+- Research / notes / doubt workflow: `Add screenshot or demo GIF here`
 
-### Suggested Prompts
+## Live Demo
 
-- Research: `Machine Learning for traffic prediction`
-- Notes: `Operating System deadlock`
-- Doubt subject: `DBMS`
-- Doubt question: `What is normalization and why do we use it?`
+- Frontend: `Deployment in progress`
+- Backend: `Deployment in progress`
+- Source code: `https://github.com/tauqxxr7/scholr`
 
-## Screenshots
+## Future Improvements
 
-### Landing Page
-
-`Add screenshot: docs/screenshots/landing.png`
-
-### Dashboard
-
-`Add screenshot: docs/screenshots/dashboard.png`
-
-### Research / Notes / Doubt Workflow
-
-`Add screenshot: docs/screenshots/modules.png`
-
-## Current Status
-
-### Finished
-
-- Shared streaming pattern across all AI modules
-- Cleaner dashboard and module pages
-- SQLite-based local history
-- Product-ready MVP shell
-
-### Next
-
-- Mobile polish and output readability improvements
-- Better backend error handling
 - Authentication and user accounts
-- Production deployment
 - PostgreSQL migration
+- Better mobile polish
+- Output readability improvements
+- More academic workflows around revision and planning
 
-## Project Docs
+## Author
 
-- Progress summary: `PROJECT_PROGRESS.md`
-- Deploy prep: `DEPLOY_CHECKLIST.md`
+Built by **Tauqeer Bharde** as a flagship AI/full-stack project focused on usability, maintainability, and a strong product direction.
 
-## Security Notes
+## Suggested GitHub Topics
 
-Never commit:
-
-- `backend/.env`
-- `frontend/.env.local`
-- `backend/scholr.db`
-- `backend/venv`
-- API keys
-
-If a Gemini key is exposed, revoke and rotate it immediately.
+`ai, genai, llm, gemini-api, full-stack, nextjs, fastapi, python, react, tailwindcss`
