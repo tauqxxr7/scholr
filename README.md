@@ -1,83 +1,49 @@
 # Scholr
 
-> AI-powered academic productivity platform for research guidance, smart notes, and doubt solving.
+> AI-powered academic productivity platform for notes generation, doubt solving, research assistance, and learning history tracking.
 
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-0F172A?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8)](https://tailwindcss.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Gemini](https://img.shields.io/badge/Gemini_API-1A73E8?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
 [![Source Code](https://img.shields.io/badge/Source_Code-111827?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tauqxxr7/scholr)
 
 ## Problem
 
-Students often switch between disconnected tools for researching a topic, generating notes, and resolving doubts. That breaks focus and makes academic workflows slower than they should be.
+Students often jump between separate tools for research, notes, clarification, and revision history. That fragmentation makes learning slower and creates friction when turning a topic into usable academic output.
 
 ## Solution
 
-Scholr is an AI-powered academic productivity platform designed to help students generate notes, solve doubts, research faster, and track learning history. It brings multiple learning workflows into one product-style interface with persistent activity tracking and a scalable product direction.
+Scholr is an AI-powered academic productivity platform designed to help students generate notes, solve doubts, research faster, and track learning history.
+
+Built as a scalable product with separation between frontend, backend, and AI layers.
 
 ## Features
 
-- Notes generation
-- Doubt solving
-- Research assistant workflow
-- Persistent history
-- Streaming AI responses
-- Dashboard-based activity view
-
-## Tech Stack
-
-### Frontend
-
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- React Markdown
-
-### Backend
-
-- FastAPI
-- Python
-- Google Generative AI SDK
-- SQLAlchemy
-- SQLite for local development
-- SSE streaming responses
-
-### Deployment Direction
-
-- Vercel for frontend
-- Render or Railway for backend
-- PostgreSQL planned for production
+- Research assistant flow for fast topic exploration
+- Notes generation for study-ready summaries
+- Doubt solving with step-by-step explanations
+- Persistent learning history for recent activity and retrieval
+- Product-ready dashboard structure for future student workflows
 
 ## Architecture
 
 ```text
-User -> Next.js frontend -> FastAPI backend -> Gemini-powered agents -> response streaming -> persistent history -> dashboard UI
+Student → Next.js Frontend → FastAPI Backend → Gemini AI Layer → Learning History
 ```
 
-Scholr is built with production-style project structure, separate frontend/backend architecture, and a direction that can scale beyond a single MVP feature.
+This repository is structured like a production-style product instead of a single prompt demo, with clear service boundaries and room for future scale.
 
-## Repository Structure
+## Tech Stack
 
-```text
-scholr/
-  backend/
-    agents/
-    db/
-    models/
-    routers/
-    main.py
-  frontend/
-    app/
-    components/
-    lib/
-  PROJECT_PROGRESS.md
-  DEPLOY_CHECKLIST.md
-  README.md
-```
+- Frontend: Next.js, TypeScript, Tailwind CSS, shadcn/ui
+- Backend: FastAPI, Python
+- AI Layer: Gemini API
+- Data Layer: SQLite for local development
+- Deployment target: Vercel frontend + Render/Railway backend
 
 ## Setup
 
@@ -90,29 +56,30 @@ cd scholr
 
 ### 2. Start the backend
 
-```bash
+```powershell
 cd backend
-python -m venv venv
 venv\Scripts\activate
 python -m pip install -r requirements.txt
 copy .env.example .env
 python -m uvicorn main:app --reload --port 8000
 ```
 
-Health check: `http://127.0.0.1:8000/health`
-
 ### 3. Start the frontend
 
 Open a new terminal:
 
-```bash
+```powershell
 cd frontend
 npm install
 copy .env.example .env.local
 npm run dev
 ```
 
-Frontend: `http://localhost:3000`
+### 4. Open the app
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://127.0.0.1:8000`
+- Health check: `http://127.0.0.1:8000/health`
 
 ## Environment Variables
 
@@ -132,30 +99,31 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-## Screenshots / Demo
+## Screenshots
 
-- Landing page: `Add screenshot or demo GIF here`
-- Dashboard: `Add screenshot or demo GIF here`
-- Research / notes / doubt workflow: `Add screenshot or demo GIF here`
+Screenshots coming soon.
 
-## Live Demo
+## Deployment Status
 
 - Frontend: `Deployment in progress`
 - Backend: `Deployment in progress`
-- Source code: `https://github.com/tauqxxr7/scholr`
 
-## Future Improvements
+## Roadmap
 
-- Authentication and user accounts
-- PostgreSQL migration
-- Better mobile polish
-- Output readability improvements
-- More academic workflows around revision and planning
+- Authentication
+- Persistent chat/history
+- Notes export
+- Dashboard analytics
+- Better prompt orchestration
+- Deployment
 
-## Author
+## Author / Contact
 
-Built by **Tauqeer Bharde** as a flagship AI/full-stack project focused on usability, maintainability, and a strong product direction.
+Built by **Tauqeer Bharde** as a flagship AI product focused on education, product usability, and deployable architecture.
+
+- GitHub: `https://github.com/tauqxxr7`
+- LinkedIn: `https://www.linkedin.com/in/tauqeer-sameer-85b868235`
 
 ## Suggested GitHub Topics
 
-`ai, genai, llm, gemini-api, full-stack, nextjs, fastapi, python, react, tailwindcss`
+`ai, genai, llm, gemini-api, nextjs, fastapi, python, typescript, tailwindcss, student-productivity, full-stack`
