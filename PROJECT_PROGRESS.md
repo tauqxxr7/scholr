@@ -1,81 +1,97 @@
 # Scholr Progress Blueprint
 
-## Vision
+## Current Stage
 
-Scholr is an India-first academic operating system for BTech students. The product starts with one focused wedge that is easy to explain, demo, and evaluate:
-- research guidance
-- exam-ready notes
-- doubt solving
-- saved academic history
+Scholr is in the clean MVP stage:
+- no auth
+- one focused student workflow
+- deployment-ready monorepo
+- local SQLite support
+- production-ready PostgreSQL path through `DATABASE_URL`
 
-## Current Milestone
+## What Is Completed
 
-Scholr Core is now in the final shipping phase:
-- Research works
-- Notes works
-- Doubt works
-- Dashboard history works
-- Shared streaming and error handling are stable
-- Local and production environment behavior are separated cleanly
-- Deployment setup is prepared for Vercel and Render
+### Product foundation
 
-## What Is Finished
+- Clean monorepo structure with `frontend/`, `backend/`, and top-level docs
+- Landing page, dashboard, research, notes, and doubt routes
+- Shared AI module UI instead of duplicated page logic
+- Shared frontend API client with production-safe URL handling
 
-### Product flow
+### Backend
 
-- Landing page is polished and product-positioned
-- Dashboard shows recent usage and module entry points
-- Research, Notes, and Doubt each stream structured output
-- Copy, clear, loading, empty, and retry states are present
+- FastAPI app in `backend/main.py`
+- `GET /health`
+- `POST /api/research`
+- `POST /api/notes`
+- `POST /api/doubt`
+- `GET /api/history`
+- shared Gemini generation helper
+- shared SSE streaming helper
+- JSON-safe SSE payloads
+- `[DONE]` sent on every stream
+- graceful handling for:
+  - missing API key
+  - invalid Gemini access
+  - model/provider failure
+  - timeout/network issues
+  - history save failure
 
-### Backend stability
+### Data
 
-- FastAPI startup and health route are in place
-- `/docs` remains available for debugging and manual API checks
-- All AI routes use one shared SSE helper
-- Streaming is JSON-safe through `json.dumps`
-- Every stream sends `[DONE]`
-- AI/provider failures become readable streamed messages
-- History save failures do not break the user response
+- SQLite works locally by default
+- full completed responses are saved
+- PostgreSQL can be used in production through `DATABASE_URL` without code changes
 
-### Data layer
+### Frontend
 
-- SQLite works for local development with zero setup
-- Production is expected to use PostgreSQL through `DATABASE_URL`
-- History is accessible through `GET /api/history`
+- Responsive dashboard shell
+- Clean shared output cards
+- loading skeletons
+- empty states
+- retry states
+- copy + clear actions
+- markdown rendering that does not crash on streamed output
 
 ### Deployment prep
 
-- Backend is shaped for Render with `backend/Procfile`
-- Backend falls back to SQLite only when `DATABASE_URL` is absent
-- Backend CORS supports local and Vercel-hosted frontend origins
-- Frontend requires `NEXT_PUBLIC_API_URL` in production
-- Ignore rules cover env files, databases, caches, and build artifacts
+- Render-ready backend configuration
+- Vercel-ready frontend configuration
+- env examples for both apps
+- repo safety and ignore rules aligned with MVP deployment
 
-## Shipping Checklist
+## What Is Pending
 
-1. Revoke any exposed Gemini keys.
-2. Create a new production Gemini key.
-3. Run the full local smoke test.
-4. Deploy backend on Render first.
-5. Deploy frontend on Vercel second.
-6. Re-run the production smoke test.
-7. Capture screenshots and the live demo URL.
+- deploy backend on Render
+- deploy frontend on Vercel
+- add live screenshots and demo URLs to README
+- verify production smoke test against deployed services
 
-## What Comes Next
+## Next Milestones
 
-After deployment is stable:
-- screenshots for README
-- short demo video
-- recruiter-facing polish
-- mentor/startup pitch walkthrough
+1. Finish production deployment
+2. Capture screenshots and short demo walkthrough
+3. Add CI checks for lint, typecheck, and backend validation
+4. Reintroduce auth only after the wedge is stable in production
+5. Add per-user history and saved items later
 
-Later, but not now:
-- auth
-- per-user history
-- saved collections
-- placements and projects
+## Deployment Status
 
-## Product Principle
+- Local development flow: ready
+- Backend deployment config: ready for Render
+- Frontend deployment config: ready for Vercel
+- Production persistence: requires PostgreSQL via `DATABASE_URL`
+- Local-only persistence: SQLite
 
-The right move is still the same: make the current three-module wedge look and feel trustworthy before adding more scope.
+## Azure Future Scaling Idea
+
+If Scholr grows beyond the MVP wedge, the most natural Azure path is:
+
+- Azure OpenAI / Azure AI Foundry for enterprise-grade model routing
+- Azure Functions for event-driven background jobs or async processing
+- Azure Cosmos DB for globally distributed app data and user history
+- Azure AI Search for semantic retrieval across notes, research, and academic content
+- Azure Blob Storage for exported files, uploaded documents, and large assets
+- Azure API Management for auth, quotas, observability, and partner integrations
+
+That path is intentionally future-facing. It is not needed for the MVP.

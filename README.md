@@ -1,44 +1,31 @@
 # Scholr
 
-Scholr is an AI-powered academic operating system for BTech students. The current MVP focuses on one sharp wedge: turn any engineering topic into research direction, exam-ready notes, and clear doubt solving in under a minute.
+Scholr is an AI academic platform for BTech students. The MVP focuses on one clean promise: turn any engineering topic into research guidance, exam-ready notes, and step-by-step doubt solving in under a minute.
 
 ## Product Overview
 
-Scholr is built around the real workflow of Indian engineering students:
-- discover what to read
-- understand what matters for exams
-- unblock doubts quickly
-- keep a usable history of what was generated
+Scholr is designed around the real workflow of engineering students:
+- figure out what to study
+- turn a topic into useful notes
+- unblock confusing concepts quickly
+- keep a history of what was generated
 
-Instead of trying to ship every student feature at once, the product starts with one polished core experience:
-- Research
-- Notes
-- Doubt
-- Dashboard history
-
-## Live Demo
-
-- Frontend: `Add your Vercel URL here`
-- Backend health: `Add your Render backend /health URL here`
-
-## Screenshots
-
-Add these after deployment:
-- `Landing page`
-- `Dashboard`
-- `Research module`
-- `Notes module`
-- `Doubt module`
+The product deliberately avoids unnecessary MVP complexity:
+- no auth
+- no Clerk
+- no extra modules yet
+- one stable flow first
 
 ## Features
 
-- Streaming AI responses across Research, Notes, and Doubt
-- Shared SSE handling with JSON-safe chunking and `[DONE]` completion
-- Local history storage for completed generations
-- Product-style dashboard with recent activity
-- Helpful empty, loading, success, and retry states
-- Production-aware frontend API handling
-- Deployment-ready backend CORS and environment handling
+- Research Assistant
+- Notes Generator
+- Doubt Solver
+- Dashboard with recent history
+- SSE streaming responses
+- Retry, empty, loading, and error states
+- Local SQLite development storage
+- PostgreSQL-ready production storage through `DATABASE_URL`
 
 ## Architecture
 
@@ -61,44 +48,33 @@ scholr/
   DEPLOY_CHECKLIST.md
 ```
 
+### Backend
+
+- FastAPI
+- Gemini API
+- shared generation helper
+- shared SSE helper
+- SQLite locally
+- PostgreSQL in production
+
 ### Frontend
 
 - Next.js App Router
 - TypeScript
-- Tailwind CSS v4
-- shadcn/ui
-- React Markdown
-
-### Backend
-
-- FastAPI
-- Google Generative AI SDK
-- SQLAlchemy
-- SQLite for local development
-- PostgreSQL through `DATABASE_URL` in production
+- Tailwind CSS
+- shared module UI
+- shared API client
+- markdown rendering for streamed AI output
 
 ## Tech Stack
 
-- Frontend: Next.js, React, TypeScript, Tailwind CSS, shadcn/ui
+- Frontend: Next.js, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python, SQLAlchemy
-- AI: Gemini 2.5 Flash
-- Local storage: SQLite
-- Production storage: PostgreSQL when available
-- Deployment: Vercel + Render
-
-## Current Status
-
-Scholr Core is stable locally and prepared for deployment.
-
-Working routes:
-- `/`
-- `/dashboard`
-- `/research`
-- `/notes`
-- `/doubt`
-- `/api/history`
-- `/health`
-- `/docs`
+- AI: Gemini `gemini-2.5-flash`
+- Local DB: SQLite
+- Production DB: PostgreSQL through `DATABASE_URL`
+- Frontend deploy: Vercel
+- Backend deploy: Render
 
 ## Local Setup
 
@@ -144,28 +120,19 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 Frontend URL:
 - `http://localhost:3000`
 
-## Deployment Setup Summary
+## Deployment Setup
 
 ### Render backend
 
 - Root Directory: `backend`
-- Build Command:
-
-```text
-pip install -r requirements.txt
-```
-
-- Start Command:
-
-```text
-uvicorn main:app --host 0.0.0.0 --port $PORT
-```
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 Required env vars:
 
 ```env
 GEMINI_API_KEY=your_real_key_here
-DATABASE_URL=your_render_postgres_connection_string
+DATABASE_URL=your_postgres_connection_string
 FRONTEND_URL=https://your-vercel-project.vercel.app
 ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
 ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
@@ -181,60 +148,61 @@ Required env var:
 NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
 ```
 
-If `NEXT_PUBLIC_API_URL` changes in Vercel, redeploy so the new value takes effect.
+Vercel env changes require a redeploy.
 
-## Demo Flow
+## Environment Variables
 
-Use this sequence when showing the product:
+### Backend
 
-1. Open the landing page.
-2. Open the dashboard.
-3. Run one Research query.
-4. Run one Notes query.
-5. Run one Doubt query.
-6. Return to dashboard and show recent history.
+- `GEMINI_API_KEY`
+- `DATABASE_URL`
+- `FRONTEND_URL`
+- `ALLOWED_ORIGINS`
+- `ALLOWED_ORIGIN_REGEX`
 
-Suggested prompts:
-- Research: `Machine Learning for traffic prediction`
-- Notes: `Operating System deadlock`
-- Doubt:
-  - Subject: `DBMS`
-  - Question: `What is normalization and why do we use it?`
+### Frontend
 
-## Deployment Notes
+- `NEXT_PUBLIC_API_URL`
 
-- Render free web services can sleep after inactivity and may take around a minute to spin back up.
-- Render free web services use an ephemeral filesystem, so SQLite should be treated as local-only and not relied on for production persistence.
-- If Render PostgreSQL free is available, use it through `DATABASE_URL`.
-- If free Postgres is not available, you can still deploy the app, but document clearly that production history persistence is optional or temporary.
+## Live Demo
+
+- Frontend: `Add your Vercel URL here`
+- Backend health: `Add your Render /health URL here`
+
+## Screenshots
+
+Add after deployment:
+- `Landing page`
+- `Dashboard`
+- `Research module`
+- `Notes module`
+- `Doubt module`
+
+## Current Status
+
+Scholr MVP is locally stable and deployment-ready. Research, Notes, Doubt, SSE streaming, and dashboard history are implemented in one clean flow.
 
 ## Roadmap
 
 Near-term:
-- Deploy backend on Render
-- Deploy frontend on Vercel
-- Capture screenshots and a short demo video
+- deploy backend on Render
+- deploy frontend on Vercel
+- capture screenshots and demo video
 
 Later:
-- Reintroduce auth carefully
-- Add per-user history
-- Add saved items and exports
-- Add placement and project flows only after the current wedge is clearly sticky
+- auth
+- per-user history
+- exports
+- placement and project modules
 
 ## Security Notes
 
 Never commit:
-- `backend/.env`
-- `frontend/.env.local`
+- `.env`
+- `.env.local`
 - `*.db`
 - `venv`
 - `.next`
+- `node_modules`
 - `__pycache__`
 - API keys
-
-If a Gemini key is ever exposed, revoke it immediately and create a new one.
-
-## Project Docs
-
-- `PROJECT_PROGRESS.md`
-- `DEPLOY_CHECKLIST.md`

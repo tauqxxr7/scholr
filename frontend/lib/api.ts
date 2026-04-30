@@ -64,7 +64,7 @@ function describeNetworkFailure(error: unknown) {
 
   if (error instanceof TypeError) {
     return new StreamModuleError(
-      'Scholr could not reach the backend. Make sure the FastAPI server is running on the expected port.',
+      'Scholr could not reach the backend. Check that the API URL is correct and the backend is running.',
       true,
     )
   }
