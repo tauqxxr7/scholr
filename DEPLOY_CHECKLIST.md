@@ -1,25 +1,13 @@
 # Scholr Deploy Checklist
 
-This checklist keeps the current MVP stable while preparing it for:
-- `frontend` on Vercel
-- `backend` on Railway
+This checklist ships the clean Scholr MVP without changing product behavior.
 
-Do not deploy until local smoke tests are passing.
+Deploy order:
+1. backend on Render
+2. frontend on Vercel
+3. production smoke test
 
-## 1. Security First
-
-- Revoke any Gemini API key that was ever exposed.
-- Create one fresh Gemini key.
-- Put the new key only in `backend/.env` locally.
-- Never commit:
-  - `backend/.env`
-  - `frontend/.env.local`
-  - `backend/scholr.db`
-  - `backend/venv`
-
-## 2. Local Smoke Test
-
-Run this before every deploy attempt:
+## 1. Local Smoke Test
 
 ### Backend
 
@@ -31,11 +19,9 @@ python -m pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
 ```
 
-Check:
-
-```text
-http://127.0.0.1:8000/health
-```
+Verify:
+- `http://127.0.0.1:8000/health`
+- `http://127.0.0.1:8000/docs`
 
 ### Frontend
 
@@ -46,52 +32,24 @@ npm install
 npm run dev
 ```
 
-Check:
-- homepage
-- dashboard
-- research
-- notes
-- doubt
-- history appears after generating responses
-- backend unavailable state still shows a clean error
+Verify:
+- homepage loads
+- dashboard loads
+- Research works
+- Notes works
+- Doubt works
+- dashboard history appears after generation
+- backend unavailable state still shows a clean message
 
-## 3. Environment Files
+## 2. Render Backend Deployment
 
-### Local frontend
+Service settings:
+- Root Directory: `backend`
+- Environment: `Python`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-Use `frontend/.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-```
-
-### Local backend
-
-Use `backend/.env`:
-
-```env
-GEMINI_API_KEY=your_real_key_here
-DATABASE_URL=sqlite:///./scholr.db
-FRONTEND_URL=http://localhost:3000
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
-```
-
-### Production frontend
-
-Set this in Vercel:
-
-```env
-NEXT_PUBLIC_API_URL=https://your-railway-backend.up.railway.app
-```
-
-Important:
-- `NEXT_PUBLIC_API_URL` is required in production.
-- The frontend now throws a clear error if this env var is missing after deployment.
-
-### Production backend
-
-Set these in Railway:
+Required environment variables:
 
 ```env
 GEMINI_API_KEY=your_real_key_here
@@ -102,156 +60,145 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
 Notes:
-- `FRONTEND_URL` is added automatically to backend CORS.
-- `ALLOWED_ORIGINS` can be a comma-separated list if you have multiple frontend URLs.
-- `ALLOWED_ORIGIN_REGEX` supports Vercel preview deployments.
+- If `DATABASE_URL` is missing, the backend falls back to SQLite.
+- That fallback is acceptable locally, not for durable production history.
+- Render free web services may sleep after inactivity.
+- Render free web services use an ephemeral filesystem, so SQLite data can disappear on restart or redeploy.
+- If Render PostgreSQL free is available, use it.
+- If free Postgres is unavailable, production history should be treated as optional or temporary.
 
-## 4. Backend Deploy on Railway
+Exact steps:
+1. Open Render.
+2. Click `New +`.
+3. Choose `Web Service`.
+4. Connect GitHub if needed.
+5. Select `tauqxxr7/scholr`.
+6. Set `Root Directory` to `backend`.
+7. Set `Environment` to `Python`.
+8. Set `Build Command` to `pip install -r requirements.txt`.
+9. Set `Start Command` to `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+10. Add the required environment variables.
+11. Choose the free or cheapest instance type.
+12. Create the service.
+13. Open `https://your-render-backend-url.onrender.com/health`.
+14. Confirm `/docs` and `/api/history`.
 
-Recommended target:
-- one Railway service for `backend`
-- one Postgres database on Railway
+## 3. Vercel Frontend Deployment
 
-### Files already prepared
+Project settings:
+- Root Directory: `frontend`
 
-- `backend/Procfile`
-- `backend/.env.example`
+Required environment variable:
 
-### Railway setup
-
-1. Create a new Railway project.
-2. Deploy the `backend` directory as the service root.
-3. Add a Postgres database.
-4. Copy the Postgres connection string into `DATABASE_URL`.
-5. Add the other env vars from the production backend section.
-
-### Start command
-
-The included Procfile uses:
-
-```text
-python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
 ```
 
-### Backend checks after deploy
+Important:
+- `NEXT_PUBLIC_API_URL` is required in production.
+- Vercel env var changes require a redeploy.
 
-Open:
+Exact steps:
+1. Open Vercel.
+2. Click `Add New...` then `Project`.
+3. Import `tauqxxr7/scholr`.
+4. Set `Root Directory` to `frontend`.
+5. Add `NEXT_PUBLIC_API_URL`.
+6. Deploy.
+7. If you change env vars later, redeploy.
 
-```text
-https://your-railway-backend.up.railway.app/health
+## 4. Environment Variables
+
+### Local backend
+
+```env
+GEMINI_API_KEY=your_real_key_here
+DATABASE_URL=sqlite:///./scholr.db
+FRONTEND_URL=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
-Then test:
-- `/api/research`
-- `/api/notes`
-- `/api/doubt`
-- `/api/history`
+### Local frontend
 
-## 5. Frontend Deploy on Vercel
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
 
-Recommended target:
-- one Vercel project rooted at `frontend`
+### Production backend
 
-### Files already prepared
+```env
+GEMINI_API_KEY=your_real_key_here
+DATABASE_URL=your_postgres_connection_string
+FRONTEND_URL=https://your-vercel-project.vercel.app
+ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
+ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
+```
 
-- `frontend/.env.example`
+### Production frontend
 
-### Vercel setup
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
+```
 
-1. Create a new Vercel project.
-2. Select the repo.
-3. Set the project root to `frontend`.
-4. Add `NEXT_PUBLIC_API_URL` pointing to the Railway backend.
-5. Deploy.
+## 5. Production Smoke Test
 
-### Frontend checks after deploy
+1. Open the live landing page.
+2. Open the live dashboard.
+3. Run Research with `Machine Learning for traffic prediction`.
+4. Run Notes with `Operating System deadlock`.
+5. Run Doubt with:
+   - Subject: `DBMS`
+   - Question: `What is normalization and why do we use it?`
+6. Return to dashboard.
+7. Confirm history appears.
+8. Refresh the page.
+9. Confirm history still appears.
+10. Re-open backend `/health`.
 
-Test:
-- landing page loads
-- dashboard loads
-- research streams
-- notes streams
-- doubt streams
-- history loads from production backend
+## 6. Common Errors And Fixes
 
-## 6. Database Rules
-
-Local development:
-- SQLite is fine
-- the file is ignored by git
-
-Production:
-- use Postgres
-- do not rely on SQLite in Railway production
-
-Why:
-- SQLite on ephemeral production filesystems is fragile
-- Postgres gives persistence across deploys and restarts
-
-## 7. Known Deployment Risks To Check
-
-These are the main things that can break during deployment:
-
-### Missing frontend API URL
+### Missing NEXT_PUBLIC_API_URL
 
 Symptom:
-- deployed frontend tries to hit nowhere or local backend
+- frontend cannot reach backend in production
 
 Fix:
 - set `NEXT_PUBLIC_API_URL` in Vercel
+- redeploy
 
-### CORS errors
+### CORS failure
 
 Symptom:
-- browser blocks requests from Vercel frontend to Railway backend
+- browser blocks frontend requests to backend
 
 Fix:
 - set `FRONTEND_URL`
 - set `ALLOWED_ORIGINS`
-- keep `ALLOWED_ORIGIN_REGEX` for Vercel previews
+- keep `ALLOWED_ORIGIN_REGEX`
 
 ### Missing Gemini key
 
 Symptom:
-- streamed readable error from backend
+- readable streamed provider/config error from backend
 
 Fix:
-- add valid `GEMINI_API_KEY` in Railway env vars
+- set `GEMINI_API_KEY` in Render
 
-### Production database not configured
+### Missing PostgreSQL
 
 Symptom:
-- history route fails or does not persist
+- history disappears after restart or redeploy
 
 Fix:
-- connect Railway Postgres and set `DATABASE_URL`
+- provision Render PostgreSQL
+- set `DATABASE_URL`
 
-## 8. Final Post-Deploy Smoke Test
+### Render cold start
 
-Test exactly like a student:
+Symptom:
+- first request after idle is slow
 
-1. Open landing page.
-2. Open dashboard.
-3. Run one Research query.
-4. Run one Notes query.
-5. Run one Doubt query.
-6. Return to dashboard.
-7. Confirm recent history appears.
-8. Refresh browser.
-9. Confirm history still appears.
-10. Stop backend locally and verify the frontend still shows the clean unavailable state in local development.
-
-## 9. Only After Deployment Is Stable
-
-Then do:
-- screenshots for README
-- demo video
-- portfolio polish
-- LinkedIn launch
-- auth later
-
-Do not do these before deploy is stable:
-- Clerk auth
-- Placement module
-- Projects module
-- analytics
+Fix:
+- wait for Render to wake the service
+- mention this during demos

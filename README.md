@@ -1,129 +1,208 @@
 # Scholr
 
-> AI-powered academic productivity platform for notes generation, doubt solving, research assistance, and learning history tracking.
+Scholr is an AI academic platform for BTech students. The MVP focuses on one clean promise: turn any engineering topic into research guidance, exam-ready notes, and step-by-step doubt solving in under a minute.
 
-[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-0F172A?style=for-the-badge&logo=tailwindcss&logoColor=38BDF8)](https://tailwindcss.com/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Gemini](https://img.shields.io/badge/Gemini_API-1A73E8?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+## Product Overview
 
-[![Source Code](https://img.shields.io/badge/Source_Code-111827?style=for-the-badge&logo=github&logoColor=white)](https://github.com/tauqxxr7/scholr)
+Scholr is designed around the real workflow of engineering students:
+- figure out what to study
+- turn a topic into useful notes
+- unblock confusing concepts quickly
+- keep a history of what was generated
 
-## Problem
-
-Students often jump between separate tools for research, notes, clarification, and revision history. That fragmentation makes learning slower and creates friction when turning a topic into usable academic output.
-
-## Solution
-
-Scholr is an AI-powered academic productivity platform designed to help students generate notes, solve doubts, research faster, and track learning history.
-
-Built as a scalable product with separation between frontend, backend, and AI layers.
+The product deliberately avoids unnecessary MVP complexity:
+- no auth
+- no Clerk
+- no extra modules yet
+- one stable flow first
 
 ## Features
 
-- Research assistant flow for fast topic exploration
-- Notes generation for study-ready summaries
-- Doubt solving with step-by-step explanations
-- Persistent learning history for recent activity and retrieval
-- Product-ready dashboard structure for future student workflows
+- Research Assistant
+- Notes Generator
+- Doubt Solver
+- Dashboard with recent history
+- SSE streaming responses
+- Retry, empty, loading, and error states
+- Local SQLite development storage
+- PostgreSQL-ready production storage through `DATABASE_URL`
 
 ## Architecture
 
 ```text
-Student → Next.js Frontend → FastAPI Backend → Gemini AI Layer → Learning History
+scholr/
+  backend/
+    agents/
+    db/
+    models/
+    routers/
+    main.py
+    Procfile
+    runtime.txt
+  frontend/
+    app/
+    components/
+    lib/
+  README.md
+  PROJECT_PROGRESS.md
+  DEPLOY_CHECKLIST.md
 ```
 
-This repository is structured like a production-style product instead of a single prompt demo, with clear service boundaries and room for future scale.
+### Backend
+
+- FastAPI
+- Gemini API
+- shared generation helper
+- shared SSE helper
+- SQLite locally
+- PostgreSQL in production
+
+### Frontend
+
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- shared module UI
+- shared API client
+- markdown rendering for streamed AI output
 
 ## Tech Stack
 
-- Frontend: Next.js, TypeScript, Tailwind CSS, shadcn/ui
-- Backend: FastAPI, Python
-- AI Layer: Gemini API
-- Data Layer: SQLite for local development
-- Deployment target: Vercel frontend + Render/Railway backend
+- Frontend: Next.js, React, TypeScript, Tailwind CSS
+- Backend: FastAPI, Python, SQLAlchemy
+- AI: Gemini `gemini-2.5-flash`
+- Local DB: SQLite
+- Production DB: PostgreSQL through `DATABASE_URL`
+- Frontend deploy: Vercel
+- Backend deploy: Render
 
-## Setup
+## Local Setup
 
-### 1. Clone the repository
+### Backend
 
-```bash
-git clone https://github.com/tauqxxr7/scholr.git
-cd scholr
-```
-
-### 2. Start the backend
+From `backend`:
 
 ```powershell
-cd backend
 venv\Scripts\activate
 python -m pip install -r requirements.txt
-copy .env.example .env
 python -m uvicorn main:app --reload --port 8000
 ```
 
-### 3. Start the frontend
-
-Open a new terminal:
-
-```powershell
-cd frontend
-npm install
-copy .env.example .env.local
-npm run dev
-```
-
-### 4. Open the app
-
-- Frontend: `http://localhost:3000`
-- Backend: `http://127.0.0.1:8000`
-- Health check: `http://127.0.0.1:8000/health`
-
-## Environment Variables
-
-### `backend/.env`
+Create `backend/.env`:
 
 ```env
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY=your_real_key_here
 DATABASE_URL=sqlite:///./scholr.db
 FRONTEND_URL=http://localhost:3000
 ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
-### `frontend/.env.local`
+Backend checks:
+- `http://127.0.0.1:8000/health`
+- `http://127.0.0.1:8000/docs`
+
+### Frontend
+
+From `frontend`:
+
+```powershell
+npm install
+npm run dev
+```
+
+Create `frontend/.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
+Frontend URL:
+- `http://localhost:3000`
+
+## Deployment Setup
+
+### Render backend
+
+- Root Directory: `backend`
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+Required env vars:
+
+```env
+GEMINI_API_KEY=your_real_key_here
+DATABASE_URL=your_postgres_connection_string
+FRONTEND_URL=https://your-vercel-project.vercel.app
+ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
+ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
+```
+
+### Vercel frontend
+
+- Root Directory: `frontend`
+
+Required env var:
+
+```env
+NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
+```
+
+Vercel env changes require a redeploy.
+
+## Environment Variables
+
+### Backend
+
+- `GEMINI_API_KEY`
+- `DATABASE_URL`
+- `FRONTEND_URL`
+- `ALLOWED_ORIGINS`
+- `ALLOWED_ORIGIN_REGEX`
+
+### Frontend
+
+- `NEXT_PUBLIC_API_URL`
+
+## Live Demo
+
+- Frontend: `Add your Vercel URL here`
+- Backend health: `Add your Render /health URL here`
+
 ## Screenshots
 
-Screenshots coming soon.
+Add after deployment:
+- `Landing page`
+- `Dashboard`
+- `Research module`
+- `Notes module`
+- `Doubt module`
 
-## Deployment Status
+## Current Status
 
-- Frontend: `Deployment in progress`
-- Backend: `Deployment in progress`
+Scholr MVP is locally stable and deployment-ready. Research, Notes, Doubt, SSE streaming, and dashboard history are implemented in one clean flow.
 
 ## Roadmap
 
-- Authentication
-- Persistent chat/history
-- Notes export
-- Dashboard analytics
-- Better prompt orchestration
-- Deployment
+Near-term:
+- deploy backend on Render
+- deploy frontend on Vercel
+- capture screenshots and demo video
 
-## Author / Contact
+Later:
+- auth
+- per-user history
+- exports
+- placement and project modules
 
-Built by **Tauqeer Bharde** as a flagship AI product focused on education, product usability, and deployable architecture.
+## Security Notes
 
-- GitHub: `https://github.com/tauqxxr7`
-- LinkedIn: `https://www.linkedin.com/in/tauqeer-sameer-85b868235`
-
-## Suggested GitHub Topics
-
-`ai, genai, llm, gemini-api, nextjs, fastapi, python, typescript, tailwindcss, student-productivity, full-stack`
+Never commit:
+- `.env`
+- `.env.local`
+- `*.db`
+- `venv`
+- `.next`
+- `node_modules`
+- `__pycache__`
+- API keys

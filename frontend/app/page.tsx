@@ -34,8 +34,8 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/sign-in">
-              <Button variant="outline">Sign in</Button>
+            <Link href="/research">
+              <Button variant="outline">Try research</Button>
             </Link>
             <Link href="/dashboard">
               <Button className="bg-slate-950 text-white hover:bg-slate-800">Open dashboard</Button>

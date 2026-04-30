@@ -13,7 +13,6 @@ def _parse_allowed_origins() -> list[str]:
     defaults = {
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://scholr.vercel.app",
     }
 
     configured = os.getenv("ALLOWED_ORIGINS", "")
