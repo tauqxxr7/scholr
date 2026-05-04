@@ -2,10 +2,10 @@
 
 ## Current Stage
 
-Scholr is in the deployment-ready MVP stage:
+Scholr is in the live MVP stage:
 - no auth
 - one focused student workflow
-- deployment-ready monorepo
+- deployed monorepo
 - local SQLite support
 - production-ready PostgreSQL path through `DATABASE_URL`
 
@@ -64,26 +64,30 @@ Scholr is in the deployment-ready MVP stage:
 - env examples for both apps
 - repo safety and ignore rules aligned with MVP deployment
 
+## Live URLs
+
+- Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
+- Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
+
 ## What Is Pending
 
-- deploy backend on Render
-- deploy frontend on Vercel
-- add live screenshots and demo URLs to README
-- verify production smoke test against deployed services
+- add demo video or short walkthrough
+- verify long-term production history persistence with PostgreSQL
 
 ## Next Milestones
 
-1. Finish production deployment
-2. Capture screenshots and short demo walkthrough
+1. Run user validation with 10 BTech students
+2. Add light analytics and usage instrumentation
 3. Add CI checks for lint, typecheck, backend validation, and build
-4. Reintroduce auth only after the wedge is stable in production
-5. Add per-user history and saved items later
+4. Reintroduce auth later, only after the wedge proves retention
+5. Move production history to PostgreSQL if usage justifies it
+6. Expand SEO and legal polish only when the public launch needs become sharper
 
 ## Deployment Status
 
 - Local development flow: ready
-- Backend deployment config: ready for Render
-- Frontend deployment config: ready for Vercel
+- Backend deployed on Render
+- Frontend deployed on Vercel
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 

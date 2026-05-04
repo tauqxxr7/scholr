@@ -166,29 +166,42 @@ Vercel env changes require a redeploy.
 
 ## Live Demo
 
-- Frontend: `Add your Vercel URL here`
-- Backend health: `Add your Render /health URL here`
+- Frontend: [scholr-coral.vercel.app](https://scholr-coral.vercel.app)
+- Backend health: [scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 
 ## Screenshots
 
-Add after deployment:
-- `Landing page`
-- `Dashboard`
-- `Research module`
-- `Notes module`
-- `Doubt module`
+### Landing Page
+
+![Landing page](frontend/public/screenshots/landing-page.png)
+
+### Research Workspace
+
+![Research workspace](frontend/public/screenshots/research-workspace.png)
+
+### Research Output
+
+![Research output](frontend/public/screenshots/research-output.png)
+
+### Notes Output
+
+![Notes output](frontend/public/screenshots/notes-output.png)
+
+### Doubt Output
+
+![Doubt output](frontend/public/screenshots/doubt-output.png)
 
 ## Current Status
 
-Scholr MVP is locally stable and deployment-ready. Research, Notes, Doubt, SSE streaming, and dashboard history are implemented in one clean flow. The product blueprint and deployment runbooks are now aligned with a simple Render + Vercel launch path.
+Scholr is now a live MVP. The frontend is deployed on Vercel, the backend is deployed on Render, and the core flow of Research, Notes, Doubt, SSE streaming, and dashboard history is working in production.
 
 ## Roadmap
 
 Near-term:
-- deploy backend on Render
-- deploy frontend on Vercel
-- capture screenshots and demo video
-- run first student validation sprint
+- run the first student validation sprint
+- add CI and branch protection checks
+- improve reliability and observability from real usage
+- refine launch copy, SEO, and legal polish as the public rollout expands
 
 Later:
 - auth
@@ -213,3 +226,9 @@ Never commit:
 - `node_modules`
 - `__pycache__`
 - API keys
+
+## Deployment Notes
+
+- Frontend runs on Vercel.
+- Backend runs on Render.
+- Render free web services may cold start after inactivity, so the first request can take longer during demos.

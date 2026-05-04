@@ -1,11 +1,11 @@
 # Scholr Deploy Checklist
 
-This checklist ships the clean Scholr MVP without changing product behavior.
+This checklist now documents the live Scholr MVP deployment and the safest path for future redeploys without changing product behavior.
 
-Deploy order:
-1. backend on Render
-2. frontend on Vercel
-3. production smoke test
+Deployment status:
+1. backend deployed on Render
+2. frontend deployed on Vercel
+3. production smoke test completed
 
 ## 1. Local Smoke Test
 
@@ -83,8 +83,8 @@ Notes:
 Exact steps:
 1. Open Render.
 2. Choose one path:
-   - `New +` → `Web Service` for Option A
-   - `New +` → `Blueprint` for Option B
+   - `New +` -> `Web Service` for Option A
+   - `New +` -> `Blueprint` for Option B
 3. Connect GitHub if needed.
 4. Select `tauqxxr7/scholr`.
 5. For Option A, leave Root Directory empty and paste the `cd backend && ...` commands.
@@ -155,6 +155,18 @@ NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
 
 ## 5. Production Smoke Test
 
+Live URLs:
+- Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
+- Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
+
+Completed production smoke test results:
+- Landing page works
+- Research works
+- Notes works
+- Doubt works
+- Backend `/health` works
+
+Recommended re-check after every redeploy:
 1. Open the live landing page.
 2. Open the live dashboard.
 3. Run Research with `Machine Learning for traffic prediction`.
