@@ -133,15 +133,14 @@ Frontend URL:
 
 ### Render backend
 
-Primary option:
-- Root Directory: `backend`
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-Fallback option if root-directory detection is awkward:
+Recommended manual fallback if Render root-directory detection is awkward:
 - Root Directory: leave empty
 - Build Command: `cd backend && pip install -r requirements.txt`
 - Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+Blueprint option:
+- Use the root-level [render.yaml](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/render.yaml)
+- It defines the backend with the same safe `cd backend && ...` commands
 
 Required env vars:
 

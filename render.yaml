@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: scholr-backend
+    runtime: python
+    plan: free
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        value: https://your-vercel-project.vercel.app
+      - key: ALLOWED_ORIGINS
+        value: https://your-vercel-project.vercel.app
+      - key: ALLOWED_ORIGIN_REGEX
+        value: https://.*\.vercel\.app

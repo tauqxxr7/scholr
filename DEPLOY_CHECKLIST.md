@@ -43,19 +43,22 @@ Verify:
 
 ## 2. Render Backend Deployment
 
-### Option A: Root directory set to backend
+### Option A: Manual Web Service with empty Root Directory
 
-Service settings:
-- Root Directory: `backend`
-- Environment: `Python`
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-### Option B: Fallback if root-directory detection causes confusion
+Use this when Render complains that `backend` does not exist or if root-directory detection feels unreliable.
 
 Service settings:
 - Root Directory: leave empty
 - Environment: `Python`
+- Build Command: `cd backend && pip install -r requirements.txt`
+- Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+### Option B: Render Blueprint with render.yaml
+
+This repo includes a root-level [render.yaml](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/render.yaml) that defines the backend service explicitly and uses the same `cd backend && ...` commands.
+
+Blueprint behavior:
+- Runtime: `Python`
 - Build Command: `cd backend && pip install -r requirements.txt`
 - Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
@@ -79,17 +82,18 @@ Notes:
 
 Exact steps:
 1. Open Render.
-2. Click `New +`.
-3. Choose `Web Service`.
-4. Connect GitHub if needed.
-5. Select `tauqxxr7/scholr`.
-6. Use Option A first.
+2. Choose one path:
+   - `New +` → `Web Service` for Option A
+   - `New +` → `Blueprint` for Option B
+3. Connect GitHub if needed.
+4. Select `tauqxxr7/scholr`.
+5. For Option A, leave Root Directory empty and paste the `cd backend && ...` commands.
+6. For Option B, let Render detect [render.yaml](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/render.yaml).
 7. Set environment variables.
 8. Choose the free or cheapest instance type.
 9. Create the service.
 10. Open `https://your-render-backend-url.onrender.com/health`.
 11. Confirm `/docs` and `/api/history`.
-12. If Render root-directory handling misbehaves, switch to Option B.
 
 ## 3. Vercel Frontend Deployment
 
