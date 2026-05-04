@@ -2,7 +2,7 @@
 
 ## Current Stage
 
-Scholr is in the clean MVP stage:
+Scholr is in the deployment-ready MVP stage:
 - no auth
 - one focused student workflow
 - deployment-ready monorepo
@@ -36,6 +36,7 @@ Scholr is in the clean MVP stage:
   - model/provider failure
   - timeout/network issues
   - history save failure
+- pagination-ready history endpoint with `limit` and `page`
 
 ### Data
 
@@ -52,10 +53,13 @@ Scholr is in the clean MVP stage:
 - retry states
 - copy + clear actions
 - markdown rendering that does not crash on streamed output
+- public privacy and terms pages
+- basic launch metadata, robots, and sitemap assets
 
 ### Deployment prep
 
 - Render-ready backend configuration
+- Render primary and fallback deployment options documented
 - Vercel-ready frontend configuration
 - env examples for both apps
 - repo safety and ignore rules aligned with MVP deployment
@@ -71,7 +75,7 @@ Scholr is in the clean MVP stage:
 
 1. Finish production deployment
 2. Capture screenshots and short demo walkthrough
-3. Add CI checks for lint, typecheck, and backend validation
+3. Add CI checks for lint, typecheck, backend validation, and build
 4. Reintroduce auth only after the wedge is stable in production
 5. Add per-user history and saved items later
 

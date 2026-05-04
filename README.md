@@ -26,6 +26,7 @@ The product deliberately avoids unnecessary MVP complexity:
 - Retry, empty, loading, and error states
 - Local SQLite development storage
 - PostgreSQL-ready production storage through `DATABASE_URL`
+- Public Privacy and Terms pages for MVP launch readiness
 
 ## Architecture
 
@@ -43,9 +44,11 @@ scholr/
     app/
     components/
     lib/
+    public/
   README.md
   PROJECT_PROGRESS.md
   DEPLOY_CHECKLIST.md
+  BLUEPRINT.md
 ```
 
 ### Backend
@@ -76,6 +79,28 @@ scholr/
 - Frontend deploy: Vercel
 - Backend deploy: Render
 
+## Environment Variables
+
+### Backend
+
+Create `backend/.env` from [backend/.env.example](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/backend/.env.example):
+
+```env
+GEMINI_API_KEY=your_real_key_here
+DATABASE_URL=sqlite:///./scholr.db
+FRONTEND_URL=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
+```
+
+### Frontend
+
+Create `frontend/.env.local` from [frontend/.env.example](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/frontend/.env.example):
+
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
+
 ## Local Setup
 
 ### Backend
@@ -86,16 +111,6 @@ From `backend`:
 venv\Scripts\activate
 python -m pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
-```
-
-Create `backend/.env`:
-
-```env
-GEMINI_API_KEY=your_real_key_here
-DATABASE_URL=sqlite:///./scholr.db
-FRONTEND_URL=http://localhost:3000
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
 Backend checks:
@@ -111,12 +126,6 @@ npm install
 npm run dev
 ```
 
-Create `frontend/.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-```
-
 Frontend URL:
 - `http://localhost:3000`
 
@@ -124,9 +133,15 @@ Frontend URL:
 
 ### Render backend
 
+Primary option:
 - Root Directory: `backend`
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+Fallback option if root-directory detection is awkward:
+- Root Directory: leave empty
+- Build Command: `cd backend && pip install -r requirements.txt`
+- Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 Required env vars:
 
@@ -150,20 +165,6 @@ NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
 
 Vercel env changes require a redeploy.
 
-## Environment Variables
-
-### Backend
-
-- `GEMINI_API_KEY`
-- `DATABASE_URL`
-- `FRONTEND_URL`
-- `ALLOWED_ORIGINS`
-- `ALLOWED_ORIGIN_REGEX`
-
-### Frontend
-
-- `NEXT_PUBLIC_API_URL`
-
 ## Live Demo
 
 - Frontend: `Add your Vercel URL here`
@@ -180,7 +181,7 @@ Add after deployment:
 
 ## Current Status
 
-Scholr MVP is locally stable and deployment-ready. Research, Notes, Doubt, SSE streaming, and dashboard history are implemented in one clean flow.
+Scholr MVP is locally stable and deployment-ready. Research, Notes, Doubt, SSE streaming, and dashboard history are implemented in one clean flow. The product blueprint and deployment runbooks are now aligned with a simple Render + Vercel launch path.
 
 ## Roadmap
 
@@ -188,12 +189,19 @@ Near-term:
 - deploy backend on Render
 - deploy frontend on Vercel
 - capture screenshots and demo video
+- run first student validation sprint
 
 Later:
 - auth
 - per-user history
 - exports
 - placement and project modules
+
+## Supporting Docs
+
+- [Blueprint](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/BLUEPRINT.md)
+- [Project Progress](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/PROJECT_PROGRESS.md)
+- [Deployment Checklist](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/DEPLOY_CHECKLIST.md)
 
 ## Security Notes
 

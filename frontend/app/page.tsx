@@ -37,6 +37,11 @@ export default function LandingPage() {
             <Link href="/research">
               <Button variant="outline">Try research</Button>
             </Link>
+            <Link href="/privacy">
+              <Button variant="ghost" className="text-slate-600 hover:text-slate-950">
+                Privacy
+              </Button>
+            </Link>
             <Link href="/dashboard">
               <Button className="bg-slate-950 text-white hover:bg-slate-800">Open dashboard</Button>
             </Link>
@@ -115,6 +120,23 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <footer className="border-t border-slate-200/80 py-8 text-sm text-slate-500">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              Scholr is an academic AI assistant for BTech students. Always verify outputs before
+              using them in exams, projects, or submissions.
+            </p>
+            <div className="flex items-center gap-4">
+              <Link href="/privacy" className="transition hover:text-slate-900">
+                Privacy
+              </Link>
+              <Link href="/terms" className="transition hover:text-slate-900">
+                Terms
+              </Link>
+            </div>
+          </div>
+        </footer>
       </div>
     </main>
   )

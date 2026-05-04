@@ -43,11 +43,21 @@ Verify:
 
 ## 2. Render Backend Deployment
 
+### Option A: Root directory set to backend
+
 Service settings:
 - Root Directory: `backend`
 - Environment: `Python`
 - Build Command: `pip install -r requirements.txt`
 - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+### Option B: Fallback if root-directory detection causes confusion
+
+Service settings:
+- Root Directory: leave empty
+- Environment: `Python`
+- Build Command: `cd backend && pip install -r requirements.txt`
+- Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 Required environment variables:
 
@@ -73,15 +83,13 @@ Exact steps:
 3. Choose `Web Service`.
 4. Connect GitHub if needed.
 5. Select `tauqxxr7/scholr`.
-6. Set `Root Directory` to `backend`.
-7. Set `Environment` to `Python`.
-8. Set `Build Command` to `pip install -r requirements.txt`.
-9. Set `Start Command` to `uvicorn main:app --host 0.0.0.0 --port $PORT`.
-10. Add the required environment variables.
-11. Choose the free or cheapest instance type.
-12. Create the service.
-13. Open `https://your-render-backend-url.onrender.com/health`.
-14. Confirm `/docs` and `/api/history`.
+6. Use Option A first.
+7. Set environment variables.
+8. Choose the free or cheapest instance type.
+9. Create the service.
+10. Open `https://your-render-backend-url.onrender.com/health`.
+11. Confirm `/docs` and `/api/history`.
+12. If Render root-directory handling misbehaves, switch to Option B.
 
 ## 3. Vercel Frontend Deployment
 

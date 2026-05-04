@@ -14,8 +14,17 @@ router = APIRouter()
 def get_history(
     module: Optional[str] = None,
     limit: int = 12,
+    page: int = 1,
     db: Session = Depends(get_db),
 ):
+    safe_limit = max(1, min(limit, 50))
+    safe_page = max(page, 1)
+
     if module:
-        return crud.get_searches_by_module(db, module=module, limit=limit)
-    return crud.get_recent_searches(db, limit=limit)
+        return crud.get_searches_by_module(
+            db,
+            module=module,
+            limit=safe_limit,
+            page=safe_page,
+        )
+    return crud.get_recent_searches(db, limit=safe_limit, page=safe_page)

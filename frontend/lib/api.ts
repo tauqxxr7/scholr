@@ -174,8 +174,8 @@ export async function streamModuleResponse(
   return { hadChunks, emptyMessage: emptyMessage || undefined }
 }
 
-export async function getHistory(limit = 6): Promise<HistoryItem[]> {
-  const response = await fetch(`${getApiUrl()}/api/history?limit=${limit}`, {
+export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
+  const response = await fetch(`${getApiUrl()}/api/history?limit=${limit}&page=${page}`, {
     cache: 'no-store',
   })
 
