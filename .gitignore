@@ -12,3 +12,5 @@ __pycache__
 frontend/.env.local
 backend/.env
 backend/scholr.db
+
+backend/.env
