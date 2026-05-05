@@ -92,11 +92,10 @@ Students will return if Scholr consistently saves time on high-friction academic
 - Research, Notes, and Doubt are working with shared SSE streaming
 - History works locally with SQLite and is production-ready for PostgreSQL through `DATABASE_URL`
 - Frontend is polished enough for demo, recruiter review, and deployment
-- Render + Vercel deployment path is documented
+- Frontend is live on Vercel and backend health is live on Render
+- Production smoke test has passed for landing, research, notes, doubt, and `/health`
 
 ## Pending Work
-- Deploy backend on Render
-- Deploy frontend on Vercel
-- Replace placeholder live demo URLs and screenshots
+- Add demo GIF or short walkthrough to the repo
 - Gather first real student usage feedback
 - Add CI and protected-branch status checks

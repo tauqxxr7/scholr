@@ -1,20 +1,70 @@
 # Scholr
 
-Scholr is an AI academic platform for BTech students. The MVP focuses on one clean promise: turn any engineering topic into research guidance, exam-ready notes, and step-by-step doubt solving in under a minute.
+AI academic workspace for BTech students that turns one prompt into research direction, revision notes, and doubt solving in under a minute.
 
-## Product Overview
+[Live App](https://scholr-coral.vercel.app) · [Backend Health](https://scholr-k9sj.onrender.com/health)
 
-Scholr is designed around the real workflow of engineering students:
-- figure out what to study
-- turn a topic into useful notes
-- unblock confusing concepts quickly
-- keep a history of what was generated
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4)
+![Vercel](https://img.shields.io/badge/Vercel-Live-black?logo=vercel)
+![Render](https://img.shields.io/badge/Render-Live-5A67D8)
 
-The product deliberately avoids unnecessary MVP complexity:
-- no auth
-- no Clerk
-- no extra modules yet
-- one stable flow first
+## What Scholr Is
+
+Scholr is a focused AI academic product for engineering students, especially Indian BTech students, who need to move faster through research, revision, and concept clarification without bouncing between scattered tools.
+
+It solves a simple but painful workflow:
+- finding a useful starting point for research takes too long
+- turning a topic into usable exam notes is repetitive
+- doubt solving is often either too generic or too slow
+
+Scholr packages those jobs into one clean MVP instead of trying to be a giant education platform too early.
+
+## Demo Preview
+
+> Demo GIF is still pending from this environment. The screenshot flow below is the current live preview.
+
+![Scholr landing preview](screenshots/landing.png)
+
+## Core Modules
+
+- **Research**: generates paper direction, reading order, and realistic project gaps.
+- **Notes**: turns a topic into revision-ready structured notes for exam prep.
+- **Doubt**: explains concepts step by step with examples and simple language.
+
+## Screenshots
+
+### Landing Page
+![Landing page](screenshots/landing.png)
+
+### Research Workspace
+![Research workspace](screenshots/research-workspace.png)
+
+### Research Output
+![Research output](screenshots/research-output.png)
+
+### Notes Output
+![Notes output](screenshots/notes-output.png)
+
+### Doubt Output
+![Doubt output](screenshots/doubt-output.png)
+
+## Live MVP Status
+
+Live MVP deployed on Vercel + Render.
+
+Production smoke test has passed:
+- landing works
+- research works
+- notes works
+- doubt works
+- backend `/health` works
+
+Render note:
+- the backend runs on Render free tier, so the first request after inactivity may cold start and take longer
 
 ## Features
 
@@ -22,11 +72,20 @@ The product deliberately avoids unnecessary MVP complexity:
 - Notes Generator
 - Doubt Solver
 - Dashboard with recent history
-- SSE streaming responses
-- Retry, empty, loading, and error states
-- Local SQLite development storage
-- PostgreSQL-ready production storage through `DATABASE_URL`
-- Public Privacy and Terms pages for MVP launch readiness
+- Shared SSE streaming responses
+- Retry, loading, empty, and error states
+- SQLite locally
+- PostgreSQL-ready through `DATABASE_URL`
+- Public privacy and terms pages
+
+## Tech Stack
+
+- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
+- Backend: FastAPI, Python, SQLAlchemy
+- AI: Gemini `gemini-2.5-flash`
+- Local DB: SQLite
+- Production DB: PostgreSQL through `DATABASE_URL`
+- Hosting: Vercel + Render
 
 ## Architecture
 
@@ -45,45 +104,43 @@ scholr/
     components/
     lib/
     public/
+  screenshots/
   README.md
   PROJECT_PROGRESS.md
   DEPLOY_CHECKLIST.md
   BLUEPRINT.md
+  render.yaml
 ```
 
 ### Backend
 
-- FastAPI
-- Gemini API
-- shared generation helper
-- shared SSE helper
-- SQLite locally
-- PostgreSQL in production
+- FastAPI app with shared Gemini generation helper
+- shared SSE response helper
+- `GET /health`
+- `POST /api/research`
+- `POST /api/notes`
+- `POST /api/doubt`
+- `GET /api/history`
 
 ### Frontend
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- shared module UI
+- shared AI module page for Research, Notes, and Doubt
 - shared API client
-- markdown rendering for streamed AI output
+- responsive dashboard shell
+- markdown-safe output rendering
 
-## Tech Stack
-
-- Frontend: Next.js, React, TypeScript, Tailwind CSS
-- Backend: FastAPI, Python, SQLAlchemy
-- AI: Gemini `gemini-2.5-flash`
-- Local DB: SQLite
-- Production DB: PostgreSQL through `DATABASE_URL`
-- Frontend deploy: Vercel
-- Backend deploy: Render
-
-## Environment Variables
+## Run Locally
 
 ### Backend
 
-Create `backend/.env` from [backend/.env.example](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/backend/.env.example):
+```powershell
+cd backend
+venv\Scripts\activate
+python -m pip install -r requirements.txt
+python -m uvicorn main:app --reload --port 8000
+```
+
+Create `backend/.env` from `backend/.env.example`:
 
 ```env
 GEMINI_API_KEY=your_real_key_here
@@ -95,128 +152,77 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 
 ### Frontend
 
-Create `frontend/.env.local` from [frontend/.env.example](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/frontend/.env.example):
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Create `frontend/.env.local` from `frontend/.env.example`:
 
 ```env
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
 
-## Local Setup
-
-### Backend
-
-From `backend`:
-
-```powershell
-venv\Scripts\activate
-python -m pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
-```
-
-Backend checks:
-- `http://127.0.0.1:8000/health`
-- `http://127.0.0.1:8000/docs`
+## Deployment
 
 ### Frontend
 
-From `frontend`:
+- Platform: Vercel
+- Root Directory: `frontend`
+- Required env var:
 
-```powershell
-npm install
-npm run dev
+```env
+NEXT_PUBLIC_API_URL=https://scholr-k9sj.onrender.com
 ```
 
-Frontend URL:
-- `http://localhost:3000`
+### Backend
 
-## Deployment Setup
-
-### Render backend
-
-Recommended manual fallback if Render root-directory detection is awkward:
+- Platform: Render
 - Root Directory: leave empty
 - Build Command: `cd backend && pip install -r requirements.txt`
 - Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 - `PYTHON_VERSION=3.12.4`
-
-Blueprint option:
-- Use the root-level [render.yaml](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/render.yaml)
-- It defines the backend with the same safe `cd backend && ...` commands
 
 Required env vars:
 
 ```env
 GEMINI_API_KEY=your_real_key_here
 DATABASE_URL=your_postgres_connection_string
-FRONTEND_URL=https://your-vercel-project.vercel.app
-ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
+FRONTEND_URL=https://scholr-coral.vercel.app
+ALLOWED_ORIGINS=https://scholr-coral.vercel.app
 ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
-### Vercel frontend
-
-- Root Directory: `frontend`
-
-Required env var:
-
-```env
-NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
-```
-
-Vercel env changes require a redeploy.
-
-## Live Demo
-
-- Frontend: [scholr-coral.vercel.app](https://scholr-coral.vercel.app)
-- Backend health: [scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
-
-## Screenshots
-
-### Landing Page
-
-![Landing page](frontend/public/screenshots/landing-page.png)
-
-### Research Workspace
-
-![Research workspace](frontend/public/screenshots/research-workspace.png)
-
-### Research Output
-
-![Research output](frontend/public/screenshots/research-output.png)
-
-### Notes Output
-
-![Notes output](frontend/public/screenshots/notes-output.png)
-
-### Doubt Output
-
-![Doubt output](frontend/public/screenshots/doubt-output.png)
-
-## Current Status
-
-Live MVP deployed on Vercel + Render.
-
-The core flow of Research, Notes, Doubt, SSE streaming, and dashboard history is working in production.
+Alternative:
+- a root-level `render.yaml` is also included for Blueprint-based deployment
 
 ## Roadmap
 
-Near-term:
-- run the first student validation sprint
-- add CI and branch protection checks
-- improve reliability and observability from real usage
-- refine launch copy, SEO, and legal polish as the public rollout expands
+### Next
 
-Later:
+1. User validation with 10 BTech students
+2. Light analytics and usage instrumentation
+3. CI checks for lint, typecheck, backend validation, and build
+
+### Later
+
 - auth
-- per-user history
+- per-user history and saved items
+- stronger production persistence with PostgreSQL
 - exports
-- placement and project modules
+- placements and project workflows
+
+## Suggested GitHub Topics
+
+`ai`, `genai`, `nextjs`, `fastapi`, `gemini-api`, `typescript`, `python`, `tailwindcss`, `student-productivity`, `btech`
 
 ## Supporting Docs
 
-- [Blueprint](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/BLUEPRINT.md)
-- [Project Progress](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/PROJECT_PROGRESS.md)
-- [Deployment Checklist](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/DEPLOY_CHECKLIST.md)
+- [Blueprint](BLUEPRINT.md)
+- [Project Progress](PROJECT_PROGRESS.md)
+- [Deployment Checklist](DEPLOY_CHECKLIST.md)
+- [Screenshots Notes](screenshots/README.md)
 
 ## Security Notes
 
@@ -229,9 +235,3 @@ Never commit:
 - `node_modules`
 - `__pycache__`
 - API keys
-
-## Deployment Notes
-
-- Frontend runs on Vercel.
-- Backend runs on Render.
-- Render free web services may cold start after inactivity, so the first request can take longer during demos.

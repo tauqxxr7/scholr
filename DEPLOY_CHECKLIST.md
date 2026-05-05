@@ -96,6 +96,9 @@ Exact steps:
 10. Open `https://your-render-backend-url.onrender.com/health`.
 11. Confirm `/docs` and `/api/history`.
 
+Working deployed backend:
+- [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
+
 ## 3. Vercel Frontend Deployment
 
 Project settings:

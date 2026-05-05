@@ -73,6 +73,7 @@ Scholr is in the live MVP stage:
 
 - add demo video or short walkthrough
 - verify long-term production history persistence with PostgreSQL
+- capture or generate a short demo GIF for the repo hero section
 
 ## Next Milestones
 
