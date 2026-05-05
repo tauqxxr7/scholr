@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://scholr-demo.vercel.app'),
+  metadataBase: new URL('https://scholr-coral.vercel.app'),
   title: {
     default: 'Scholr | AI Academic Platform for BTech Students',
     template: '%s | Scholr',
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: 'Scholr | AI Academic Platform for BTech Students',
     description:
       'Research faster, generate revision notes, and solve doubts in one focused academic workspace.',
-    url: 'https://scholr-demo.vercel.app',
+    url: 'https://scholr-coral.vercel.app',
     siteName: 'Scholr',
     type: 'website',
   },

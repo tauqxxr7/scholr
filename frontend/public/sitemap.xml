@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://scholr-demo.vercel.app/</loc>
+    <loc>https://scholr-coral.vercel.app/</loc>
   </url>
   <url>
-    <loc>https://scholr-demo.vercel.app/dashboard</loc>
+    <loc>https://scholr-coral.vercel.app/dashboard</loc>
   </url>
   <url>
-    <loc>https://scholr-demo.vercel.app/research</loc>
+    <loc>https://scholr-coral.vercel.app/research</loc>
   </url>
   <url>
-    <loc>https://scholr-demo.vercel.app/notes</loc>
+    <loc>https://scholr-coral.vercel.app/notes</loc>
   </url>
   <url>
-    <loc>https://scholr-demo.vercel.app/doubt</loc>
+    <loc>https://scholr-coral.vercel.app/doubt</loc>
   </url>
   <url>
-    <loc>https://scholr-demo.vercel.app/privacy</loc>
+    <loc>https://scholr-coral.vercel.app/privacy</loc>
   </url>
   <url>
-    <loc>https://scholr-demo.vercel.app/terms</loc>
+    <loc>https://scholr-coral.vercel.app/terms</loc>
   </url>
 </urlset>

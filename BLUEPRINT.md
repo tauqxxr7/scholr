@@ -99,3 +99,29 @@ Students will return if Scholr consistently saves time on high-friction academic
 - Add demo GIF or short walkthrough to the repo
 - Gather first real student usage feedback
 - Add CI and protected-branch status checks
+
+## Roadmap Additions
+
+### Auth & security
+- Google OAuth login
+- user-specific history
+- email verification
+- protected dashboard
+- role-based access later
+- rate limiting and abuse protection
+
+### API and data
+- keep history pagination simple with `page` and `limit`
+- move production persistence to PostgreSQL as usage justifies it
+
+### Logging and observability
+- centralized logging later with Sentry, Grafana, or Azure Monitor
+- stronger uptime and latency tracking after the first usage wave
+
+### Analytics
+- start lightweight with Vercel Analytics or PostHog later
+- avoid invasive tracking or cookies unless truly needed
+
+### SEO and legal
+- grow sitemap/search-console coverage as distribution needs increase
+- evolve privacy and terms as the product moves beyond MVP

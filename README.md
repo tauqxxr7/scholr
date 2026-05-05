@@ -2,38 +2,37 @@
 
 AI academic workspace for BTech students that turns one prompt into research direction, revision notes, and doubt solving in under a minute.
 
-[Live App](https://scholr-coral.vercel.app) · [Backend Health](https://scholr-k9sj.onrender.com/health)
-
+[![Live App](https://img.shields.io/badge/Live_App-Vercel-black?logo=vercel)](https://scholr-coral.vercel.app)
+[![Backend Health](https://img.shields.io/badge/Backend-Render-5A67D8?logo=render&logoColor=white)](https://scholr-k9sj.onrender.com/health)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4)
-![Vercel](https://img.shields.io/badge/Vercel-Live-black?logo=vercel)
-![Render](https://img.shields.io/badge/Render-Live-5A67D8)
-
-## What Scholr Is
-
-Scholr is a focused AI academic product for engineering students, especially Indian BTech students, who need to move faster through research, revision, and concept clarification without bouncing between scattered tools.
-
-It solves a simple but painful workflow:
-- finding a useful starting point for research takes too long
-- turning a topic into usable exam notes is repetitive
-- doubt solving is often either too generic or too slow
-
-Scholr packages those jobs into one clean MVP instead of trying to be a giant education platform too early.
-
-## Demo Preview
-
-> Demo GIF is still pending from this environment. The screenshot flow below is the current live preview.
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Live MVP](https://img.shields.io/badge/Status-Live_MVP-16A34A)
 
 ![Scholr landing preview](screenshots/landing.png)
 
-## Core Modules
+## One-Glance Overview
 
-- **Research**: generates paper direction, reading order, and realistic project gaps.
-- **Notes**: turns a topic into revision-ready structured notes for exam prep.
-- **Doubt**: explains concepts step by step with examples and simple language.
+**What it is:** Scholr is a live AI academic product for engineering students.  
+**Who it is for:** BTech students who need research help, revision notes, and doubt solving without switching across scattered tools.  
+**Why it matters:** Generic AI tools answer questions, but they do not package academic help in a fast, exam-friendly, research-aware workflow.
+
+### Core modules
+
+- **Research**: papers, reading order, and project-worthy gaps
+- **Notes**: revision-ready notes structured for exam prep
+- **Doubt**: step-by-step explanations with examples and simple language
+
+## Demo Preview
+
+`screenshots/scholr-demo.gif` is still pending from this environment, so the repo uses the screenshot walkthrough below for now.
+
+Live product:
+- Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
+- Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 
 ## Screenshots
 
@@ -52,11 +51,11 @@ Scholr packages those jobs into one clean MVP instead of trying to be a giant ed
 ### Doubt Output
 ![Doubt output](screenshots/doubt-output.png)
 
-## Live MVP Status
+## Production Status
 
-Live MVP deployed on Vercel + Render.
+**Live MVP deployed on Vercel + Render.**
 
-Production smoke test has passed:
+Production smoke test passed:
 - landing works
 - research works
 - notes works
@@ -64,7 +63,16 @@ Production smoke test has passed:
 - backend `/health` works
 
 Render note:
-- the backend runs on Render free tier, so the first request after inactivity may cold start and take longer
+- the backend runs on the Render free tier, so the first request after inactivity may cold start and take longer
+
+## Problem Scholr Solves
+
+BTech students regularly face three repeated problems:
+- research discovery is slow and fragmented
+- turning a topic into useful notes is repetitive
+- doubt solving is often generic, unstructured, or buried in long videos and forums
+
+Scholr compresses those tasks into one focused product loop instead of trying to become a massive education platform too early.
 
 ## Features
 
@@ -195,7 +203,7 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
 Alternative:
-- a root-level `render.yaml` is also included for Blueprint-based deployment
+- a root-level `render.yaml` is included for Blueprint-based deployment
 
 ## Roadmap
 
@@ -205,13 +213,39 @@ Alternative:
 2. Light analytics and usage instrumentation
 3. CI checks for lint, typecheck, backend validation, and build
 
+### Future Auth & Security
+
+- Google OAuth login
+- user-specific history
+- email verification
+- password reset only if password auth is added
+- rate limiting
+- protected dashboard
+- role-based access later
+
 ### Later
 
-- auth
-- per-user history and saved items
 - stronger production persistence with PostgreSQL
 - exports
 - placements and project workflows
+
+## Built by Tauqeer Bharde
+
+Tauqeer Bharde is a **BTech AI & Data Science student** building practical AI products around academic workflows, decision support, and developer systems learning.
+
+Links:
+- GitHub: [tauqxxr7](https://github.com/tauqxxr7)
+- LinkedIn: [Tauqeer Bharde](https://www.linkedin.com/in/tauqeer-sameer-85b868235)
+- Email: [tauqeerplayer@gmail.com](mailto:tauqeerplayer@gmail.com)
+
+Project ecosystem:
+- **Scholr**: flagship academic AI platform for research, notes, and doubt solving
+- **AI Career Copilot**: career guidance and planning assistant
+- **QueuePulse**: systems/backend learning project
+- **CrisisMind Lite**: safety and impact-focused AI concept
+- **CKD Hyperparameter Optimization Study**: ML experimentation and research work
+- **Mini Search Engine**: information retrieval and search fundamentals
+- **AI Mock Interview Coach**, **PolicyPilot Agent**, and **Customer Churn Prediction System** as adjacent AI/product exploration work
 
 ## Suggested GitHub Topics
 

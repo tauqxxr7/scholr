@@ -230,3 +230,10 @@ Symptom:
 Fix:
 - wait for Render to wake the service
 - mention this during demos
+
+## 7. Future Ops Roadmap
+
+- Add centralized logging later with Sentry, Grafana, or Azure Monitor
+- Keep client-side error messages user-friendly and non-sensitive
+- Expand pagination only when history usage grows
+- Add privacy, SEO, and analytics depth later without disturbing the MVP

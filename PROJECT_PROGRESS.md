@@ -84,6 +84,44 @@ Scholr is in the live MVP stage:
 5. Move production history to PostgreSQL if usage justifies it
 6. Expand SEO and legal polish only when the public launch needs become sharper
 
+## Roadmap Extensions
+
+### Auth & security roadmap
+
+- Google OAuth login
+- user-specific history
+- protected dashboard
+- email verification
+- password reset only if password auth is introduced
+- rate limiting and abuse protection
+
+### API pagination roadmap
+
+- keep `limit` and `page` support simple and stable
+- add richer filtering only if real usage demands it
+
+### Logging and observability roadmap
+
+- centralized error logging later with Sentry, Grafana, or Azure Monitor
+- no sensitive provider errors exposed in the client console
+- request tracing and latency monitoring after usage grows
+
+### Analytics roadmap
+
+- start with Vercel Analytics or PostHog later
+- keep analytics lightweight and privacy-aware
+
+### SEO roadmap
+
+- Google Search Console
+- richer Open Graph previews
+- content pages only if distribution needs increase
+
+### Legal and compliance roadmap
+
+- iterate privacy and terms as the public rollout expands
+- add stronger data-handling language if user accounts are introduced
+
 ## Deployment Status
 
 - Local development flow: ready
