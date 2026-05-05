@@ -88,6 +88,7 @@ Scholr is in the live MVP stage:
 - Local development flow: ready
 - Backend deployed on Render
 - Frontend deployed on Vercel
+- Final production smoke test: passed
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 

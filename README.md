@@ -137,6 +137,7 @@ Recommended manual fallback if Render root-directory detection is awkward:
 - Root Directory: leave empty
 - Build Command: `cd backend && pip install -r requirements.txt`
 - Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
+- `PYTHON_VERSION=3.12.4`
 
 Blueprint option:
 - Use the root-level [render.yaml](/C:/Users/TAUQEER%20BHARDE/.codex/worktrees/944e/scholr/render.yaml)
@@ -193,7 +194,9 @@ Vercel env changes require a redeploy.
 
 ## Current Status
 
-Scholr is now a live MVP. The frontend is deployed on Vercel, the backend is deployed on Render, and the core flow of Research, Notes, Doubt, SSE streaming, and dashboard history is working in production.
+Live MVP deployed on Vercel + Render.
+
+The core flow of Research, Notes, Doubt, SSE streaming, and dashboard history is working in production.
 
 ## Roadmap
 
