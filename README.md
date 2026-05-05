@@ -74,6 +74,16 @@ BTech students regularly face three repeated problems:
 
 Scholr compresses those tasks into one focused product loop instead of trying to become a massive education platform too early.
 
+## Why Scholr Is Not Just ChatGPT
+
+Scholr is intentionally narrower and more product-shaped than a generic chatbot:
+
+- **Structured academic workflows** instead of one blank chat box
+- **Exam-ready notes** instead of free-form summaries
+- **Research direction** with reading order and gap framing
+- **Saved history** so outputs stay useful after one session
+- **BTech-focused prompting** designed around engineering coursework, viva prep, and final-year idea exploration
+
 ## Features
 
 - Research Assistant
@@ -85,6 +95,19 @@ Scholr compresses those tasks into one focused product loop instead of trying to
 - SQLite locally
 - PostgreSQL-ready through `DATABASE_URL`
 - Public privacy and terms pages
+
+## Current Product Depth
+
+Scholr already goes beyond a thin AI wrapper in a few important ways:
+
+- **SSE streaming** so answers arrive progressively instead of waiting for one large blob
+- **JSON-safe AI chunks** so streamed responses are easier to parse and render reliably
+- **Structured prompts** for Research, Notes, and Doubt instead of one generic prompt
+- **Dashboard history** for recent academic output review
+- **Render + Vercel deployment** with documented production environment handling
+- **Error states** for backend issues, empty responses, and retry scenarios
+- **Copy / clear / retry UI** that makes the modules usable like product surfaces, not demos
+- **Production env handling** that keeps localhost fallback in development and requires a real API URL in production
 
 ## Tech Stack
 
@@ -211,7 +234,8 @@ Alternative:
 
 1. User validation with 10 BTech students
 2. Light analytics and usage instrumentation
-3. CI checks for lint, typecheck, backend validation, and build
+3. Demo video plus a polished `screenshots/scholr-demo.gif`
+4. CI checks for lint, typecheck, backend validation, and build
 
 ### Future Auth & Security
 
@@ -225,6 +249,9 @@ Alternative:
 
 ### Later
 
+- caching repeated prompts where it clearly improves latency
+- structured backend logs and request IDs
+- stronger rate limiting
 - stronger production persistence with PostgreSQL
 - exports
 - placements and project workflows

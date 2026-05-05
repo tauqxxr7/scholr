@@ -79,10 +79,11 @@ Scholr is in the live MVP stage:
 
 1. Run user validation with 10 BTech students
 2. Add light analytics and usage instrumentation
-3. Add CI checks for lint, typecheck, backend validation, and build
-4. Reintroduce auth later, only after the wedge proves retention
-5. Move production history to PostgreSQL if usage justifies it
-6. Expand SEO and legal polish only when the public launch needs become sharper
+3. Add demo video and a polished repo GIF or walkthrough asset
+4. Add CI checks for lint, typecheck, backend validation, and build
+5. Reintroduce auth later, only after the wedge proves retention
+6. Move production history to PostgreSQL if usage justifies it
+7. Expand SEO and legal polish only when the public launch needs become sharper
 
 ## Roadmap Extensions
 
@@ -105,6 +106,14 @@ Scholr is in the live MVP stage:
 - centralized error logging later with Sentry, Grafana, or Azure Monitor
 - no sensitive provider errors exposed in the client console
 - request tracing and latency monitoring after usage grows
+
+### Near-term engineering roadmap
+
+- caching repeated prompts where it clearly improves latency
+- request IDs for easier debugging across backend flows
+- stronger backend log structure for operational visibility
+- rate limiting once public usage starts increasing
+- keep sanitized error handling as a non-negotiable default
 
 ### Analytics roadmap
 

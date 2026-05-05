@@ -99,6 +99,7 @@ Students will return if Scholr consistently saves time on high-friction academic
 - Add demo GIF or short walkthrough to the repo
 - Gather first real student usage feedback
 - Add CI and protected-branch status checks
+- Add lightweight product analytics after the first student validation sprint
 
 ## Roadmap Additions
 
@@ -113,10 +114,12 @@ Students will return if Scholr consistently saves time on high-friction academic
 ### API and data
 - keep history pagination simple with `page` and `limit`
 - move production persistence to PostgreSQL as usage justifies it
+- explore prompt-response caching only if repeated usage patterns justify it
 
 ### Logging and observability
 - centralized logging later with Sentry, Grafana, or Azure Monitor
 - stronger uptime and latency tracking after the first usage wave
+- add request IDs for cleaner debugging across API and deployment logs
 
 ### Analytics
 - start lightweight with Vercel Analytics or PostHog later
