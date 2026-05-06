@@ -251,9 +251,9 @@ Alternative:
 ### Next
 
 1. User validation with 10 BTech students
-2. Light analytics and usage instrumentation
-3. Demo video plus a polished `screenshots/scholr-demo.gif`
-4. CI checks for lint, typecheck, backend validation, and build
+2. Demo video plus a polished `screenshots/scholr-demo.gif`
+3. CI checks for lint, typecheck, backend validation, and build
+4. Review early product signal from real student usage
 
 ### Future Auth & Security
 
@@ -272,6 +272,19 @@ Alternative:
 - referral loop if user validation shows organic interest
 - stronger production persistence with PostgreSQL
 - placements and project workflows
+
+## Azure Future Scaling
+
+Tauqeer has Azure for Startups access with `$1,000` in credits, but the current MVP stays on **Render + Vercel** until user validation proves real demand.
+
+If Scholr earns that signal, the most natural Azure path is:
+
+- Azure App Service or Azure Container Apps for the backend
+- Azure Database for PostgreSQL for durable production history
+- Azure AI Search for semantic history, retrieval, and future RAG workflows
+- Azure Blob Storage for exports and uploaded files
+- Azure Monitor / Application Insights for observability
+- Azure OpenAI / Azure AI Foundry as a future managed model layer
 
 ## Built by Tauqeer Bharde
 

@@ -83,12 +83,14 @@ Students will return if Scholr consistently saves time on high-friction academic
 - Prefer explicit environment gating so analytics never block local or production app startup
 
 ## Azure Future Scaling Plan
-- Azure OpenAI or Azure AI Studio for enterprise-friendly model routing and governance
-- Azure Functions for async and scheduled background workloads
-- Azure Cosmos DB for globally distributed user and history storage
+Tauqeer has Azure for Startups access with `$1,000` in credits, but the current MVP should stay on Render + Vercel until user validation proves stronger demand.
+
+- Azure App Service or Azure Container Apps for backend hosting
+- Azure Database for PostgreSQL for durable history and user data
 - Azure AI Search for syllabus, notes, and retrieval workflows
 - Azure Blob Storage for uploaded resources and generated exports
-- Azure API Management for rate limiting, partner access, and observability
+- Azure Monitor / Application Insights for observability
+- Azure OpenAI / Azure AI Foundry for enterprise-friendly model routing and governance
 
 ## Current Status
 - Research, Notes, and Doubt are working with shared SSE streaming
@@ -96,6 +98,9 @@ Students will return if Scholr consistently saves time on high-friction academic
 - Frontend is polished enough for demo, recruiter review, and deployment
 - Frontend is live on Vercel and backend health is live on Render
 - Production smoke test has passed for landing, research, notes, doubt, and `/health`
+- Current live URLs:
+  - Frontend: https://scholr-coral.vercel.app
+  - Backend health: https://scholr-k9sj.onrender.com/health
 
 ## Pending Work
 - Add demo GIF or short walkthrough to the repo

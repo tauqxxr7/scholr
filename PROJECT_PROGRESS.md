@@ -149,18 +149,26 @@ Scholr is in the live MVP stage:
 - Backend deployed on Render
 - Frontend deployed on Vercel
 - Final production smoke test: passed
+- Smoke test details:
+  - landing works
+  - research works
+  - notes works
+  - doubt works
+  - backend `/health` works
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 
 ## Azure Future Scaling Idea
 
+Tauqeer has Azure for Startups access with `$1,000` in credits, but Scholr should stay on Render + Vercel until user validation proves stronger demand.
+
 If Scholr grows beyond the MVP wedge, the most natural Azure path is:
 
-- Azure OpenAI / Azure AI Foundry for enterprise-grade model routing
-- Azure Functions for event-driven background jobs or async processing
-- Azure Cosmos DB for globally distributed app data and user history
+- Azure App Service or Azure Container Apps for backend hosting
+- Azure Database for PostgreSQL for durable production history
 - Azure AI Search for semantic retrieval across notes, research, and academic content
 - Azure Blob Storage for exported files, uploaded documents, and large assets
-- Azure API Management for auth, quotas, observability, and partner integrations
+- Azure Monitor / Application Insights for observability
+- Azure OpenAI / Azure AI Foundry for enterprise-grade model routing
 
 That path is intentionally future-facing. It is not needed for the MVP.

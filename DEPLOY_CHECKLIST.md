@@ -237,3 +237,15 @@ Fix:
 - Keep client-side error messages user-friendly and non-sensitive
 - Expand pagination only when history usage grows
 - Add privacy, SEO, and analytics depth later without disturbing the MVP
+
+## 8. Azure Future Infra Opportunity
+
+Tauqeer has Azure for Startups access with `$1,000` in credits, but the current MVP should remain on Render + Vercel until the 10-user validation milestone shows real demand.
+
+If that signal is strong, the next infra path to evaluate is:
+- Azure App Service or Azure Container Apps for backend hosting
+- Azure Database for PostgreSQL for durable production data
+- Azure AI Search for semantic history and future RAG workflows
+- Azure Blob Storage for exports and uploaded files
+- Azure Monitor / Application Insights for observability
+- Azure OpenAI / Azure AI Foundry as a future model layer
