@@ -71,7 +71,7 @@ def build_sse_response(
                 source=source,
                 duration_ms=round((perf_counter() - started_at) * 1000),
                 success=False,
-                error_category="provider",
+                error_category=exc.category,
                 retryable=exc.retryable,
             )
             yield _sse_event(
@@ -79,6 +79,7 @@ def build_sse_response(
                     "type": "error",
                     "message": exc.user_message,
                     "retryable": exc.retryable,
+                    "category": exc.category,
                 }
             )
         except Exception:
@@ -98,6 +99,7 @@ def build_sse_response(
                     "type": "error",
                     "message": "Scholr hit an unexpected issue while generating this answer. Please try again.",
                     "retryable": True,
+                    "category": "unexpected",
                 }
             )
         else:

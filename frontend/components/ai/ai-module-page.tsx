@@ -116,9 +116,7 @@ export default function AiModulePage({
 
       const errorCategory =
         submissionError instanceof StreamModuleError
-          ? submissionError.retryable
-            ? 'recoverable'
-            : 'configuration'
+          ? submissionError.category
           : 'unexpected'
 
       trackEvent('generation_failed', {

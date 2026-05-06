@@ -12,10 +12,11 @@ DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
 
 
 class ScholrGenerationError(Exception):
-    def __init__(self, user_message: str, *, retryable: bool = True):
+    def __init__(self, user_message: str, *, retryable: bool = True, category: str = "provider"):
         super().__init__(user_message)
         self.user_message = user_message
         self.retryable = retryable
+        self.category = category
 
 
 def _get_api_key() -> str:
@@ -25,6 +26,7 @@ def _get_api_key() -> str:
         raise ScholrGenerationError(
             "Scholr is not configured with a Gemini API key yet. Add a valid key in backend/.env and restart the backend.",
             retryable=False,
+            category="configuration",
         )
 
     return api_key
@@ -42,35 +44,57 @@ def _classify_provider_error(exc: Exception) -> ScholrGenerationError:
         return ScholrGenerationError(
             "Scholr took too long to get a response from Gemini. Please try again in a moment.",
             retryable=True,
+            category="timeout",
         )
 
     if "api key" in message or "permission" in message or "unauth" in message or "invalid argument" in message:
         return ScholrGenerationError(
             "The Gemini API key looks missing, invalid, or does not have access to this model. Update backend/.env and restart the backend.",
             retryable=False,
+            category="configuration",
         )
 
     if "quota" in message or "rate limit" in message or "resource exhausted" in message:
         return ScholrGenerationError(
             "Gemini is temporarily rate limited or out of quota for this project. Please wait a bit and try again.",
             retryable=True,
+            category="rate_limited",
         )
 
     if "model" in message and ("not found" in message or "supported" in message or "deprecated" in message):
         return ScholrGenerationError(
             "This Gemini model is unavailable for the current project. Switch to an active model and restart the backend.",
             retryable=False,
+            category="configuration",
         )
 
     if "deadline" in message or "timed out" in message or "timeout" in message:
         return ScholrGenerationError(
             "Gemini did not respond in time. Please retry once the connection is stable.",
             retryable=True,
+            category="timeout",
+        )
+
+    if (
+        "service unavailable" in message
+        or "temporarily unavailable" in message
+        or "internal" in message
+        or "bad gateway" in message
+        or "unavailable" in message
+        or "connection reset" in message
+        or "connection aborted" in message
+        or "remote protocol" in message
+    ):
+        return ScholrGenerationError(
+            "AI provider error. Please retry.",
+            retryable=True,
+            category="provider_unavailable",
         )
 
     return ScholrGenerationError(
-        "Scholr could not generate a response right now. Please try again.",
+        "AI provider error. Please retry.",
         retryable=True,
+        category="provider_unavailable",
     )
 
 
@@ -126,4 +150,5 @@ async def stream_gemini_response(
         raise ScholrGenerationError(
             "Scholr did not receive any usable text from Gemini for this prompt. Please try rephrasing it.",
             retryable=True,
+            category="empty_provider_response",
         )
