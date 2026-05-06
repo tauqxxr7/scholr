@@ -1,0 +1,72 @@
+type ScholrEventName =
+  | 'module_opened'
+  | 'generation_started'
+  | 'generation_completed'
+  | 'generation_failed'
+  | 'copy_clicked'
+  | 'clear_clicked'
+  | 'retry_clicked'
+
+type ScholrEventPayload = {
+  module?: string
+  success?: boolean
+  response_length?: number
+  duration_ms?: number
+  error_category?: string
+  entrypoint?: string
+  timestamp?: string
+}
+
+const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim() || ''
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || ''
+
+let posthogInstancePromise: Promise<{ capture: (event: string, payload: ScholrEventPayload) => void } | null> | null =
+  null
+
+function isAnalyticsEnabled() {
+  return typeof window !== 'undefined' && Boolean(posthogKey && posthogHost)
+}
+
+async function getPostHog() {
+  if (!isAnalyticsEnabled()) {
+    return null
+  }
+
+  if (!posthogInstancePromise) {
+    posthogInstancePromise = import('posthog-js')
+      .then(({ default: posthog }) => {
+        if (!posthog.__loaded) {
+          posthog.init(posthogKey, {
+            api_host: posthogHost,
+            capture_pageview: false,
+            capture_pageleave: false,
+            autocapture: false,
+            persistence: 'localStorage+cookie',
+            person_profiles: 'never',
+          })
+        }
+
+        return posthog
+      })
+      .catch(() => null)
+  }
+
+  return posthogInstancePromise
+}
+
+export function trackEvent(event: ScholrEventName, payload: ScholrEventPayload = {}) {
+  if (!isAnalyticsEnabled()) {
+    return
+  }
+
+  void getPostHog().then((posthog) => {
+    if (!posthog) {
+      return
+    }
+
+    posthog.capture(event, {
+      ...payload,
+      timestamp: payload.timestamp || new Date().toISOString(),
+    })
+  })
+}

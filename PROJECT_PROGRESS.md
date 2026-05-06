@@ -36,6 +36,9 @@ Scholr is in the live MVP stage:
   - model/provider failure
   - timeout/network issues
   - history save failure
+- in-memory IP rate limiting for AI endpoints
+- structured request logging with request IDs
+- short-TTL cache replay for repeated prompts
 - pagination-ready history endpoint with `limit` and `page`
 
 ### Data
@@ -57,6 +60,8 @@ Scholr is in the live MVP stage:
 - public privacy and terms pages
 - basic launch metadata, robots, and sitemap assets
 - PWA-lite manifest and mobile browser metadata
+- env-gated PostHog analytics wrapper
+- safe product events for open, generate, copy, clear, and retry flows
 
 ### Deployment prep
 
@@ -80,7 +85,7 @@ Scholr is in the live MVP stage:
 ## Next Milestones
 
 1. Run user validation with 10 BTech students
-2. Add light analytics and usage instrumentation
+2. Review analytics signal after the first student validation sprint
 3. Add demo video and a polished repo GIF or walkthrough asset
 4. Add CI checks for lint, typecheck, backend validation, and build
 5. Reintroduce auth later, only after the wedge proves retention
@@ -111,10 +116,9 @@ Scholr is in the live MVP stage:
 
 ### Near-term engineering roadmap
 
-- caching repeated prompts where it clearly improves latency
-- request IDs for easier debugging across backend flows
-- stronger backend log structure for operational visibility
-- rate limiting once public usage starts increasing
+- evaluate whether the 15-minute cache window should stay, shrink, or become Redis-backed
+- structured backend log shipping for operational visibility
+- stronger rate limiting once public usage starts increasing
 - keep sanitized error handling as a non-negotiable default
 
 ### Analytics roadmap

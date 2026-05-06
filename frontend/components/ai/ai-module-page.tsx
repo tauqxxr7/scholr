@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   Copy,
@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { trackEvent } from '@/lib/analytics'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
 
 type SecondaryField = {
@@ -24,6 +25,7 @@ type SecondaryField = {
 }
 
 type AiModulePageProps = {
+  moduleName: 'research' | 'notes' | 'doubt'
   title: string
   description: string
   endpoint: string
@@ -39,6 +41,7 @@ type AiModulePageProps = {
 }
 
 export default function AiModulePage({
+  moduleName,
   title,
   description,
   endpoint,
@@ -59,7 +62,16 @@ export default function AiModulePage({
   const [emptyStateMessage, setEmptyStateMessage] = useState('')
   const [lastAttemptFailed, setLastAttemptFailed] = useState(false)
 
+  useEffect(() => {
+    trackEvent('module_opened', {
+      module: moduleName,
+      entrypoint: 'module_page',
+    })
+  }, [moduleName])
+
   const runRequest = async () => {
+    const startedAt = performance.now()
+    let responseLength = 0
     const payload: Record<string, string> = {
       [payloadKey]: primaryValue,
     }
@@ -73,9 +85,11 @@ export default function AiModulePage({
     setError('')
     setEmptyStateMessage('')
     setLastAttemptFailed(false)
+    trackEvent('generation_started', { module: moduleName })
 
     try {
       const result = await streamModuleResponse(endpoint, payload, (chunk) => {
+        responseLength += chunk.length
         setOutput((current) => current + chunk)
       })
 
@@ -85,6 +99,12 @@ export default function AiModulePage({
         )
       }
 
+      trackEvent('generation_completed', {
+        module: moduleName,
+        success: result.hadChunks,
+        response_length: responseLength,
+        duration_ms: Math.round(performance.now() - startedAt),
+      })
       setHasGeneratedOnce(true)
     } catch (submissionError) {
       const friendlyError =
@@ -94,6 +114,20 @@ export default function AiModulePage({
             ? submissionError.message
             : 'Scholr could not complete this request right now. Please try again.'
 
+      const errorCategory =
+        submissionError instanceof StreamModuleError
+          ? submissionError.retryable
+            ? 'recoverable'
+            : 'configuration'
+          : 'unexpected'
+
+      trackEvent('generation_failed', {
+        module: moduleName,
+        success: false,
+        response_length: responseLength,
+        duration_ms: Math.round(performance.now() - startedAt),
+        error_category: errorCategory,
+      })
       setError(friendlyError)
       setHasGeneratedOnce(true)
       setLastAttemptFailed(true)
@@ -115,8 +149,31 @@ export default function AiModulePage({
     }
 
     await navigator.clipboard.writeText(output)
+    trackEvent('copy_clicked', {
+      module: moduleName,
+      response_length: output.length,
+    })
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1500)
+  }
+
+  const handleClear = () => {
+    setOutput('')
+    setError('')
+    setEmptyStateMessage('')
+    setLastAttemptFailed(false)
+    trackEvent('clear_clicked', {
+      module: moduleName,
+      response_length: output.length,
+    })
+  }
+
+  const handleRetry = async () => {
+    trackEvent('retry_clicked', {
+      module: moduleName,
+      response_length: output.length,
+    })
+    await runRequest()
   }
 
   const hasContent = output || error
@@ -227,12 +284,7 @@ export default function AiModulePage({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => {
-                  setOutput('')
-                  setError('')
-                  setEmptyStateMessage('')
-                  setLastAttemptFailed(false)
-                }}
+                onClick={handleClear}
                 disabled={loading || !hasContent}
                 className="min-h-12 w-full rounded-2xl border-slate-200 sm:w-auto"
               >
@@ -307,7 +359,7 @@ export default function AiModulePage({
               {lastAttemptFailed ? (
                 <Button
                   variant="outline"
-                  onClick={runRequest}
+                  onClick={handleRetry}
                   disabled={loading || !primaryValue.trim()}
                   className="mt-4 min-h-11 w-full rounded-2xl border-red-200 bg-white text-red-700 hover:bg-red-100 hover:text-red-800 sm:w-auto"
                 >

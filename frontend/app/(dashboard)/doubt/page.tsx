@@ -11,6 +11,7 @@ export default function DoubtPage() {
 
   return (
     <AiModulePage
+      moduleName="doubt"
       title="Scholr Doubt"
       description="Get a calm, step-by-step explanation for difficult topics without losing the depth needed for engineering subjects."
       endpoint="/api/doubt"

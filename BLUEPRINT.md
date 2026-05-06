@@ -70,15 +70,17 @@ Students will return if Scholr consistently saves time on high-friction academic
 
 ## Analytics Readiness
 - Keep analytics light until product direction is validated
-- Recommended first internal events:
-  - `landing_cta_clicked`
+- Current implementation target:
   - `module_opened`
   - `generation_started`
   - `generation_completed`
   - `generation_failed`
-  - `history_viewed`
+  - `copy_clicked`
+  - `clear_clicked`
+  - `retry_clicked`
+- Track only module name, success/failure, response length, duration, timestamp, and coarse error category
 - Do not add cookies or invasive tracking until a clear need exists
-- If analytics are added later, prefer privacy-friendly product analytics with explicit environment gating
+- Prefer explicit environment gating so analytics never block local or production app startup
 
 ## Azure Future Scaling Plan
 - Azure OpenAI or Azure AI Studio for enterprise-friendly model routing and governance
@@ -99,7 +101,7 @@ Students will return if Scholr consistently saves time on high-friction academic
 - Add demo GIF or short walkthrough to the repo
 - Gather first real student usage feedback
 - Add CI and protected-branch status checks
-- Add lightweight product analytics after the first student validation sprint
+- Review early analytics signal after the first student validation sprint
 
 ## Roadmap Additions
 
@@ -114,15 +116,15 @@ Students will return if Scholr consistently saves time on high-friction academic
 ### API and data
 - keep history pagination simple with `page` and `limit`
 - move production persistence to PostgreSQL as usage justifies it
-- explore prompt-response caching only if repeated usage patterns justify it
+- evaluate whether short-TTL prompt-response caching should stay local, become Redis-backed, or be removed if freshness matters more than quota savings
 
 ### Logging and observability
+- current MVP direction is structured application logs with request IDs and safe event fields
 - centralized logging later with Sentry, Grafana, or Azure Monitor
 - stronger uptime and latency tracking after the first usage wave
-- add request IDs for cleaner debugging across API and deployment logs
 
 ### Analytics
-- start lightweight with Vercel Analytics or PostHog later
+- start lightweight with PostHog or Vercel Analytics behind env gating
 - avoid invasive tracking or cookies unless truly needed
 
 ### SEO and legal

@@ -35,6 +35,10 @@ function describeHttpFailure(status: number) {
     return 'Scholr backend is running into a server issue right now. Please retry in a moment.'
   }
 
+  if (status === 429) {
+    return 'Scholr is handling too many requests from this connection right now. Please wait a moment and try again.'
+  }
+
   if (status === 404) {
     return 'This Scholr route is unavailable right now. Restart the backend and try again.'
   }

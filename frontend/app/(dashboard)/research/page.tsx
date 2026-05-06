@@ -10,6 +10,7 @@ export default function ResearchPage() {
 
   return (
     <AiModulePage
+      moduleName="research"
       title="Scholr Research"
       description="Turn any engineering topic into a research starting point with papers, reading order, and a realistic project gap."
       endpoint="/api/research"

@@ -1,11 +1,14 @@
 import json
 import logging
 from collections.abc import AsyncIterator, Callable
+from time import perf_counter
 from typing import Any
 
+from fastapi import Request
 from fastapi.responses import StreamingResponse
 
 from agents._generation import ScholrGenerationError
+from core.logging_utils import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +28,32 @@ def _safe_history_summary(text: str) -> str:
     return cleaned[:160] if cleaned else ""
 
 
+async def stream_text_chunks(text: str, chunk_size: int = 180) -> AsyncIterator[str]:
+    for start in range(0, len(text), chunk_size):
+        yield text[start : start + chunk_size]
+
+
 def build_sse_response(
     *,
     generator: AsyncIterator[str],
     save_history: Callable[[str], Any] | None = None,
     empty_message: str = "Scholr did not generate any output for this prompt. Please try rephrasing it.",
+    request: Request | None = None,
+    module: str,
+    source: str = "live",
 ) -> StreamingResponse:
     async def event_stream():
         full_response: list[str] = []
+        request_id = getattr(getattr(request, "state", None), "request_id", None)
+        started_at = perf_counter()
+
+        log_event(
+            logger,
+            "generation_started",
+            module=module,
+            request_id=request_id,
+            source=source,
+        )
 
         try:
             async for chunk in generator:
@@ -42,7 +63,17 @@ def build_sse_response(
                 full_response.append(chunk)
                 yield _sse_event({"type": "chunk", "chunk": chunk})
         except ScholrGenerationError as exc:
-            logger.warning("Generation error: %s", exc.user_message)
+            log_event(
+                logger,
+                "generation_failed",
+                module=module,
+                request_id=request_id,
+                source=source,
+                duration_ms=round((perf_counter() - started_at) * 1000),
+                success=False,
+                error_category="provider",
+                retryable=exc.retryable,
+            )
             yield _sse_event(
                 {
                     "type": "error",
@@ -51,6 +82,16 @@ def build_sse_response(
                 }
             )
         except Exception:
+            log_event(
+                logger,
+                "generation_failed",
+                module=module,
+                request_id=request_id,
+                source=source,
+                duration_ms=round((perf_counter() - started_at) * 1000),
+                success=False,
+                error_category="unexpected",
+            )
             logger.exception("Unexpected error while streaming module response")
             yield _sse_event(
                 {
@@ -61,20 +102,59 @@ def build_sse_response(
             )
         else:
             if not full_response:
+                log_event(
+                    logger,
+                    "generation_completed",
+                    module=module,
+                    request_id=request_id,
+                    source=source,
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    success=True,
+                    response_length=0,
+                )
                 yield _sse_event(
                     {
                         "type": "empty",
                         "message": empty_message,
                     }
                 )
+            else:
+                response_text = "".join(full_response)
+                log_event(
+                    logger,
+                    "generation_completed",
+                    module=module,
+                    request_id=request_id,
+                    source=source,
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    success=True,
+                    response_length=len(response_text),
+                )
         finally:
             if full_response and save_history:
+                response_text = "".join(full_response)
                 try:
-                    save_history("".join(full_response))
+                    save_history(response_text)
+                    log_event(
+                        logger,
+                        "history_saved",
+                        module=module,
+                        request_id=request_id,
+                        source=source,
+                        response_length=len(response_text),
+                    )
                 except Exception:
+                    log_event(
+                        logger,
+                        "history_save_failed",
+                        module=module,
+                        request_id=request_id,
+                        source=source,
+                        response_length=len(response_text),
+                    )
                     logger.exception(
                         "Search history could not be saved. First response preview: %s",
-                        _safe_history_summary("".join(full_response)),
+                        _safe_history_summary(response_text),
                     )
 
             yield "data: [DONE]\n\n"

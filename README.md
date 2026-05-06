@@ -92,6 +92,10 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 - Dashboard with recent history
 - Responsive across mobile, tablet, laptop, and desktop
 - Shared SSE streaming responses
+- Analytics wrapper ready for PostHog when env vars are present
+- In-memory IP rate limiting on AI endpoints
+- Structured backend logging and request IDs
+- Short-TTL response caching for repeated prompts
 - Retry, loading, empty, and error states
 - PWA-lite manifest for installable browser support
 - SQLite locally
@@ -109,6 +113,9 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **Render + Vercel deployment** with documented production environment handling
 - **Error states** for backend issues, empty responses, and retry scenarios
 - **Copy / clear / retry UI** that makes the modules usable like product surfaces, not demos
+- **Analytics readiness** through an env-gated PostHog wrapper that tracks only safe product events
+- **API protection** through lightweight rate limiting, request IDs, and structured logs
+- **Short-TTL cache replay** for repeated prompts so quota is protected without changing the SSE UX
 - **Responsive workspace shell** so the same product loop works across phones, tablets, laptops, and desktops
 - **PWA-lite support** with a manifest, theme color, and mobile-ready metadata
 - **Production env handling** that keeps localhost fallback in development and requires a real API URL in production
@@ -260,11 +267,10 @@ Alternative:
 
 ### Later
 
-- caching repeated prompts where it clearly improves latency
-- structured backend logs and request IDs
-- stronger rate limiting
+- semantic search / RAG for deeper academic retrieval
+- PDF export and shareable study outputs
+- referral loop if user validation shows organic interest
 - stronger production persistence with PostgreSQL
-- exports
 - placements and project workflows
 
 ## Built by Tauqeer Bharde
@@ -294,6 +300,7 @@ Project ecosystem:
 - [Blueprint](BLUEPRINT.md)
 - [Project Progress](PROJECT_PROGRESS.md)
 - [Deployment Checklist](DEPLOY_CHECKLIST.md)
+- [User Validation Plan](USER_VALIDATION_PLAN.md)
 - [Screenshots Notes](screenshots/README.md)
 
 ## Security Notes

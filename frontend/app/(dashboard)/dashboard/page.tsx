@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
+import { trackEvent } from '@/lib/analytics'
 import type { HistoryItem } from '@/lib/api'
 import { getHistory } from '@/lib/api'
 
@@ -43,7 +44,7 @@ export default function DashboardPage() {
   const [historyLoading, setHistoryLoading] = useState(true)
 
   useEffect(() => {
-    getHistory(6)
+    getHistory(6, 1)
       .then(setHistory)
       .catch(() => setHistoryError('History will appear here once the backend is reachable.'))
       .finally(() => setHistoryLoading(false))
@@ -112,6 +113,12 @@ export default function DashboardPage() {
             <Link
               key={module.href}
               href={module.href}
+              onClick={() =>
+                trackEvent('module_opened', {
+                  module: module.title.toLowerCase(),
+                  entrypoint: 'dashboard',
+                })
+              }
               className="group rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md sm:p-6"
             >
               <div className="flex items-center justify-between">

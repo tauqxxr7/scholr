@@ -10,6 +10,7 @@ export default function NotesPage() {
 
   return (
     <AiModulePage
+      moduleName="notes"
       title="Scholr Notes"
       description="Generate structured revision notes built for university prep, quick revision, and last-minute exam confidence."
       endpoint="/api/notes"
