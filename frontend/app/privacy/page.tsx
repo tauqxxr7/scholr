@@ -26,11 +26,11 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#fffdf8_0%,#f8fafc_100%)] px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <main className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#fffdf8_0%,#f8fafc_100%)] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <div className="mx-auto max-w-3xl rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-[2rem] sm:p-8">
         <div className="flex flex-col gap-4 border-b border-slate-200 pb-6">
           <Link href="/" className="text-sm font-medium text-slate-500 transition hover:text-slate-950">
-            ← Back to Scholr
+            Back to Scholr
           </Link>
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Privacy</p>
@@ -44,9 +44,12 @@ export default function PrivacyPage() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-6">
           {sections.map((section) => (
-            <section key={section.title} className="rounded-[1.5rem] border border-slate-200 bg-slate-50/60 p-5">
+            <section
+              key={section.title}
+              className="rounded-[1.5rem] border border-slate-200 bg-slate-50/60 p-4 sm:p-5"
+            >
               <h2 className="text-lg font-semibold text-slate-950">{section.title}</h2>
               <p className="mt-2 text-sm leading-7 text-slate-600 sm:text-base">{section.body}</p>
             </section>

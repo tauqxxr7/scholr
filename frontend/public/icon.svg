@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>Scholr icon</title>
+  <defs>
+    <linearGradient id="scholrBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="55%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e0f2fe" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="#020617" />
+  <rect x="40" y="40" width="432" height="432" rx="96" fill="url(#scholrBg)" />
+  <path
+    d="M176 182c0-22.091 17.909-40 40-40h96c13.255 0 24 10.745 24 24s-10.745 24-24 24h-88v52h72c30.928 0 56 25.072 56 56s-25.072 56-56 56h-72v24c0 13.255-10.745 24-24 24s-24-10.745-24-24V182Zm48 108v36h72c4.418 0 8-3.582 8-8s-3.582-8-8-8h-72Z"
+    fill="#020617"
+  />
+</svg>

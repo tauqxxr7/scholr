@@ -47,6 +47,7 @@ Scholr is in the live MVP stage:
 ### Frontend
 
 - Responsive dashboard shell
+- Responsive mobile, tablet, laptop, and desktop layouts
 - Clean shared output cards
 - loading skeletons
 - empty states
@@ -55,6 +56,7 @@ Scholr is in the live MVP stage:
 - markdown rendering that does not crash on streamed output
 - public privacy and terms pages
 - basic launch metadata, robots, and sitemap assets
+- PWA-lite manifest and mobile browser metadata
 
 ### Deployment prep
 
@@ -125,6 +127,12 @@ Scholr is in the live MVP stage:
 - Google Search Console
 - richer Open Graph previews
 - content pages only if distribution needs increase
+
+### Device support roadmap
+
+- keep testing real-device edge cases for iPhone Safari, iPad Safari, and Android Chrome
+- add app icons beyond the current placeholder-safe manifest setup
+- consider install prompts only if repeat usage justifies a fuller PWA pass
 
 ### Legal and compliance roadmap
 

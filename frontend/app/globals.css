@@ -129,11 +129,23 @@
   html {
     @apply font-sans;
   }
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  button,
+  [role="button"],
+  input,
+  textarea,
+  select {
+    touch-action: manipulation;
+  }
 }
 
 @layer components {
   .scholr-markdown {
-    @apply space-y-5 text-sm leading-7 text-slate-700 sm:text-[15px];
+    @apply min-w-0 space-y-5 break-words text-sm leading-7 text-slate-700 sm:text-[15px];
   }
 
   .scholr-markdown h1,
@@ -193,6 +205,10 @@
 
   .scholr-markdown pre code {
     @apply bg-transparent p-0 text-[13px] text-slate-100;
+  }
+
+  .scholr-markdown table {
+    @apply block w-full overflow-x-auto rounded-xl;
   }
 
   .scholr-streaming-cursor {

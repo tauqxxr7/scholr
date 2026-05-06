@@ -51,18 +51,19 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 lg:space-y-10">
-      <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(254,243,199,0.9),rgba(255,255,255,0.98),rgba(224,242,254,0.95))] p-6 shadow-sm sm:p-8">
+      <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(254,243,199,0.9),rgba(255,255,255,0.98),rgba(224,242,254,0.95))] p-5 shadow-sm sm:rounded-[2rem] sm:p-8">
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] xl:items-end">
           <div>
             <Badge className="rounded-full bg-white/90 px-3 py-1 text-slate-700 shadow-sm">
               India-first academic operating system
             </Badge>
-            <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+            <h1 className="mt-4 max-w-3xl text-[2.2rem] font-semibold tracking-tight text-slate-950 sm:text-5xl">
               Build a lovable wedge first: research, notes, and doubt solving for BTech students.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-              Scholr is now live locally with streaming answers and saved history. This dashboard
-              is our operating room for polishing the product into something demo-worthy.
+              Scholr is live across devices with streaming answers and saved history. This
+              dashboard is our operating room for keeping the product fast, readable, and
+              demo-worthy.
             </p>
           </div>
 
@@ -85,7 +86,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Storage</p>
-                  <p className="mt-1 text-sm font-medium text-slate-900">SQLite history active</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">History storage active</p>
                 </div>
               </div>
             </div>
@@ -127,12 +128,12 @@ export default function DashboardPage() {
         })}
       </section>
 
-      <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
-        <div className="flex items-center justify-between gap-4">
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-[2rem] sm:p-7">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-slate-950">Recent history</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Every finished response is now stored locally in SQLite.
+              Every finished response is stored in the active backend database for quick review.
             </p>
           </div>
           <Badge variant="outline">{history.length} items</Badge>

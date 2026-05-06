@@ -90,8 +90,10 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 - Notes Generator
 - Doubt Solver
 - Dashboard with recent history
+- Responsive across mobile, tablet, laptop, and desktop
 - Shared SSE streaming responses
 - Retry, loading, empty, and error states
+- PWA-lite manifest for installable browser support
 - SQLite locally
 - PostgreSQL-ready through `DATABASE_URL`
 - Public privacy and terms pages
@@ -107,7 +109,16 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **Render + Vercel deployment** with documented production environment handling
 - **Error states** for backend issues, empty responses, and retry scenarios
 - **Copy / clear / retry UI** that makes the modules usable like product surfaces, not demos
+- **Responsive workspace shell** so the same product loop works across phones, tablets, laptops, and desktops
+- **PWA-lite support** with a manifest, theme color, and mobile-ready metadata
 - **Production env handling** that keeps localhost fallback in development and requires a real API URL in production
+
+## Device Support
+
+- Mobile: 320px, 375px, and 430px layouts stack cleanly and use a drawer-style workspace nav
+- Tablet: 768px keeps the mobile header/drawer pattern so content gets the full screen width
+- Laptop and desktop: 1024px and 1440px keep the persistent sidebar and two-column workspaces
+- Long AI output stays readable without forcing full-page horizontal scroll
 
 ## Tech Stack
 

@@ -131,22 +131,22 @@ export default function AiModulePage({
       : 'Waiting for input'
 
   return (
-    <div className="space-y-6 lg:space-y-8">
-      <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.95),rgba(255,255,255,0.98),rgba(240,249,255,0.98))] p-6 shadow-sm sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-5 lg:space-y-8">
+      <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.95),rgba(255,255,255,0.98),rgba(240,249,255,0.98))] p-5 shadow-sm sm:rounded-[2rem] sm:p-8">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-sm font-medium text-amber-800 shadow-sm">
-            <Sparkles className="h-4 w-4" />
-            Scholr Core
+              <Sparkles className="h-4 w-4" />
+              Scholr Core
             </div>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className="mt-4 text-[1.9rem] font-semibold tracking-tight text-slate-950 sm:text-4xl">
               {title}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
               {description}
             </p>
           </div>
-          <div className="grid gap-3 rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm sm:grid-cols-2 lg:min-w-[20rem]">
+          <div className="grid gap-3 rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm sm:grid-cols-2 xl:min-w-[20rem]">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Experience</p>
               <p className="mt-2 text-sm font-medium text-slate-900">
@@ -161,10 +161,10 @@ export default function AiModulePage({
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Prompt</p>
                 <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
@@ -183,7 +183,7 @@ export default function AiModulePage({
                   placeholder={secondaryField.placeholder}
                   value={secondaryField.value}
                   onChange={(event) => secondaryField.onChange(event.target.value)}
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
+                  className="min-h-12 rounded-2xl border-slate-200 bg-slate-50/70 text-base md:text-base"
                 />
               </div>
             ) : null}
@@ -196,8 +196,8 @@ export default function AiModulePage({
                 placeholder={primaryPlaceholder}
                 value={primaryValue}
                 onChange={(event) => onPrimaryChange(event.target.value)}
-                rows={secondaryField ? 8 : 10}
-                className="min-h-[220px] resize-none rounded-[1.5rem] border-slate-200 bg-slate-50/70 px-4 py-3 text-sm leading-7 shadow-none"
+                rows={secondaryField ? 7 : 9}
+                className="min-h-[180px] resize-none rounded-[1.5rem] border-slate-200 bg-slate-50/70 px-4 py-3 text-base leading-7 shadow-none sm:min-h-[220px] md:text-base"
               />
             </div>
 
@@ -220,7 +220,7 @@ export default function AiModulePage({
               <Button
                 onClick={handleSubmit}
                 disabled={loading || !primaryValue.trim()}
-                className="min-h-12 rounded-2xl bg-slate-950 px-5 text-white hover:bg-slate-800 sm:min-w-44"
+                className="min-h-12 w-full rounded-2xl bg-slate-950 px-5 text-white hover:bg-slate-800 sm:w-auto sm:min-w-44"
               >
                 {loading ? loadingLabel : idleLabel}
                 {!loading ? <ArrowUpRight className="ml-2 h-4 w-4" /> : null}
@@ -234,7 +234,7 @@ export default function AiModulePage({
                   setLastAttemptFailed(false)
                 }}
                 disabled={loading || !hasContent}
-                className="min-h-12 rounded-2xl border-slate-200"
+                className="min-h-12 w-full rounded-2xl border-slate-200 sm:w-auto"
               >
                 <RefreshCcw className="mr-2 h-4 w-4" />
                 Clear
@@ -243,7 +243,7 @@ export default function AiModulePage({
                 variant="outline"
                 onClick={handleCopy}
                 disabled={!output}
-                className="min-h-12 rounded-2xl border-slate-200"
+                className="min-h-12 w-full rounded-2xl border-slate-200 sm:w-auto"
               >
                 <Copy className="mr-2 h-4 w-4" />
                 {copied ? 'Copied' : 'Copy'}
@@ -252,7 +252,7 @@ export default function AiModulePage({
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
           <div className="mb-5 flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Output</p>
@@ -267,7 +267,7 @@ export default function AiModulePage({
           </div>
 
           {!hasContent && !loading ? (
-            <div className="flex min-h-[24rem] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.9),rgba(255,255,255,0.95))] px-6 text-center">
+            <div className="flex min-h-[18rem] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-slate-200 bg-[linear-gradient(180deg,rgba(248,250,252,0.9),rgba(255,255,255,0.95))] px-5 py-8 text-center sm:min-h-[24rem] sm:px-6">
               <div className="rounded-full bg-white p-4 shadow-sm">
                 <Sparkles className="h-5 w-5 text-amber-700" />
               </div>
@@ -309,7 +309,7 @@ export default function AiModulePage({
                   variant="outline"
                   onClick={runRequest}
                   disabled={loading || !primaryValue.trim()}
-                  className="mt-4 min-h-11 rounded-2xl border-red-200 bg-white text-red-700 hover:bg-red-100 hover:text-red-800"
+                  className="mt-4 min-h-11 w-full rounded-2xl border-red-200 bg-white text-red-700 hover:bg-red-100 hover:text-red-800 sm:w-auto"
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Retry request
