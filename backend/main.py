@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
+from agents._generation import get_provider_status, validate_provider_startup
 from core.logging_utils import configure_logging, log_event
 from db.database import init_db
 from routers import doubt, history, notes, research
@@ -69,6 +70,29 @@ app.include_router(history.router, prefix="/api", tags=["history"])
 logger = logging.getLogger("scholr.api")
 
 
+@app.on_event("startup")
+async def validate_provider_on_startup():
+    provider_status = validate_provider_startup()
+
+    log_event(
+        logger,
+        "provider_startup_validation",
+        provider_configured=provider_status["provider_configured"],
+        provider_ready=provider_status["provider_ready"],
+        model_name=provider_status["model_name"],
+        error_category=provider_status["provider_error_category"],
+    )
+
+    if not provider_status["provider_ready"]:
+        log_event(
+            logger,
+            "GEMINI_PROVIDER_NOT_READY",
+            provider_configured=provider_status["provider_configured"],
+            model_name=provider_status["model_name"],
+            error_category=provider_status["provider_error_category"],
+        )
+
+
 @app.middleware("http")
 async def add_request_context(request: Request, call_next):
     request_id = request.headers.get("x-request-id", "").strip() or str(uuid.uuid4())
@@ -94,4 +118,9 @@ async def add_request_context(request: Request, call_next):
 
 @app.get("/health")
 def health_check():
-    return {"status": "Scholr API is running", "version": "1.0.0"}
+    provider_status = get_provider_status()
+    return {
+        "status": "Scholr API is running",
+        "version": "1.0.0",
+        **provider_status,
+    }
