@@ -34,6 +34,15 @@ Live product:
 - Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 
+## 🎥 Demo Walkthrough
+
+A short walkthrough demo is being prepared to show the core student workflow:
+Dashboard → AI module → response generation → learning history.
+
+- Expected file: `docs/demo/scholr-walkthrough.gif`
+- Recording script: [docs/demo/DEMO_SCRIPT.md](docs/demo/DEMO_SCRIPT.md)
+- Demo notes: [docs/demo/README.md](docs/demo/README.md)
+
 ## Screenshots
 
 ### Landing Page
