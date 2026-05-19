@@ -216,11 +216,11 @@ Fix:
 
 Symptom:
 - `/health` or `/health/provider` shows `provider_ready: false`
-- `provider_error_category` becomes `invalid_model`, `provider_timeout`, or `provider_5xx`
+- `provider_error_category` becomes `invalid_model`, `no_supported_generation_model`, `provider_timeout`, or `provider_5xx`
 
 Fix:
-- verify `selected_model`, `available_models_count`, and `available_models_sample`
-- confirm the Render project key has access to at least one discovered text-generation model
+- verify `selected_model`, `available_models_count`, `candidate_models_count`, `rejected_models_count`, and `model_selection_strategy`
+- confirm the Render project key has access to at least one production-safe text-generation model in the `gemini-1.5-flash` or `gemini-1.5-pro` families
 - run `python backend/scripts/test_provider.py` with backend env loaded
 - force a Render redeploy after changing model or env configuration
 

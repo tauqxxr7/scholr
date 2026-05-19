@@ -291,14 +291,15 @@ If Scholr shows `AI provider error. Please retry.` in production, check these in
    - confirm the project still has quota and Gemini API access
    - check whether the project is hitting provider-side or free-tier limits
 3. Model availability
-   - verify `selected_model`, `available_models_count`, and `available_models_sample` from `/health/provider`
-   - if the selected model is unstable, confirm the project exposes other text-generation candidates
+   - verify `selected_model`, `available_models_count`, `candidate_models_count`, `rejected_models_count`, and `model_selection_strategy` from `/health/provider`
+   - if `provider_error_category` becomes `no_supported_generation_model`, the discovered models did not pass Scholr's production-safe generation filter
+   - confirm the project exposes `gemini-1.5-flash` or `gemini-1.5-pro` (including versioned aliases) with `generateContent` capability
 4. Render redeploy state
    - after changing env vars or backend code, force a redeploy on Render
    - verify `/health` reflects the newest provider diagnostics after rollout
 5. Backend smoke test
    - run `python backend/scripts/test_provider.py` with the backend env loaded
-   - check `provider_status`, `selected_model`, `available_models_count`, and `provider_error_category`
+   - check `provider_status`, `selected_model`, `available_models_count`, `candidate_models_count`, `model_selection_strategy`, and `provider_error_category`
 
 ## Roadmap
 

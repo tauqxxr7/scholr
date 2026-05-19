@@ -25,7 +25,9 @@ DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
 DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 18
 DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
-PREFERRED_MODEL_CANDIDATES = ("gemini-1.5-flash", "gemini-1.5-pro")
+PREFERRED_MODEL_FAMILIES = ("gemini-1.5-flash", "gemini-1.5-pro")
+MODEL_REJECTION_TOKENS = ("preview", "robotics", "embedding", "image", "vision", "experimental", "tts", "aqa", "live")
+REQUIRED_GENERATION_ACTION = "generatecontent"
 CONFIGURED_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "").strip()
 PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
 PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 8
@@ -40,6 +42,9 @@ PROVIDER_STATE: dict[str, Any] = {
     "provider_error_category": None,
     "available_models_count": 0,
     "available_models_sample": [],
+    "candidate_models_count": 0,
+    "rejected_models_count": 0,
+    "model_selection_strategy": "uninitialized",
     "startup_validation_time_ms": None,
     "sdk_version": "unavailable",
 }
@@ -89,12 +94,67 @@ def _normalize_model_name(model_name: str | None) -> str:
     return normalized
 
 
-def _is_text_generation_candidate(model_name: str) -> bool:
+def _normalize_action_name(action_name: Any) -> str:
+    text = str(getattr(action_name, "name", action_name) or "").strip().lower()
+    return "".join(character for character in text if character.isalnum())
+
+
+def _extract_supported_actions(model: Any) -> list[str]:
+    supported_actions: set[str] = set()
+
+    for attribute in ("supported_actions", "supported_generation_methods", "supported_methods", "actions"):
+        raw_value = getattr(model, attribute, None)
+        if not raw_value:
+            continue
+
+        values = raw_value if isinstance(raw_value, (list, tuple, set)) else [raw_value]
+        for value in values:
+            normalized = _normalize_action_name(value)
+            if normalized:
+                supported_actions.add(normalized)
+
+    return sorted(supported_actions)
+
+
+def _matches_model_family(model_name: str, family: str) -> bool:
+    lowered_name = model_name.lower()
+    lowered_family = family.lower()
+    return lowered_name == lowered_family or lowered_name.startswith(f"{lowered_family}-")
+
+
+def _get_preferred_family(model_name: str) -> str | None:
+    for family in PREFERRED_MODEL_FAMILIES:
+        if _matches_model_family(model_name, family):
+            return family
+    return None
+
+
+def _model_sort_key(model_name: str) -> tuple[int, str]:
+    preferred_family = _get_preferred_family(model_name)
+    if preferred_family is None:
+        return (len(PREFERRED_MODEL_FAMILIES), model_name)
+
+    exact_match_bonus = 0 if model_name.lower() == preferred_family.lower() else 1
+    family_index = PREFERRED_MODEL_FAMILIES.index(preferred_family)
+    return (family_index, f"{exact_match_bonus}:{model_name}")
+
+
+def _reject_model_reasons(model_name: str, supported_actions: list[str]) -> list[str]:
     lowered = model_name.lower()
+    reasons: list[str] = []
+
     if not lowered.startswith("gemini"):
-        return False
-    excluded_tokens = ("embedding", "image", "tts", "aqa", "live", "vision")
-    return not any(token in lowered for token in excluded_tokens)
+        reasons.append("non_gemini_model")
+
+    for token in MODEL_REJECTION_TOKENS:
+        if token in lowered:
+            reasons.append(f"excluded_token:{token}")
+            break
+
+    if REQUIRED_GENERATION_ACTION not in supported_actions:
+        reasons.append("missing_generateContent")
+
+    return reasons
 
 
 def _classify_provider_error(exc: Exception) -> ScholrGenerationError:
@@ -184,38 +244,94 @@ def _build_client():
     return _CLIENT
 
 
-def _discover_models() -> list[str]:
+def _discover_models() -> list[dict[str, Any]]:
     client = _build_client()
-    discovered: list[str] = []
+    discovered: dict[str, dict[str, Any]] = {}
 
     for model in client.models.list():
         name = _normalize_model_name(getattr(model, "name", None))
-        if name:
-            discovered.append(name)
+        if not name:
+            continue
 
-    unique_models = sorted({name for name in discovered})
-    return unique_models
+        supported_actions = _extract_supported_actions(model)
+        existing = discovered.get(name)
+        if existing:
+            existing["supported_actions"] = sorted(set(existing["supported_actions"]) | set(supported_actions))
+            continue
+
+        discovered[name] = {
+            "name": name,
+            "supported_actions": supported_actions,
+        }
+
+    return [discovered[name] for name in sorted(discovered)]
 
 
-def _candidate_models(requested_model_name: str | None, discovered_models: list[str]) -> tuple[str, ...]:
-    seen: set[str] = set()
-    ordered: list[str] = []
+def _select_candidate_models(requested_model_name: str | None, discovered_models: list[dict[str, Any]]) -> dict[str, Any]:
+    rejected_models: list[dict[str, Any]] = []
+    allowed_models: list[dict[str, Any]] = []
 
-    for model_name in (
-        _normalize_model_name(CONFIGURED_MODEL_NAME),
-        _normalize_model_name(requested_model_name),
-        *PREFERRED_MODEL_CANDIDATES,
-    ):
-        if model_name and model_name in discovered_models and model_name not in seen:
-            ordered.append(model_name)
-            seen.add(model_name)
+    for descriptor in discovered_models:
+        model_name = descriptor["name"]
+        supported_actions = descriptor.get("supported_actions", [])
+        rejected_reasons = _reject_model_reasons(model_name, supported_actions)
 
-    for model_name in discovered_models:
-        if _is_text_generation_candidate(model_name) and model_name not in seen:
-            ordered.append(model_name)
-            seen.add(model_name)
+        if rejected_reasons:
+            rejected_models.append(
+                {
+                    "name": model_name,
+                    "reasons": rejected_reasons,
+                }
+            )
+            continue
 
-    return tuple(ordered)
+        allowed_models.append(descriptor)
+
+    preferred_candidates = sorted(
+        (descriptor for descriptor in allowed_models if _get_preferred_family(descriptor["name"])),
+        key=lambda descriptor: _model_sort_key(descriptor["name"]),
+    )
+    fallback_candidates = sorted(
+        (descriptor for descriptor in allowed_models if not _get_preferred_family(descriptor["name"])),
+        key=lambda descriptor: descriptor["name"],
+    )
+
+    strategy = "no_supported_generation_model"
+    selected_descriptors: list[dict[str, Any]] = []
+    if preferred_candidates:
+        selected_descriptors = preferred_candidates + fallback_candidates
+        strategy = "allowlist-first"
+        if fallback_candidates:
+            strategy = "allowlist-first-with-filtered-fallback"
+    elif fallback_candidates:
+        selected_descriptors = fallback_candidates
+        strategy = "filtered-discovery-fallback"
+
+    candidates = tuple(descriptor["name"] for descriptor in selected_descriptors)
+
+    log_event(
+        logger,
+        "provider_models_discovered",
+        discovered_models=[descriptor["name"] for descriptor in discovered_models[:20]],
+        discovered_models_count=len(discovered_models),
+    )
+    log_event(
+        logger,
+        "provider_models_filtered",
+        candidate_models=list(candidates),
+        candidate_models_count=len(candidates),
+        rejected_models=rejected_models[:20],
+        rejected_models_count=len(rejected_models),
+        requested_model_name=_normalize_model_name(requested_model_name) or None,
+        configured_model_name=_normalize_model_name(CONFIGURED_MODEL_NAME) or None,
+        model_selection_strategy=strategy,
+    )
+
+    return {
+        "candidates": candidates,
+        "rejected_models": rejected_models,
+        "strategy": strategy,
+    }
 
 
 def _extract_chunk_text(chunk: Any) -> str:
@@ -264,9 +380,13 @@ def _update_provider_state(
     selected_model: str | None,
     status: str,
     error_category: str | None,
-    discovered_models: list[str],
+    discovered_models: list[dict[str, Any]],
+    candidate_models_count: int = 0,
+    rejected_models_count: int = 0,
+    model_selection_strategy: str = "unknown",
     startup_validation_time_ms: int | None = None,
 ) -> None:
+    discovered_names = [descriptor["name"] for descriptor in discovered_models]
     PROVIDER_STATE.update(
         {
             "configured": configured,
@@ -275,8 +395,11 @@ def _update_provider_state(
             "model_name": selected_model,
             "provider_status": status,
             "provider_error_category": error_category,
-            "available_models_count": len(discovered_models),
-            "available_models_sample": discovered_models[:8],
+            "available_models_count": len(discovered_names),
+            "available_models_sample": discovered_names[:8],
+            "candidate_models_count": candidate_models_count,
+            "rejected_models_count": rejected_models_count,
+            "model_selection_strategy": model_selection_strategy,
             "startup_validation_time_ms": startup_validation_time_ms,
             "sdk_version": _sdk_version(),
         }
@@ -293,6 +416,9 @@ def get_provider_status() -> dict[str, Any]:
         "provider_error_category": PROVIDER_STATE["provider_error_category"],
         "available_models_count": PROVIDER_STATE["available_models_count"],
         "available_models_sample": PROVIDER_STATE["available_models_sample"],
+        "candidate_models_count": PROVIDER_STATE["candidate_models_count"],
+        "rejected_models_count": PROVIDER_STATE["rejected_models_count"],
+        "model_selection_strategy": PROVIDER_STATE["model_selection_strategy"],
         "provider_sdk_version": PROVIDER_STATE["sdk_version"],
         "startup_validation_time_ms": PROVIDER_STATE["startup_validation_time_ms"],
     }
@@ -300,7 +426,7 @@ def get_provider_status() -> dict[str, Any]:
 
 async def validate_provider_startup() -> dict[str, Any]:
     started_at = perf_counter()
-    discovered_models: list[str] = []
+    discovered_models: list[dict[str, Any]] = []
 
     try:
         _get_api_key()
@@ -313,6 +439,9 @@ async def validate_provider_startup() -> dict[str, Any]:
             status="not_configured",
             error_category=exc.category,
             discovered_models=[],
+            candidate_models_count=0,
+            rejected_models_count=0,
+            model_selection_strategy="not_configured",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         return get_provider_status()
@@ -336,26 +465,35 @@ async def validate_provider_startup() -> dict[str, Any]:
             status="not_ready",
             error_category=classified.category,
             discovered_models=[],
+            candidate_models_count=0,
+            rejected_models_count=0,
+            model_selection_strategy="discovery_failed",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         return get_provider_status()
 
-    candidates = _candidate_models(CONFIGURED_MODEL_NAME, discovered_models)
+    selection = _select_candidate_models(CONFIGURED_MODEL_NAME, discovered_models)
+    candidates = selection["candidates"]
     if not candidates:
         log_event(
             logger,
             "provider_generation_capability_mismatch",
             auth_configured=True,
-            discovered_models=discovered_models[:12],
+            discovered_models=[descriptor["name"] for descriptor in discovered_models[:12]],
             available_models_count=len(discovered_models),
+            rejected_models=selection["rejected_models"][:12],
+            model_selection_strategy=selection["strategy"],
         )
         _update_provider_state(
             configured=True,
             ready=False,
             selected_model=None,
             status="not_ready",
-            error_category="invalid_model",
+            error_category="no_supported_generation_model",
             discovered_models=discovered_models,
+            candidate_models_count=0,
+            rejected_models_count=len(selection["rejected_models"]),
+            model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         return get_provider_status()
@@ -392,6 +530,9 @@ async def validate_provider_startup() -> dict[str, Any]:
             status="ready",
             error_category=None,
             discovered_models=discovered_models,
+            candidate_models_count=len(candidates),
+            rejected_models_count=len(selection["rejected_models"]),
+            model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         log_event(
@@ -400,6 +541,8 @@ async def validate_provider_startup() -> dict[str, Any]:
             model_name=candidate,
             stage="startup_probe",
             available_models_count=len(discovered_models),
+            candidate_models_count=len(candidates),
+            model_selection_strategy=selection["strategy"],
         )
         return get_provider_status()
 
@@ -410,15 +553,20 @@ async def validate_provider_startup() -> dict[str, Any]:
         status="not_ready",
         error_category="invalid_model",
         discovered_models=discovered_models,
+        candidate_models_count=len(candidates),
+        rejected_models_count=len(selection["rejected_models"]),
+        model_selection_strategy=selection["strategy"],
         startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
     )
     log_event(
         logger,
         "provider_generation_capability_mismatch",
         auth_configured=True,
-        discovered_models=discovered_models[:12],
+        discovered_models=[descriptor["name"] for descriptor in discovered_models[:12]],
         attempted_candidates=list(candidates),
+        rejected_models=selection["rejected_models"][:12],
         error_category="invalid_model",
+        model_selection_strategy=selection["strategy"],
     )
     return get_provider_status()
 
@@ -428,7 +576,7 @@ def resolve_model_name(requested_model_name: str) -> str:
     if PROVIDER_STATE["ready"] and preferred:
         return preferred
     requested = _normalize_model_name(requested_model_name)
-    return requested or _normalize_model_name(CONFIGURED_MODEL_NAME) or PREFERRED_MODEL_CANDIDATES[0]
+    return requested or _normalize_model_name(CONFIGURED_MODEL_NAME) or PREFERRED_MODEL_FAMILIES[0]
 
 
 async def stream_gemini_response(
@@ -440,19 +588,20 @@ async def stream_gemini_response(
 ) -> AsyncIterator[str]:
     client = _build_client()
 
-    discovered_models = list(PROVIDER_STATE["available_models_sample"])
+    discovered_models: list[dict[str, Any]] = []
     if not discovered_models:
         try:
             discovered_models = _discover_models()
         except Exception:
             discovered_models = []
 
-    candidates = _candidate_models(resolve_model_name(model_name), discovered_models)
+    selection = _select_candidate_models(resolve_model_name(model_name), discovered_models)
+    candidates = selection["candidates"]
     if not candidates:
         raise ScholrGenerationError(
             "This Gemini project does not currently expose any supported text generation models.",
             retryable=False,
-            category="invalid_model",
+            category="no_supported_generation_model",
         )
 
     last_error: ScholrGenerationError | None = None
@@ -575,6 +724,9 @@ async def stream_gemini_response(
                 "model_name": candidate,
                 "provider_status": "ready",
                 "provider_error_category": None,
+                "candidate_models_count": len(candidates),
+                "rejected_models_count": len(selection["rejected_models"]),
+                "model_selection_strategy": selection["strategy"],
             }
         )
         log_event(
@@ -635,6 +787,9 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
         "provider_sdk_version": provider_status["provider_sdk_version"],
         "available_models_count": provider_status["available_models_count"],
         "available_models_sample": provider_status["available_models_sample"],
+        "candidate_models_count": provider_status["candidate_models_count"],
+        "rejected_models_count": provider_status["rejected_models_count"],
+        "model_selection_strategy": provider_status["model_selection_strategy"],
         "startup_validation_time_ms": provider_status["startup_validation_time_ms"],
         "prompt": prompt,
     }
@@ -646,7 +801,7 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
     try:
         collected: list[str] = []
         async for chunk in stream_gemini_response(
-            model_name=provider_status["selected_model"] or PREFERRED_MODEL_CANDIDATES[0],
+            model_name=provider_status["selected_model"] or PREFERRED_MODEL_FAMILIES[0],
             prompt=prompt,
             temperature=0.0,
             max_output_tokens=PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
