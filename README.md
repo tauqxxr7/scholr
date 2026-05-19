@@ -8,7 +8,7 @@ AI-powered academic intelligence and research assistance platform for BTech stud
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4)
+![Gemini](https://img.shields.io/badge/Gemini-Validated_Fallback-4285F4)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Live MVP](https://img.shields.io/badge/Status-Live_MVP-16A34A)
 
@@ -64,12 +64,10 @@ Dashboard → AI module → response generation → learning history.
 
 **Live MVP deployed on Vercel + Render.**
 
-Production smoke test passed:
-- landing works
-- research works
-- notes works
-- doubt works
+Currently verified in production:
+- frontend loads
 - backend `/health` works
+- Research / Notes / Doubt provider reliability is under verification until live generation is confirmed healthy again
 
 Render note:
 - the backend runs on the Render free tier, so the first request after inactivity may cold start and take longer
@@ -142,7 +140,7 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python, SQLAlchemy
-- AI: Gemini `gemini-2.5-flash`
+- AI: Gemini API with startup-validated fallback order: `gemini-1.5-flash`, `gemini-1.5-pro`, then `gemini-2.5-flash`
 - Local DB: SQLite
 - Production DB: PostgreSQL through `DATABASE_URL`
 - Hosting: Vercel + Render
@@ -269,6 +267,23 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 
 Alternative:
 - a root-level `render.yaml` is included for Blueprint-based deployment
+
+## Provider Troubleshooting
+
+If Scholr shows `AI provider error. Please retry.` in production, check these in order:
+
+1. `GEMINI_API_KEY`
+   - confirm the key exists in Render backend environment variables
+   - confirm it belongs to the intended Google AI project
+2. Quota and API access
+   - confirm the project still has quota and Gemini API access
+   - check whether the project is hitting provider-side or free-tier limits
+3. Model availability
+   - verify the startup-selected model reported by `/health`
+   - if the primary model is unstable, confirm fallback models are available to the project
+4. Render redeploy state
+   - after changing env vars or backend code, force a redeploy on Render
+   - verify `/health` reflects the newest provider diagnostics after rollout
 
 ## Roadmap
 

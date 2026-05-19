@@ -98,7 +98,7 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - Frontend is polished enough for demo, recruiter review, and deployment
 - Frontend is live on Vercel and backend health is live on Render
 - Provider diagnostics, request IDs, rate limiting, and cache replay are now part of the production MVP
-- Production smoke test has passed for landing, research, notes, doubt, and `/health`
+- Current production verification shows the frontend loads and backend `/health` works, while Research / Notes / Doubt provider reliability remains under verification until live generation is healthy again
 - Current live URLs:
   - Frontend: https://scholr-coral.vercel.app
   - Backend health: https://scholr-k9sj.onrender.com/health

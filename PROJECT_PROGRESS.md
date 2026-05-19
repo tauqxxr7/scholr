@@ -151,13 +151,10 @@ Scholr is in the live MVP stage:
 - Local development flow: ready
 - Backend deployed on Render
 - Frontend deployed on Vercel
-- Final production smoke test: passed
-- Smoke test details:
-  - landing works
-  - research works
-  - notes works
-  - doubt works
+- Production status:
+  - frontend loads
   - backend `/health` works
+  - Research / Notes / Doubt provider reliability is under verification until live generation is confirmed healthy again
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 

@@ -46,6 +46,16 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 
 This does not expose secrets, but it makes production incidents easier to triage.
 
+## Provider Troubleshooting
+
+If the live app shows `AI provider error. Please retry.`:
+
+1. confirm `GEMINI_API_KEY` is present in Render
+2. confirm the Google AI project still has Gemini API quota and access
+3. check `/health` for the startup-selected `model_name`
+4. verify the backend has fully redeployed after code or env changes
+5. confirm the fallback model chain is still available to the project
+
 ## Known Production Realities
 
 - Render free tier can cold start after inactivity

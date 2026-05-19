@@ -5,7 +5,7 @@ This checklist now documents the live Scholr MVP deployment and the safest path 
 Deployment status:
 1. backend deployed on Render
 2. frontend deployed on Vercel
-3. production smoke test completed
+3. production smoke test partially completed
 
 ## 1. Local Smoke Test
 
@@ -163,12 +163,10 @@ Live URLs:
 - Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 
-Completed production smoke test results:
-- Landing page works
-- Research works
-- Notes works
-- Doubt works
+Current live verification:
+- Frontend loads
 - Backend `/health` works
+- Research / Notes / Doubt provider reliability is under verification until live generation is confirmed healthy again
 
 Recommended re-check after every redeploy:
 1. Open the live landing page.
