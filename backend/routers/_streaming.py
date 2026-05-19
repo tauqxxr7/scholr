@@ -51,6 +51,7 @@ def build_sse_response(
     request: Request | None = None,
     module: str,
     source: str = "live",
+    recovery_text: str | None = None,
 ) -> StreamingResponse:
     async def event_stream():
         full_response: list[str] = []
@@ -74,6 +75,24 @@ def build_sse_response(
                 full_response.append(chunk)
                 yield _sse_event({"type": "chunk", "chunk": chunk})
         except ScholrGenerationError as exc:
+            if recovery_text:
+                full_response.clear()
+                yield _sse_event({"type": "meta", **_response_mode_payload("fallback")})
+                async for fallback_chunk in stream_text_chunks(recovery_text):
+                    full_response.append(fallback_chunk)
+                    yield _sse_event({"type": "chunk", "chunk": fallback_chunk})
+                log_event(
+                    logger,
+                    "generation_completed",
+                    module=module,
+                    request_id=request_id,
+                    source="fallback",
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    success=True,
+                    response_length=len("".join(full_response)),
+                    error_category=exc.category,
+                )
+                return
             log_event(
                 logger,
                 "generation_failed",
@@ -94,6 +113,24 @@ def build_sse_response(
                 }
             )
         except Exception:
+            if recovery_text:
+                full_response.clear()
+                yield _sse_event({"type": "meta", **_response_mode_payload("fallback")})
+                async for fallback_chunk in stream_text_chunks(recovery_text):
+                    full_response.append(fallback_chunk)
+                    yield _sse_event({"type": "chunk", "chunk": fallback_chunk})
+                log_event(
+                    logger,
+                    "generation_completed",
+                    module=module,
+                    request_id=request_id,
+                    source="fallback",
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    success=True,
+                    response_length=len("".join(full_response)),
+                    error_category="unexpected",
+                )
+                return
             log_event(
                 logger,
                 "generation_failed",

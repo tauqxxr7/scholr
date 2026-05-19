@@ -30,11 +30,12 @@ async def research_endpoint(
         request_id=request_id,
     )
     use_fallback = should_use_emergency_fallback() and not cached
+    fallback_text = build_provider_degraded_text("research", request.topic)
 
     return build_sse_response(
         generator=stream_text_chunks(cached.response.response)
         if cached
-        else stream_text_chunks(build_provider_degraded_text("research", request.topic))
+        else stream_text_chunks(fallback_text)
         if use_fallback
         else generate_research_response(request.topic),
         save_history=lambda response: crud.save_search(
@@ -47,4 +48,5 @@ async def research_endpoint(
         request=http_request,
         module="research",
         source="warm_cache" if cached and cached.mode == "similar" else "cache" if cached else "fallback" if use_fallback else "live",
+        recovery_text=fallback_text,
     )
