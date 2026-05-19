@@ -72,7 +72,7 @@ logger = logging.getLogger("scholr.api")
 
 @app.on_event("startup")
 async def validate_provider_on_startup():
-    provider_status = validate_provider_startup()
+    provider_status = await validate_provider_startup()
 
     log_event(
         logger,

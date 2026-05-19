@@ -1,6 +1,6 @@
 # Scholr
 
-AI academic workspace for BTech students that turns one prompt into research direction, revision notes, and doubt solving in under a minute.
+AI-powered academic intelligence and research assistance platform for BTech students.
 
 [![Live App](https://img.shields.io/badge/Live_App-Vercel-black?logo=vercel)](https://scholr-coral.vercel.app)
 [![Backend Health](https://img.shields.io/badge/Backend-Render-5A67D8?logo=render&logoColor=white)](https://scholr-k9sj.onrender.com/health)
@@ -101,6 +101,7 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 - Dashboard with recent history
 - Responsive across mobile, tablet, laptop, and desktop
 - Shared SSE streaming responses
+- Provider diagnostics with startup validation and runtime fallback
 - Analytics wrapper ready for PostHog when env vars are present
 - In-memory IP rate limiting on AI endpoints
 - Structured backend logging and request IDs
@@ -125,6 +126,7 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **Analytics readiness** through an env-gated PostHog wrapper that tracks only safe product events
 - **API protection** through lightweight rate limiting, request IDs, and structured logs
 - **Short-TTL cache replay** for repeated prompts so quota is protected without changing the SSE UX
+- **Provider resilience** through startup validation, categorized Gemini errors, and safe runtime model fallback
 - **Responsive workspace shell** so the same product loop works across phones, tablets, laptops, and desktops
 - **PWA-lite support** with a manifest, theme color, and mobile-ready metadata
 - **Production env handling** that keeps localhost fallback in development and requires a real API URL in production
@@ -167,7 +169,20 @@ scholr/
   PROJECT_PROGRESS.md
   DEPLOY_CHECKLIST.md
   BLUEPRINT.md
+  ARCHITECTURE.md
+  SYSTEM_DESIGN.md
+  ENGINEERING_DECISIONS.md
+  DEPLOYMENT.md
   render.yaml
+```
+
+```mermaid
+flowchart LR
+    U["BTech student on phone, tablet, or desktop"] --> F["Next.js frontend on Vercel"]
+    F -->|"SSE requests"| B["FastAPI backend on Render"]
+    B --> G["Gemini provider layer"]
+    B --> D["History persistence (SQLite locally / PostgreSQL in production)"]
+    B --> O["Structured logs, rate limiting, cache replay"]
 ```
 
 ### Backend
@@ -277,6 +292,7 @@ Alternative:
 ### Later
 
 - semantic search / RAG for deeper academic retrieval
+- PDF upload and document intelligence with citations from uploaded files
 - PDF export and shareable study outputs
 - referral loop if user validation shows organic interest
 - stronger production persistence with PostgreSQL
@@ -323,6 +339,10 @@ Project ecosystem:
 - [Project Progress](PROJECT_PROGRESS.md)
 - [Deployment Checklist](DEPLOY_CHECKLIST.md)
 - [User Validation Plan](USER_VALIDATION_PLAN.md)
+- [Architecture](ARCHITECTURE.md)
+- [System Design](SYSTEM_DESIGN.md)
+- [Engineering Decisions](ENGINEERING_DECISIONS.md)
+- [Deployment Guide](DEPLOYMENT.md)
 - [Screenshots Notes](screenshots/README.md)
 
 ## Security Notes

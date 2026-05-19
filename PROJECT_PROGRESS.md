@@ -39,6 +39,7 @@ Scholr is in the live MVP stage:
 - in-memory IP rate limiting for AI endpoints
 - structured request logging with request IDs
 - short-TTL cache replay for repeated prompts
+- provider startup validation and runtime model fallback
 - pagination-ready history endpoint with `limit` and `page`
 
 ### Data
@@ -88,9 +89,10 @@ Scholr is in the live MVP stage:
 2. Review analytics signal after the first student validation sprint
 3. Add demo video and a polished repo GIF or walkthrough asset
 4. Add CI checks for lint, typecheck, backend validation, and build
-5. Reintroduce auth later, only after the wedge proves retention
-6. Move production history to PostgreSQL if usage justifies it
-7. Expand SEO and legal polish only when the public launch needs become sharper
+5. Validate provider fallback behavior under real student usage
+6. Reintroduce auth later, only after the wedge proves retention
+7. Move production history to PostgreSQL if usage justifies it
+8. Expand SEO and legal polish only when the public launch needs become sharper
 
 ## Roadmap Extensions
 
@@ -120,6 +122,7 @@ Scholr is in the live MVP stage:
 - structured backend log shipping for operational visibility
 - stronger rate limiting once public usage starts increasing
 - keep sanitized error handling as a non-negotiable default
+- optional multi-provider abstraction only if Gemini reliability needs a second backend path
 
 ### Analytics roadmap
 

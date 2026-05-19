@@ -1,24 +1,34 @@
 import asyncio
+import logging
 import os
+from time import perf_counter
 from collections.abc import AsyncIterator
 from typing import Any
 
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+from core.logging_utils import log_event
+
 load_dotenv()
 
 DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
+DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 18
+DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
 MODEL_CANDIDATES = ("gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro")
 CONFIGURED_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "").strip()
+PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
+PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 8
 
 PROVIDER_STATE: dict[str, Any] = {
     "configured": False,
     "ready": False,
     "model_name": CONFIGURED_MODEL_NAME or MODEL_CANDIDATES[0],
     "error_category": None,
+    "sdk_version": getattr(genai, "__version__", "unknown"),
 }
+logger = logging.getLogger("scholr.provider")
 
 
 class ScholrGenerationError(Exception):
@@ -46,6 +56,19 @@ def _preferred_models() -> tuple[str, ...]:
     if CONFIGURED_MODEL_NAME:
         return (CONFIGURED_MODEL_NAME, *[model for model in MODEL_CANDIDATES if model != CONFIGURED_MODEL_NAME])
     return MODEL_CANDIDATES
+
+
+def _candidate_models(requested_model_name: str | None = None) -> tuple[str, ...]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+
+    for candidate in (requested_model_name, *_preferred_models()):
+        normalized = (candidate or "").strip()
+        if normalized and normalized not in seen:
+            ordered.append(normalized)
+            seen.add(normalized)
+
+    return tuple(ordered)
 
 
 def _build_model(model_name: str):
@@ -125,16 +148,42 @@ def _classify_provider_error(exc: Exception) -> ScholrGenerationError:
     )
 
 
+def _should_try_fallback(exc: ScholrGenerationError) -> bool:
+    return exc.category in {"provider_5xx", "provider_timeout", "invalid_model", "empty_response"}
+
+
+async def _probe_model_generation(model_name: str) -> None:
+    model = _build_model(model_name)
+    response = await asyncio.wait_for(
+        model.generate_content_async(
+            PROVIDER_PROBE_PROMPT,
+            generation_config=genai.GenerationConfig(
+                temperature=0.0,
+                max_output_tokens=PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
+            ),
+        ),
+        timeout=DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS,
+    )
+    text = (getattr(response, "text", None) or "").strip()
+    if not text:
+        raise ScholrGenerationError(
+            "Gemini returned an empty response during provider startup validation.",
+            retryable=True,
+            category="empty_response",
+        )
+
+
 def get_provider_status() -> dict[str, Any]:
     return {
         "provider_configured": PROVIDER_STATE["configured"],
         "provider_ready": PROVIDER_STATE["ready"],
         "model_name": PROVIDER_STATE["model_name"],
         "provider_error_category": PROVIDER_STATE["error_category"],
+        "provider_sdk_version": PROVIDER_STATE["sdk_version"],
     }
 
 
-def validate_provider_startup() -> dict[str, Any]:
+async def validate_provider_startup() -> dict[str, Any]:
     try:
         api_key = _get_api_key()
     except ScholrGenerationError as exc:
@@ -166,8 +215,44 @@ def validate_provider_startup() -> dict[str, Any]:
         )
         return get_provider_status()
 
-    for candidate in _preferred_models():
+    for candidate in _candidate_models():
         if candidate in available:
+            try:
+                await _probe_model_generation(candidate)
+            except ScholrGenerationError as exc:
+                PROVIDER_STATE.update(
+                    {
+                        "configured": True,
+                        "ready": False,
+                        "model_name": candidate,
+                        "error_category": exc.category,
+                    }
+                )
+                log_event(
+                    logger,
+                    "provider_probe_failed",
+                    model_name=candidate,
+                    error_category=exc.category,
+                )
+                continue
+            except Exception as exc:
+                classified = _classify_provider_error(exc)
+                PROVIDER_STATE.update(
+                    {
+                        "configured": True,
+                        "ready": False,
+                        "model_name": candidate,
+                        "error_category": classified.category,
+                    }
+                )
+                log_event(
+                    logger,
+                    "provider_probe_failed",
+                    model_name=candidate,
+                    error_category=classified.category,
+                )
+                continue
+
             PROVIDER_STATE.update(
                 {
                     "configured": True,
@@ -175,6 +260,11 @@ def validate_provider_startup() -> dict[str, Any]:
                     "model_name": candidate,
                     "error_category": None,
                 }
+            )
+            log_event(
+                logger,
+                "provider_probe_succeeded",
+                model_name=candidate,
             )
             return get_provider_status()
 
@@ -202,50 +292,146 @@ async def stream_gemini_response(
     temperature: float,
     max_output_tokens: int,
 ) -> AsyncIterator[str]:
-    try:
-        model = _build_model(resolve_model_name(model_name))
-        response = await asyncio.wait_for(
-            model.generate_content_async(
-                prompt,
-                stream=True,
-                generation_config=genai.GenerationConfig(
-                    temperature=temperature,
-                    max_output_tokens=max_output_tokens,
-                ),
-            ),
-            timeout=DEFAULT_CONNECT_TIMEOUT_SECONDS,
-        )
-    except ScholrGenerationError:
-        raise
-    except Exception as exc:
-        raise _classify_provider_error(exc) from exc
+    last_error: ScholrGenerationError | None = None
+    candidates = _candidate_models(resolve_model_name(model_name))
 
-    chunks_received = 0
-    iterator = response.__aiter__()
-
-    while True:
+    for candidate in candidates:
+        last_error = None
         try:
-            chunk = await asyncio.wait_for(
-                anext(iterator),
-                timeout=DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS,
+            started_at = perf_counter()
+            model = _build_model(candidate)
+            response = await asyncio.wait_for(
+                model.generate_content_async(
+                    prompt,
+                    stream=True,
+                    generation_config=genai.GenerationConfig(
+                        temperature=temperature,
+                        max_output_tokens=max_output_tokens,
+                    ),
+                ),
+                timeout=DEFAULT_CONNECT_TIMEOUT_SECONDS,
             )
-        except StopAsyncIteration:
-            break
-        except ScholrGenerationError:
-            raise
+            log_event(
+                logger,
+                "provider_generation_opened",
+                model_name=candidate,
+                duration_ms=round((perf_counter() - started_at) * 1000),
+            )
+        except ScholrGenerationError as exc:
+            last_error = exc
         except Exception as exc:
-            raise _classify_provider_error(exc) from exc
+            last_error = _classify_provider_error(exc)
 
-        text = getattr(chunk, "text", None)
-        if not text:
-            continue
+        if last_error:
+            log_event(
+                logger,
+                "provider_generation_failed",
+                model_name=candidate,
+                error_category=last_error.category,
+            )
+            if _should_try_fallback(last_error) and candidate != candidates[-1]:
+                log_event(
+                    logger,
+                    "provider_fallback_attempted",
+                    from_model=candidate,
+                    error_category=last_error.category,
+                )
+                continue
+            raise last_error
 
-        chunks_received += 1
-        yield text
+        chunks_received = 0
+        iterator = response.__aiter__()
+        stream_deadline = perf_counter() + DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS
 
-    if chunks_received == 0:
-        raise ScholrGenerationError(
-            "Scholr did not receive any usable text from Gemini for this prompt. Please try rephrasing it.",
-            retryable=True,
-            category="empty_response",
+        while True:
+            remaining_seconds = stream_deadline - perf_counter()
+            if remaining_seconds <= 0:
+                last_error = ScholrGenerationError(
+                    "Gemini did not finish responding in time. Please try again.",
+                    retryable=True,
+                    category="provider_timeout",
+                )
+                break
+
+            try:
+                chunk = await asyncio.wait_for(
+                    anext(iterator),
+                    timeout=min(DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS, remaining_seconds),
+                )
+            except StopAsyncIteration:
+                break
+            except ScholrGenerationError as exc:
+                last_error = exc
+                break
+            except Exception as exc:
+                last_error = _classify_provider_error(exc)
+                break
+
+            text = getattr(chunk, "text", None)
+            if not text:
+                continue
+
+            chunks_received += 1
+            yield text
+
+        if last_error:
+            log_event(
+                logger,
+                "provider_stream_failed",
+                model_name=candidate,
+                error_category=last_error.category,
+                streamed_chunks=chunks_received,
+            )
+            if _should_try_fallback(last_error) and candidate != candidates[-1]:
+                log_event(
+                    logger,
+                    "provider_fallback_attempted",
+                    from_model=candidate,
+                    error_category=last_error.category,
+                    streamed_chunks=chunks_received,
+                )
+                continue
+            raise last_error
+
+        if chunks_received == 0:
+            last_error = ScholrGenerationError(
+                "Scholr did not receive any usable text from Gemini for this prompt. Please try rephrasing it.",
+                retryable=True,
+                category="empty_response",
+            )
+            log_event(
+                logger,
+                "provider_stream_failed",
+                model_name=candidate,
+                error_category=last_error.category,
+                streamed_chunks=0,
+            )
+            if _should_try_fallback(last_error) and candidate != candidates[-1]:
+                log_event(
+                    logger,
+                    "provider_fallback_attempted",
+                    from_model=candidate,
+                    error_category=last_error.category,
+                    streamed_chunks=0,
+                )
+                continue
+            raise last_error
+
+        PROVIDER_STATE.update(
+            {
+                "configured": True,
+                "ready": True,
+                "model_name": candidate,
+                "error_category": None,
+            }
         )
+        return
+
+    if last_error:
+        raise last_error
+
+    raise ScholrGenerationError(
+        "AI provider error. Please retry.",
+        retryable=True,
+        category="provider_5xx",
+    )

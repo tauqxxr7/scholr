@@ -97,6 +97,7 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - History works locally with SQLite and is production-ready for PostgreSQL through `DATABASE_URL`
 - Frontend is polished enough for demo, recruiter review, and deployment
 - Frontend is live on Vercel and backend health is live on Render
+- Provider diagnostics, request IDs, rate limiting, and cache replay are now part of the production MVP
 - Production smoke test has passed for landing, research, notes, doubt, and `/health`
 - Current live URLs:
   - Frontend: https://scholr-coral.vercel.app
@@ -122,11 +123,13 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - keep history pagination simple with `page` and `limit`
 - move production persistence to PostgreSQL as usage justifies it
 - evaluate whether short-TTL prompt-response caching should stay local, become Redis-backed, or be removed if freshness matters more than quota savings
+- add semantic search over saved history only after there is real repeat usage to justify embeddings infrastructure
 
 ### Logging and observability
 - current MVP direction is structured application logs with request IDs and safe event fields
 - centralized logging later with Sentry, Grafana, or Azure Monitor
 - stronger uptime and latency tracking after the first usage wave
+- add provider scorecards by model if fallback behavior becomes part of ongoing operations
 
 ### Analytics
 - start lightweight with PostHog or Vercel Analytics behind env gating
@@ -135,3 +138,10 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 ### SEO and legal
 - grow sitemap/search-console coverage as distribution needs increase
 - evolve privacy and terms as the product moves beyond MVP
+
+### Future document intelligence lane
+- Phase 1: PDF upload and metadata extraction
+- Phase 2: chunking and embeddings for notes, slides, and lab manuals
+- Phase 3: citations from uploaded files inside Research, Notes, and Doubt
+- Phase 4: semantic search across both uploaded material and saved history
+- This remains roadmap-only until the current wedge shows repeat usage
