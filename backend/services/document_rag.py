@@ -4,18 +4,16 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-import google.generativeai as genai
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
-from agents._generation import ScholrGenerationError, stream_gemini_response
+from agents._generation import ScholrGenerationError, embed_texts, stream_gemini_response
 from db import crud
 
 MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
 DEFAULT_CHUNK_SIZE = 1200
 DEFAULT_CHUNK_OVERLAP = 180
 DEFAULT_TOP_K = 4
-EMBEDDING_MODEL_NAME = "models/text-embedding-004"
 DOCUMENTS_ROOT = Path("data/documents")
 VECTOR_DB_ROOT = Path("data/chromadb")
 DOCUMENT_COLLECTION_NAME = "scholr_documents"
@@ -140,37 +138,17 @@ def _chunk_page_text(pages: list[dict[str, int | str]]) -> list[dict[str, int | 
     return chunks
 
 
-def _embed_texts(texts: list[str], *, task_type: str) -> list[list[float]]:
-    try:
-        result = genai.embed_content(
-            model=EMBEDDING_MODEL_NAME,
-            content=texts,
-            task_type=task_type,
-        )
-    except Exception as exc:  # pragma: no cover - provider path depends on runtime access
-        raise DocumentIntelligenceError(
-            "Embeddings could not be generated for this document right now.",
-            category="embedding_provider_error",
-        ) from exc
-
-    embeddings = result.get("embedding") if isinstance(result, dict) else None
-    if embeddings and isinstance(embeddings, list) and embeddings and isinstance(embeddings[0], float):
-        return [embeddings]
-
-    if isinstance(embeddings, list):
-        return embeddings
-
-    raise DocumentIntelligenceError(
-        "Embeddings returned in an unexpected format.",
-        category="embedding_provider_error",
-    )
-
-
 def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, int | str]]) -> None:
     client = _load_chroma_client()
     collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
     texts = [str(chunk["content"]) for chunk in chunks]
-    embeddings = _embed_texts(texts, task_type="retrieval_document")
+    try:
+        embeddings = embed_texts(texts, task_type="RETRIEVAL_DOCUMENT")
+    except ScholrGenerationError as exc:
+        raise DocumentIntelligenceError(
+            "Embeddings could not be generated for this document right now.",
+            category=exc.category,
+        ) from exc
 
     collection.upsert(
         ids=[f"{document_id}:{index}" for index in range(len(chunks))],
@@ -264,7 +242,13 @@ def retrieve_document_chunks(
 
     client = _load_chroma_client()
     collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
-    embeddings = _embed_texts([query], task_type="retrieval_query")
+    try:
+        embeddings = embed_texts([query], task_type="RETRIEVAL_QUERY")
+    except ScholrGenerationError as exc:
+        raise DocumentIntelligenceError(
+            "Embeddings could not be generated for this document question right now.",
+            category=exc.category,
+        ) from exc
     result = collection.query(
         query_embeddings=embeddings,
         n_results=max(1, min(top_k, 8)),

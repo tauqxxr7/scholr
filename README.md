@@ -150,7 +150,7 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python, SQLAlchemy
-- AI: Gemini API with startup-validated fallback order: `gemini-1.5-flash`, then `gemini-1.5-pro`
+- AI: Google GenAI Python SDK (`google-genai`) with startup discovery, automatic model selection, and fallback
 - Local DB: SQLite
 - Production DB: PostgreSQL through `DATABASE_URL`
 - Hosting: Vercel + Render
@@ -291,15 +291,14 @@ If Scholr shows `AI provider error. Please retry.` in production, check these in
    - confirm the project still has quota and Gemini API access
    - check whether the project is hitting provider-side or free-tier limits
 3. Model availability
-   - verify the startup-selected model reported by `/health` or `/health/provider`
-   - current production target is `gemini-1.5-flash` with `gemini-1.5-pro` as fallback
-   - if the primary model is unstable, confirm fallback model access is enabled for the project
+   - verify `selected_model`, `available_models_count`, and `available_models_sample` from `/health/provider`
+   - if the selected model is unstable, confirm the project exposes other text-generation candidates
 4. Render redeploy state
    - after changing env vars or backend code, force a redeploy on Render
    - verify `/health` reflects the newest provider diagnostics after rollout
 5. Backend smoke test
    - run `python backend/scripts/test_provider.py` with the backend env loaded
-   - check `provider_status`, `model_name`, and `provider_error_category`
+   - check `provider_status`, `selected_model`, `available_models_count`, and `provider_error_category`
 
 ## Roadmap
 
