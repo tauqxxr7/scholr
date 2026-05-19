@@ -16,7 +16,7 @@ DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
 DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 18
 DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
-MODEL_CANDIDATES = ("gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-flash")
+MODEL_CANDIDATES = ("gemini-1.5-flash", "gemini-1.5-pro")
 CONFIGURED_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "").strip()
 PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
 PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 8
@@ -270,8 +270,9 @@ async def validate_provider_startup() -> dict[str, Any]:
             )
             log_event(
                 logger,
-                "provider_probe_succeeded",
+                "provider_model_selected",
                 model_name=candidate,
+                stage="startup_probe",
             )
             return get_provider_status()
 
@@ -308,6 +309,12 @@ async def stream_gemini_response(
         try:
             started_at = perf_counter()
             model = _build_model(candidate)
+            log_event(
+                logger,
+                "provider_model_selected",
+                model_name=candidate,
+                stage="generation_open",
+            )
             response = await asyncio.wait_for(
                 model.generate_content_async(
                     prompt,
@@ -340,8 +347,9 @@ async def stream_gemini_response(
             if _should_try_fallback(last_error) and candidate != candidates[-1]:
                 log_event(
                     logger,
-                    "provider_fallback_attempted",
-                    from_model=candidate,
+                    "provider_model_fallback",
+                    attempted_model=candidate,
+                    fallback_model=candidates[candidates.index(candidate) + 1],
                     error_category=last_error.category,
                 )
                 continue
@@ -393,8 +401,9 @@ async def stream_gemini_response(
             if _should_try_fallback(last_error) and candidate != candidates[-1]:
                 log_event(
                     logger,
-                    "provider_fallback_attempted",
-                    from_model=candidate,
+                    "provider_model_fallback",
+                    attempted_model=candidate,
+                    fallback_model=candidates[candidates.index(candidate) + 1],
                     error_category=last_error.category,
                     streamed_chunks=chunks_received,
                 )
@@ -417,8 +426,9 @@ async def stream_gemini_response(
             if _should_try_fallback(last_error) and candidate != candidates[-1]:
                 log_event(
                     logger,
-                    "provider_fallback_attempted",
-                    from_model=candidate,
+                    "provider_model_fallback",
+                    attempted_model=candidate,
+                    fallback_model=candidates[candidates.index(candidate) + 1],
                     error_category=last_error.category,
                     streamed_chunks=0,
                 )
@@ -433,6 +443,12 @@ async def stream_gemini_response(
                 "status": "ready",
                 "error_category": None,
             }
+        )
+        log_event(
+            logger,
+            "provider_generation_success",
+            model_name=candidate,
+            streamed_chunks=chunks_received,
         )
         return
 

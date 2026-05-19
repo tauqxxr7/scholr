@@ -29,7 +29,7 @@ async def generate_doubt_response(question: str, subject: str = "General"):
     prompt = DOUBT_PROMPT.format(question=question, subject=subject)
 
     async for chunk in stream_gemini_response(
-        model_name="gemini-2.5-flash",
+        model_name="gemini-1.5-flash",
         prompt=prompt,
         temperature=0.3,
         max_output_tokens=1500,

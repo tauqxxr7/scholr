@@ -219,7 +219,8 @@ Symptom:
 - `provider_error_category` becomes `invalid_model`, `provider_timeout`, or `provider_5xx`
 
 Fix:
-- verify the Render project key has access to the selected Gemini model
+- verify the Render project key has access to `gemini-1.5-flash`
+- verify fallback access to `gemini-1.5-pro`
 - run `python backend/scripts/test_provider.py` with backend env loaded
 - force a Render redeploy after changing model or env configuration
 
