@@ -24,9 +24,10 @@ PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 8
 PROVIDER_STATE: dict[str, Any] = {
     "configured": False,
     "ready": False,
-    "model_name": CONFIGURED_MODEL_NAME or MODEL_CANDIDATES[0],
+    "model_name": None,
     "error_category": None,
     "sdk_version": getattr(genai, "__version__", "unknown"),
+    "status": "unknown",
 }
 logger = logging.getLogger("scholr.provider")
 
@@ -46,7 +47,7 @@ def _get_api_key() -> str:
         raise ScholrGenerationError(
             "Scholr is not configured with a Gemini API key yet. Add a valid key in backend/.env and restart the backend.",
             retryable=False,
-            category="configuration",
+            category="invalid_api_key",
         )
 
     return api_key
@@ -83,7 +84,7 @@ def _classify_provider_error(exc: Exception) -> ScholrGenerationError:
         return ScholrGenerationError(
             "Scholr took too long to get a response from Gemini. Please try again in a moment.",
             retryable=True,
-            category="timeout",
+            category="provider_timeout",
         )
 
     if "api key" in message or "permission" in message or "unauth" in message:
@@ -178,6 +179,7 @@ def get_provider_status() -> dict[str, Any]:
         "provider_configured": PROVIDER_STATE["configured"],
         "provider_ready": PROVIDER_STATE["ready"],
         "model_name": PROVIDER_STATE["model_name"],
+        "provider_status": PROVIDER_STATE["status"],
         "provider_error_category": PROVIDER_STATE["error_category"],
         "provider_sdk_version": PROVIDER_STATE["sdk_version"],
     }
@@ -191,6 +193,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             {
                 "configured": False,
                 "ready": False,
+                "status": "not_configured",
                 "error_category": exc.category,
             }
         )
@@ -210,6 +213,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             {
                 "configured": True,
                 "ready": False,
+                "status": "not_ready",
                 "error_category": classified.category,
             }
         )
@@ -225,6 +229,7 @@ async def validate_provider_startup() -> dict[str, Any]:
                         "configured": True,
                         "ready": False,
                         "model_name": candidate,
+                        "status": "not_ready",
                         "error_category": exc.category,
                     }
                 )
@@ -242,6 +247,7 @@ async def validate_provider_startup() -> dict[str, Any]:
                         "configured": True,
                         "ready": False,
                         "model_name": candidate,
+                        "status": "not_ready",
                         "error_category": classified.category,
                     }
                 )
@@ -258,6 +264,7 @@ async def validate_provider_startup() -> dict[str, Any]:
                     "configured": True,
                     "ready": True,
                     "model_name": candidate,
+                    "status": "ready",
                     "error_category": None,
                 }
             )
@@ -272,6 +279,7 @@ async def validate_provider_startup() -> dict[str, Any]:
         {
             "configured": True,
             "ready": False,
+            "status": "not_ready",
             "error_category": "invalid_model",
         }
     )
@@ -422,6 +430,7 @@ async def stream_gemini_response(
                 "configured": True,
                 "ready": True,
                 "model_name": candidate,
+                "status": "ready",
                 "error_category": None,
             }
         )
@@ -435,3 +444,54 @@ async def stream_gemini_response(
         retryable=True,
         category="provider_5xx",
     )
+
+
+async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[str, Any]:
+    provider_status = await validate_provider_startup()
+    result: dict[str, Any] = {
+        "provider_configured": provider_status["provider_configured"],
+        "provider_ready": provider_status["provider_ready"],
+        "provider_status": provider_status["provider_status"],
+        "model_name": provider_status["model_name"],
+        "provider_error_category": provider_status["provider_error_category"],
+        "provider_sdk_version": provider_status["provider_sdk_version"],
+        "prompt": prompt,
+    }
+
+    if not provider_status["provider_ready"]:
+        result["success"] = False
+        return result
+
+    try:
+        collected: list[str] = []
+        async for chunk in stream_gemini_response(
+            model_name=provider_status["model_name"] or _preferred_models()[0],
+            prompt=prompt,
+            temperature=0.0,
+            max_output_tokens=PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
+        ):
+            collected.append(chunk)
+
+        response_text = "".join(collected).strip()
+        result.update(
+            {
+                "success": bool(response_text),
+                "response_preview": response_text[:80],
+                "response_length": len(response_text),
+                "provider_error_category": None if response_text else "empty_response",
+            }
+        )
+        if not response_text:
+            result["provider_status"] = "not_ready"
+        return result
+    except ScholrGenerationError as exc:
+        result.update(
+            {
+                "success": False,
+                "provider_status": "not_ready",
+                "provider_error_category": exc.category,
+                "response_preview": None,
+                "response_length": 0,
+            }
+        )
+        return result

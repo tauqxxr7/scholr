@@ -98,6 +98,7 @@ Exact steps:
 
 Working deployed backend:
 - [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
+- [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
 
 ## 3. Vercel Frontend Deployment
 
@@ -210,6 +211,17 @@ Symptom:
 
 Fix:
 - set `GEMINI_API_KEY` in Render
+
+### Invalid model or provider not ready
+
+Symptom:
+- `/health` or `/health/provider` shows `provider_ready: false`
+- `provider_error_category` becomes `invalid_model`, `provider_timeout`, or `provider_5xx`
+
+Fix:
+- verify the Render project key has access to the selected Gemini model
+- run `python backend/scripts/test_provider.py` with backend env loaded
+- force a Render redeploy after changing model or env configuration
 
 ### Missing PostgreSQL
 

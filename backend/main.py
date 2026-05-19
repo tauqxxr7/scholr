@@ -125,3 +125,12 @@ def health_check():
         "version": "1.0.0",
         **provider_status,
     }
+
+
+@app.get("/health/provider")
+def provider_health_check():
+    provider_status = get_provider_status()
+    return {
+        "status": "provider_health",
+        **provider_status,
+    }

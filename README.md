@@ -33,6 +33,7 @@ AI-powered academic intelligence and research assistance platform for BTech stud
 Live product:
 - Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
+- Provider health: [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
 
 ## 🎥 Demo Walkthrough
 
@@ -290,11 +291,14 @@ If Scholr shows `AI provider error. Please retry.` in production, check these in
    - confirm the project still has quota and Gemini API access
    - check whether the project is hitting provider-side or free-tier limits
 3. Model availability
-   - verify the startup-selected model reported by `/health`
+   - verify the startup-selected model reported by `/health` or `/health/provider`
    - if the primary model is unstable, confirm fallback models are available to the project
 4. Render redeploy state
    - after changing env vars or backend code, force a redeploy on Render
    - verify `/health` reflects the newest provider diagnostics after rollout
+5. Backend smoke test
+   - run `python backend/scripts/test_provider.py` with the backend env loaded
+   - check `provider_status`, `model_name`, and `provider_error_category`
 
 ## Roadmap
 
