@@ -14,6 +14,7 @@ type StreamEvent =
   | { type: 'chunk'; chunk: string }
   | { type: 'error'; message: string; retryable?: boolean; category?: string }
   | { type: 'empty'; message?: string }
+  | { type: 'meta'; mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback'; label?: string }
 
 export class StreamModuleError extends Error {
   retryable: boolean
@@ -30,6 +31,8 @@ export class StreamModuleError extends Error {
 export type StreamModuleResult = {
   hadChunks: boolean
   emptyMessage?: string
+  mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback'
+  modeLabel?: string
 }
 
 function describeHttpFailure(status: number) {
@@ -156,6 +159,8 @@ export async function streamModuleResponse(
   let hadChunks = false
   let malformedEvents = 0
   let emptyMessage = ''
+  let mode: StreamModuleResult['mode']
+  let modeLabel = ''
 
   const processEventBlock = (eventBlock: string) => {
     const normalizedBlock = eventBlock.replace(/\r/g, '')
@@ -194,6 +199,12 @@ export async function streamModuleResponse(
         emptyMessage =
           parsed.message ||
           'Scholr did not return any output for this prompt. Try rephrasing it and run again.'
+        return
+      }
+
+      if (parsed.type === 'meta') {
+        mode = parsed.mode
+        modeLabel = parsed.label || ''
       }
       return
     } catch (error) {
@@ -227,7 +238,7 @@ export async function streamModuleResponse(
     for (const event of events) {
       const result = processEventBlock(event)
       if (result === 'done') {
-        return { hadChunks, emptyMessage: emptyMessage || undefined }
+        return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
       }
     }
   }
@@ -235,11 +246,11 @@ export async function streamModuleResponse(
   if (buffer.trim()) {
     const result = processEventBlock(buffer)
     if (result === 'done') {
-      return { hadChunks, emptyMessage: emptyMessage || undefined }
+      return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
     }
   }
 
-  return { hadChunks, emptyMessage: emptyMessage || undefined }
+  return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
 }
 
 export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {

@@ -18,6 +18,25 @@ def normalize_query(query: str) -> str:
     return re.sub(r"\s+", " ", query.strip().lower())
 
 
+def _query_tokens(query: str) -> set[str]:
+    normalized = normalize_query(query)
+    return {token for token in re.findall(r"[a-z0-9]+", normalized) if len(token) >= 3}
+
+
+def _similarity_score(left: str, right: str) -> float:
+    left_tokens = _query_tokens(left)
+    right_tokens = _query_tokens(right)
+    if not left_tokens or not right_tokens:
+        return 0.0
+
+    overlap = left_tokens & right_tokens
+    if not overlap:
+        return 0.0
+
+    union = left_tokens | right_tokens
+    return len(overlap) / max(len(union), 1)
+
+
 def get_recent_searches(db: Session, limit: int = 20, page: int = 1) -> list[SearchHistory]:
     offset = max(page - 1, 0) * limit
     return (
@@ -70,6 +89,35 @@ def get_cached_search(
             return row
 
     return None
+
+
+def get_similar_cached_search(
+    db: Session,
+    *,
+    module: str,
+    query: str,
+    ttl_minutes: int = 30,
+    scan_limit: int = 40,
+    minimum_score: float = 0.55,
+) -> SearchHistory | None:
+    cutoff = datetime.utcnow() - timedelta(minutes=ttl_minutes)
+    recent_rows = (
+        db.query(SearchHistory)
+        .filter(SearchHistory.module == module, SearchHistory.created_at >= cutoff)
+        .order_by(SearchHistory.created_at.desc())
+        .limit(scan_limit)
+        .all()
+    )
+
+    best_match: SearchHistory | None = None
+    best_score = 0.0
+    for row in recent_rows:
+        score = _similarity_score(query, row.query)
+        if score >= minimum_score and score > best_score:
+            best_match = row
+            best_score = score
+
+    return best_match
 
 
 def create_document_asset(

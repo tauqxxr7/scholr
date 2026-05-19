@@ -61,6 +61,8 @@ export default function AiModulePage({
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false)
   const [emptyStateMessage, setEmptyStateMessage] = useState('')
   const [lastAttemptFailed, setLastAttemptFailed] = useState(false)
+  const [responseMode, setResponseMode] = useState<'ai' | 'cache' | 'warm_cache' | 'fallback'>('ai')
+  const [responseModeLabel, setResponseModeLabel] = useState('AI Mode')
 
   useEffect(() => {
     trackEvent('module_opened', {
@@ -85,6 +87,8 @@ export default function AiModulePage({
     setError('')
     setEmptyStateMessage('')
     setLastAttemptFailed(false)
+    setResponseMode('ai')
+    setResponseModeLabel('AI Mode')
     trackEvent('generation_started', { module: moduleName })
 
     try {
@@ -97,6 +101,12 @@ export default function AiModulePage({
         setEmptyStateMessage(
           result.emptyMessage || 'Scholr did not return any output for this prompt. Try refining it and run again.',
         )
+      }
+      if (result.mode) {
+        setResponseMode(result.mode)
+      }
+      if (result.modeLabel) {
+        setResponseModeLabel(result.modeLabel)
       }
 
       trackEvent('generation_completed', {
@@ -160,6 +170,8 @@ export default function AiModulePage({
     setError('')
     setEmptyStateMessage('')
     setLastAttemptFailed(false)
+    setResponseMode('ai')
+    setResponseModeLabel('AI Mode')
     trackEvent('clear_clicked', {
       module: moduleName,
       response_length: output.length,
@@ -184,6 +196,15 @@ export default function AiModulePage({
       : emptyStateMessage
         ? 'No output returned'
       : 'Waiting for input'
+  const inferredFallbackMode = output.startsWith('## Provider Temporarily Unavailable')
+  const activeMode = inferredFallbackMode ? 'fallback' : responseMode
+  const activeModeLabel = inferredFallbackMode ? 'Fallback Academic Mode' : responseModeLabel
+  const modeBadgeClass =
+    activeMode === 'fallback'
+      ? 'bg-amber-50 text-amber-800 border border-amber-200'
+      : activeMode === 'cache' || activeMode === 'warm_cache'
+        ? 'bg-sky-50 text-sky-800 border border-sky-200'
+        : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
 
   return (
     <div className="space-y-5 lg:space-y-8">
@@ -210,7 +231,12 @@ export default function AiModulePage({
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Response mode</p>
-              <p className="mt-2 text-sm font-medium text-slate-900">{outputStatus}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${modeBadgeClass}`}>
+                  {activeModeLabel}
+                </span>
+                <span className="text-sm font-medium text-slate-900">{outputStatus}</span>
+              </div>
             </div>
           </div>
         </div>

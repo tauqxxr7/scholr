@@ -5,6 +5,7 @@ from importlib import metadata
 from time import perf_counter
 from collections.abc import AsyncIterator
 from typing import Any
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 
@@ -37,6 +38,8 @@ CONFIGURED_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "").strip()
 PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
 PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 8
 EMBEDDING_MODEL_NAME = "gemini-embedding-001"
+PROVIDER_COOLDOWN_SECONDS = 180
+PROVIDER_QUOTA_COOLDOWN_THRESHOLD = 2
 
 PROVIDER_STATE: dict[str, Any] = {
     "configured": False,
@@ -53,6 +56,9 @@ PROVIDER_STATE: dict[str, Any] = {
     "failed_validation_models_count": 0,
     "selected_model_validation_status": "not_validated",
     "failed_model_reasons": [],
+    "quota_failure_count": 0,
+    "last_successful_generation_timestamp": None,
+    "provider_recovery_state": "probing",
     "model_selection_strategy": "uninitialized",
     "startup_validation_time_ms": None,
     "sdk_version": "unavailable",
@@ -60,6 +66,7 @@ PROVIDER_STATE: dict[str, Any] = {
 
 logger = logging.getLogger("scholr.provider")
 _CLIENT = None
+_PROVIDER_COOLDOWN_UNTIL: datetime | None = None
 
 
 class ScholrGenerationError(Exception):
@@ -83,6 +90,56 @@ def _sdk_not_available_error() -> ScholrGenerationError:
         retryable=False,
         category="sdk_not_installed",
     )
+
+
+def _utc_now() -> datetime:
+    return datetime.utcnow()
+
+
+def _utc_timestamp() -> str:
+    return _utc_now().isoformat(timespec="seconds") + "Z"
+
+
+def _cooldown_active() -> bool:
+    global _PROVIDER_COOLDOWN_UNTIL
+    if _PROVIDER_COOLDOWN_UNTIL is None:
+        return False
+    if _utc_now() >= _PROVIDER_COOLDOWN_UNTIL:
+        _PROVIDER_COOLDOWN_UNTIL = None
+        if PROVIDER_STATE["provider_recovery_state"] == "cooldown":
+            PROVIDER_STATE["provider_recovery_state"] = "probing"
+        return False
+    return True
+
+
+def _enter_provider_cooldown() -> None:
+    global _PROVIDER_COOLDOWN_UNTIL
+    _PROVIDER_COOLDOWN_UNTIL = _utc_now() + timedelta(seconds=PROVIDER_COOLDOWN_SECONDS)
+    PROVIDER_STATE["provider_recovery_state"] = "cooldown"
+
+
+def _record_provider_failure(category: str) -> None:
+    if category == "quota_exceeded":
+        PROVIDER_STATE["quota_failure_count"] += 1
+        if PROVIDER_STATE["quota_failure_count"] >= PROVIDER_QUOTA_COOLDOWN_THRESHOLD:
+            _enter_provider_cooldown()
+        else:
+            PROVIDER_STATE["provider_recovery_state"] = "degraded"
+        return
+
+    if category in {"provider_5xx", "provider_timeout", "no_validated_generation_model", "no_supported_generation_model"}:
+        PROVIDER_STATE["provider_recovery_state"] = "degraded"
+
+
+def _record_provider_success(model_name: str) -> None:
+    PROVIDER_STATE["ready"] = True
+    PROVIDER_STATE["selected_model"] = model_name
+    PROVIDER_STATE["model_name"] = model_name
+    PROVIDER_STATE["provider_status"] = "ready"
+    PROVIDER_STATE["provider_error_category"] = None
+    PROVIDER_STATE["quota_failure_count"] = 0
+    PROVIDER_STATE["last_successful_generation_timestamp"] = _utc_timestamp()
+    PROVIDER_STATE["provider_recovery_state"] = "active"
 
 
 def _get_api_key() -> str:
@@ -391,7 +448,7 @@ def _build_failed_model_reason(model_name: str, category: str) -> dict[str, str]
 def _build_provider_degraded_text(module: str, topic: str, details: str, *, subject: str | None = None) -> str:
     if module == "research":
         return f"""## Provider Temporarily Unavailable
-Scholr could not reach a validated Gemini generation model for this research request, so here is a safe fallback study plan.
+Scholr is temporarily in fallback academic mode for this research request, so here is a safe study plan while live AI generation recovers.
 
 ## Topic Received
 {topic}
@@ -418,7 +475,7 @@ Scholr could not reach a validated Gemini generation model for this research req
 
     if module == "notes":
         return f"""## Provider Temporarily Unavailable
-Scholr could not reach a validated Gemini generation model, so here is a safe revision framework for this topic.
+Scholr is temporarily in fallback academic mode for this notes request, so here is a safe revision framework for this topic.
 
 ## Topic Received
 {topic}
@@ -441,7 +498,7 @@ Scholr could not reach a validated Gemini generation model, so here is a safe re
 
     subject_line = subject or "General"
     return f"""## Provider Temporarily Unavailable
-Scholr could not reach a validated Gemini generation model, so here is a safe fallback explanation scaffold.
+Scholr is temporarily in fallback academic mode for this doubt request, so here is a safe explanation scaffold.
 
 ## Subject
 {subject_line}
@@ -488,6 +545,9 @@ def _update_provider_state(
     failed_validation_models_count: int = 0,
     selected_model_validation_status: str = "not_validated",
     failed_model_reasons: list[dict[str, str]] | None = None,
+    quota_failure_count: int | None = None,
+    last_successful_generation_timestamp: str | None = None,
+    provider_recovery_state: str | None = None,
     model_selection_strategy: str = "unknown",
     startup_validation_time_ms: int | None = None,
 ) -> None:
@@ -508,6 +568,15 @@ def _update_provider_state(
             "failed_validation_models_count": failed_validation_models_count,
             "selected_model_validation_status": selected_model_validation_status,
             "failed_model_reasons": failed_model_reasons or [],
+            "quota_failure_count": PROVIDER_STATE["quota_failure_count"] if quota_failure_count is None else quota_failure_count,
+            "last_successful_generation_timestamp": (
+                PROVIDER_STATE["last_successful_generation_timestamp"]
+                if last_successful_generation_timestamp is None
+                else last_successful_generation_timestamp
+            ),
+            "provider_recovery_state": (
+                PROVIDER_STATE["provider_recovery_state"] if provider_recovery_state is None else provider_recovery_state
+            ),
             "model_selection_strategy": model_selection_strategy,
             "startup_validation_time_ms": startup_validation_time_ms,
             "sdk_version": _sdk_version(),
@@ -531,6 +600,9 @@ def get_provider_status() -> dict[str, Any]:
         "failed_validation_models_count": PROVIDER_STATE["failed_validation_models_count"],
         "selected_model_validation_status": PROVIDER_STATE["selected_model_validation_status"],
         "failed_model_reasons": PROVIDER_STATE["failed_model_reasons"],
+        "quota_failure_count": PROVIDER_STATE["quota_failure_count"],
+        "last_successful_generation_timestamp": PROVIDER_STATE["last_successful_generation_timestamp"],
+        "provider_recovery_state": PROVIDER_STATE["provider_recovery_state"],
         "model_selection_strategy": PROVIDER_STATE["model_selection_strategy"],
         "provider_sdk_version": PROVIDER_STATE["sdk_version"],
         "startup_validation_time_ms": PROVIDER_STATE["startup_validation_time_ms"],
@@ -540,6 +612,28 @@ def get_provider_status() -> dict[str, Any]:
 async def validate_provider_startup() -> dict[str, Any]:
     started_at = perf_counter()
     discovered_models: list[dict[str, Any]] = []
+
+    if _cooldown_active():
+        _update_provider_state(
+            configured=bool(os.getenv("GEMINI_API_KEY", "").strip()),
+            ready=False,
+            selected_model=PROVIDER_STATE["selected_model"],
+            status="cooldown",
+            error_category="quota_exceeded",
+            discovered_models=[],
+            candidate_models_count=PROVIDER_STATE["candidate_models_count"],
+            rejected_models_count=PROVIDER_STATE["rejected_models_count"],
+            validated_models_count=PROVIDER_STATE["validated_models_count"],
+            failed_validation_models_count=PROVIDER_STATE["failed_validation_models_count"],
+            selected_model_validation_status=PROVIDER_STATE["selected_model_validation_status"],
+            failed_model_reasons=PROVIDER_STATE["failed_model_reasons"],
+            quota_failure_count=PROVIDER_STATE["quota_failure_count"],
+            last_successful_generation_timestamp=PROVIDER_STATE["last_successful_generation_timestamp"],
+            provider_recovery_state="cooldown",
+            model_selection_strategy=PROVIDER_STATE["model_selection_strategy"],
+            startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
+        )
+        return get_provider_status()
 
     try:
         _get_api_key()
@@ -558,6 +652,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             failed_validation_models_count=0,
             selected_model_validation_status="not_validated",
             failed_model_reasons=[],
+            provider_recovery_state="not_configured",
             model_selection_strategy="not_configured",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
@@ -588,6 +683,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             failed_validation_models_count=0,
             selected_model_validation_status="not_validated",
             failed_model_reasons=[],
+            provider_recovery_state="degraded",
             model_selection_strategy="discovery_failed",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
@@ -618,6 +714,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             failed_validation_models_count=0,
             selected_model_validation_status="not_validated",
             failed_model_reasons=[],
+            provider_recovery_state="degraded",
             model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
@@ -636,6 +733,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             await _probe_model_generation(candidate)
         except ScholrGenerationError as exc:
             failed_model_reasons.append(_build_failed_model_reason(candidate, exc.category))
+            _record_provider_failure(exc.category)
             log_event(
                 logger,
                 "model_probe_failed",
@@ -647,6 +745,7 @@ async def validate_provider_startup() -> dict[str, Any]:
         except Exception as exc:
             classified = _classify_provider_error(exc)
             failed_model_reasons.append(_build_failed_model_reason(candidate, classified.category))
+            _record_provider_failure(classified.category)
             log_event(
                 logger,
                 "model_probe_failed",
@@ -678,6 +777,9 @@ async def validate_provider_startup() -> dict[str, Any]:
             failed_validation_models_count=len(failed_model_reasons),
             selected_model_validation_status="validated",
             failed_model_reasons=failed_model_reasons,
+            quota_failure_count=0,
+            last_successful_generation_timestamp=_utc_timestamp(),
+            provider_recovery_state="active",
             model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
@@ -706,6 +808,7 @@ async def validate_provider_startup() -> dict[str, Any]:
         failed_validation_models_count=len(failed_model_reasons),
         selected_model_validation_status="not_validated",
         failed_model_reasons=failed_model_reasons,
+        provider_recovery_state="degraded",
         model_selection_strategy=selection["strategy"],
         startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
     )
@@ -739,6 +842,21 @@ async def stream_gemini_response(
     max_output_tokens: int,
 ) -> AsyncIterator[str]:
     client = _build_client()
+
+    if not PROVIDER_STATE["ready"]:
+        if _cooldown_active():
+            raise ScholrGenerationError(
+                "Gemini quota is cooling down right now. Scholr is temporarily using fallback academic mode.",
+                retryable=True,
+                category="quota_exceeded",
+            )
+        await validate_provider_startup()
+        if not PROVIDER_STATE["ready"]:
+            raise ScholrGenerationError(
+                "Scholr could not validate a live generation model right now.",
+                retryable=True,
+                category=PROVIDER_STATE["provider_error_category"] or "no_validated_generation_model",
+            )
 
     discovered_models: list[dict[str, Any]] = []
     if not discovered_models:
@@ -785,6 +903,7 @@ async def stream_gemini_response(
             last_error = _classify_provider_error(exc)
 
         if last_error:
+            _record_provider_failure(last_error.category)
             log_event(
                 logger,
                 "provider_generation_failed",
@@ -823,6 +942,7 @@ async def stream_gemini_response(
             yield text
 
         if last_error:
+            _record_provider_failure(last_error.category)
             log_event(
                 logger,
                 "provider_generation_failed",
@@ -869,13 +989,9 @@ async def stream_gemini_response(
                 continue
             raise last_error
 
+        _record_provider_success(candidate)
         PROVIDER_STATE.update(
             {
-                "ready": True,
-                "selected_model": candidate,
-                "model_name": candidate,
-                "provider_status": "ready",
-                "provider_error_category": None,
                 "candidate_models_count": len(candidates),
                 "rejected_models_count": len(selection["rejected_models"]),
                 "validated_models_count": max(1, PROVIDER_STATE["validated_models_count"]),
@@ -947,6 +1063,9 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
         "failed_validation_models_count": provider_status["failed_validation_models_count"],
         "selected_model_validation_status": provider_status["selected_model_validation_status"],
         "failed_model_reasons": provider_status["failed_model_reasons"],
+        "quota_failure_count": provider_status["quota_failure_count"],
+        "last_successful_generation_timestamp": provider_status["last_successful_generation_timestamp"],
+        "provider_recovery_state": provider_status["provider_recovery_state"],
         "model_selection_strategy": provider_status["model_selection_strategy"],
         "startup_validation_time_ms": provider_status["startup_validation_time_ms"],
         "prompt": prompt,

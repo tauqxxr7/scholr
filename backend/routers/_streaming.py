@@ -23,6 +23,16 @@ def _sse_event(payload: dict[str, Any]) -> str:
     return f"data: {json.dumps(payload)}\n\n"
 
 
+def _response_mode_payload(source: str) -> dict[str, str]:
+    if source == "fallback":
+        return {"mode": "fallback", "label": "Fallback Academic Mode"}
+    if source == "warm_cache":
+        return {"mode": "warm_cache", "label": "Cached Academic Response"}
+    if source == "cache":
+        return {"mode": "cache", "label": "Cached Academic Response"}
+    return {"mode": "ai", "label": "AI Mode"}
+
+
 def _safe_history_summary(text: str) -> str:
     cleaned = text.strip()
     return cleaned[:160] if cleaned else ""
@@ -54,6 +64,7 @@ def build_sse_response(
             request_id=request_id,
             source=source,
         )
+        yield _sse_event({"type": "meta", **_response_mode_payload(source)})
 
         try:
             async for chunk in generator:
