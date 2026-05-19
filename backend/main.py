@@ -84,6 +84,9 @@ async def validate_provider_on_startup():
         selected_model=provider_status["selected_model"],
         candidate_models_count=provider_status["candidate_models_count"],
         rejected_models_count=provider_status["rejected_models_count"],
+        validated_models_count=provider_status["validated_models_count"],
+        failed_validation_models_count=provider_status["failed_validation_models_count"],
+        selected_model_validation_status=provider_status["selected_model_validation_status"],
         model_selection_strategy=provider_status["model_selection_strategy"],
         error_category=provider_status["provider_error_category"],
     )
@@ -97,6 +100,9 @@ async def validate_provider_on_startup():
             selected_model=provider_status["selected_model"],
             candidate_models_count=provider_status["candidate_models_count"],
             rejected_models_count=provider_status["rejected_models_count"],
+            validated_models_count=provider_status["validated_models_count"],
+            failed_validation_models_count=provider_status["failed_validation_models_count"],
+            selected_model_validation_status=provider_status["selected_model_validation_status"],
             model_selection_strategy=provider_status["model_selection_strategy"],
             error_category=provider_status["provider_error_category"],
         )

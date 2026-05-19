@@ -1,4 +1,5 @@
-from agents._generation import stream_gemini_response
+from agents._generation import ScholrGenerationError, build_provider_degraded_text, stream_gemini_response
+from routers._streaming import stream_text_chunks
 
 RESEARCH_PROMPT = """
 You are an expert research assistant for Indian BTech engineering students.
@@ -32,10 +33,15 @@ Do not use overly academic jargon.
 async def generate_research_response(topic: str):
     prompt = RESEARCH_PROMPT.format(topic=topic)
 
-    async for chunk in stream_gemini_response(
-        model_name="gemini-1.5-flash",
-        prompt=prompt,
-        temperature=0.7,
-        max_output_tokens=2048,
-    ):
-        yield chunk
+    try:
+        async for chunk in stream_gemini_response(
+            model_name="gemini-1.5-flash",
+            prompt=prompt,
+            temperature=0.7,
+            max_output_tokens=2048,
+        ):
+            yield chunk
+    except ScholrGenerationError as exc:
+        degraded = build_provider_degraded_text("research", topic)
+        async for chunk in stream_text_chunks(degraded):
+            yield chunk

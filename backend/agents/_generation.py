@@ -23,9 +23,14 @@ except ImportError:  # pragma: no cover - depends on local environment setup
 
 DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
-DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 18
+DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 8
 DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
-PREFERRED_MODEL_FAMILIES = ("gemini-1.5-flash", "gemini-1.5-pro")
+STRICT_MODEL_PRIORITY = (
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-flash",
+)
 MODEL_REJECTION_TOKENS = ("preview", "robotics", "embedding", "image", "vision", "experimental", "tts", "aqa", "live")
 REQUIRED_GENERATION_ACTION = "generatecontent"
 CONFIGURED_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "").strip()
@@ -44,6 +49,10 @@ PROVIDER_STATE: dict[str, Any] = {
     "available_models_sample": [],
     "candidate_models_count": 0,
     "rejected_models_count": 0,
+    "validated_models_count": 0,
+    "failed_validation_models_count": 0,
+    "selected_model_validation_status": "not_validated",
+    "failed_model_reasons": [],
     "model_selection_strategy": "uninitialized",
     "startup_validation_time_ms": None,
     "sdk_version": "unavailable",
@@ -123,7 +132,7 @@ def _matches_model_family(model_name: str, family: str) -> bool:
 
 
 def _get_preferred_family(model_name: str) -> str | None:
-    for family in PREFERRED_MODEL_FAMILIES:
+    for family in STRICT_MODEL_PRIORITY:
         if _matches_model_family(model_name, family):
             return family
     return None
@@ -132,10 +141,10 @@ def _get_preferred_family(model_name: str) -> str | None:
 def _model_sort_key(model_name: str) -> tuple[int, str]:
     preferred_family = _get_preferred_family(model_name)
     if preferred_family is None:
-        return (len(PREFERRED_MODEL_FAMILIES), model_name)
+        return (len(STRICT_MODEL_PRIORITY), model_name)
 
     exact_match_bonus = 0 if model_name.lower() == preferred_family.lower() else 1
-    family_index = PREFERRED_MODEL_FAMILIES.index(preferred_family)
+    family_index = STRICT_MODEL_PRIORITY.index(preferred_family)
     return (family_index, f"{exact_match_bonus}:{model_name}")
 
 
@@ -269,12 +278,13 @@ def _discover_models() -> list[dict[str, Any]]:
 
 def _select_candidate_models(requested_model_name: str | None, discovered_models: list[dict[str, Any]]) -> dict[str, Any]:
     rejected_models: list[dict[str, Any]] = []
-    allowed_models: list[dict[str, Any]] = []
+    models_by_family: dict[str, list[dict[str, Any]]] = {family: [] for family in STRICT_MODEL_PRIORITY}
 
     for descriptor in discovered_models:
         model_name = descriptor["name"]
         supported_actions = descriptor.get("supported_actions", [])
         rejected_reasons = _reject_model_reasons(model_name, supported_actions)
+        matched_family = _get_preferred_family(model_name)
 
         if rejected_reasons:
             rejected_models.append(
@@ -285,27 +295,25 @@ def _select_candidate_models(requested_model_name: str | None, discovered_models
             )
             continue
 
-        allowed_models.append(descriptor)
+        if matched_family is None:
+            rejected_models.append(
+                {
+                    "name": model_name,
+                    "reasons": ["outside_strict_priority"],
+                }
+            )
+            continue
 
-    preferred_candidates = sorted(
-        (descriptor for descriptor in allowed_models if _get_preferred_family(descriptor["name"])),
-        key=lambda descriptor: _model_sort_key(descriptor["name"]),
-    )
-    fallback_candidates = sorted(
-        (descriptor for descriptor in allowed_models if not _get_preferred_family(descriptor["name"])),
-        key=lambda descriptor: descriptor["name"],
-    )
+        models_by_family[matched_family].append(descriptor)
+
+    selected_descriptors: list[dict[str, Any]] = []
+    for family in STRICT_MODEL_PRIORITY:
+        family_models = sorted(models_by_family[family], key=lambda descriptor: _model_sort_key(descriptor["name"]))
+        selected_descriptors.extend(family_models)
 
     strategy = "no_supported_generation_model"
-    selected_descriptors: list[dict[str, Any]] = []
-    if preferred_candidates:
-        selected_descriptors = preferred_candidates + fallback_candidates
-        strategy = "allowlist-first"
-        if fallback_candidates:
-            strategy = "allowlist-first-with-filtered-fallback"
-    elif fallback_candidates:
-        selected_descriptors = fallback_candidates
-        strategy = "filtered-discovery-fallback"
+    if selected_descriptors:
+        strategy = "strict-priority-validated-fallback"
 
     candidates = tuple(descriptor["name"] for descriptor in selected_descriptors)
 
@@ -373,6 +381,99 @@ async def _probe_model_generation(model_name: str) -> None:
         )
 
 
+def _build_failed_model_reason(model_name: str, category: str) -> dict[str, str]:
+    return {
+        "model": model_name,
+        "reason": category,
+    }
+
+
+def _build_provider_degraded_text(module: str, topic: str, details: str, *, subject: str | None = None) -> str:
+    if module == "research":
+        return f"""## Provider Temporarily Unavailable
+Scholr could not reach a validated Gemini generation model for this research request, so here is a safe fallback study plan.
+
+## Topic Received
+{topic}
+
+## Immediate Research Directions
+1. Break the topic into three search angles: core concept, practical application, and latest improvement papers.
+2. Search Google Scholar, Semantic Scholar, and IEEE Xplore using the exact topic plus one use-case keyword.
+3. Compare at least two survey papers before reading individual implementation papers.
+
+## Suggested Search Terms
+- "{topic} survey"
+- "{topic} review paper"
+- "{topic} applications"
+- "{topic} limitations"
+
+## What To Do While Scholr Retries
+{details}
+
+## Retry Checklist
+- retry in a minute
+- simplify the topic wording
+- try a narrower project-focused variation
+"""
+
+    if module == "notes":
+        return f"""## Provider Temporarily Unavailable
+Scholr could not reach a validated Gemini generation model, so here is a safe revision framework for this topic.
+
+## Topic Received
+{topic}
+
+## Revision Outline
+1. Write a two-line definition of the topic in your own words.
+2. List five key concepts, subtypes, or steps related to it.
+3. Add formulas, diagrams, or conditions that usually appear in exams.
+4. End with three quick viva-style questions.
+
+## What To Review First
+- core definition
+- important classifications
+- exam-heavy formulas or conditions
+- one real example or use case
+
+## What To Do While Scholr Retries
+{details}
+"""
+
+    subject_line = subject or "General"
+    return f"""## Provider Temporarily Unavailable
+Scholr could not reach a validated Gemini generation model, so here is a safe fallback explanation scaffold.
+
+## Subject
+{subject_line}
+
+## Doubt Received
+{topic}
+
+## How To Approach It
+1. Rewrite the doubt as one direct textbook question.
+2. Identify the core definition behind it.
+3. Write one example that proves the idea in practice.
+4. Compare it with one related concept so the difference is clear.
+
+## What To Check Next
+- class notes or textbook definition
+- one worked example
+- one common mistake students make here
+
+## What To Do While Scholr Retries
+{details}
+"""
+
+
+def build_provider_degraded_text(module: str, topic: str, *, subject: str | None = None) -> str:
+    return _build_provider_degraded_text(
+        module,
+        topic,
+        "The provider orchestration layer is still healthy enough to keep your workflow moving, but live generation is temporarily unavailable.",
+        subject=subject,
+    )
+
+
 def _update_provider_state(
     *,
     configured: bool,
@@ -383,6 +484,10 @@ def _update_provider_state(
     discovered_models: list[dict[str, Any]],
     candidate_models_count: int = 0,
     rejected_models_count: int = 0,
+    validated_models_count: int = 0,
+    failed_validation_models_count: int = 0,
+    selected_model_validation_status: str = "not_validated",
+    failed_model_reasons: list[dict[str, str]] | None = None,
     model_selection_strategy: str = "unknown",
     startup_validation_time_ms: int | None = None,
 ) -> None:
@@ -399,6 +504,10 @@ def _update_provider_state(
             "available_models_sample": discovered_names[:8],
             "candidate_models_count": candidate_models_count,
             "rejected_models_count": rejected_models_count,
+            "validated_models_count": validated_models_count,
+            "failed_validation_models_count": failed_validation_models_count,
+            "selected_model_validation_status": selected_model_validation_status,
+            "failed_model_reasons": failed_model_reasons or [],
             "model_selection_strategy": model_selection_strategy,
             "startup_validation_time_ms": startup_validation_time_ms,
             "sdk_version": _sdk_version(),
@@ -418,6 +527,10 @@ def get_provider_status() -> dict[str, Any]:
         "available_models_sample": PROVIDER_STATE["available_models_sample"],
         "candidate_models_count": PROVIDER_STATE["candidate_models_count"],
         "rejected_models_count": PROVIDER_STATE["rejected_models_count"],
+        "validated_models_count": PROVIDER_STATE["validated_models_count"],
+        "failed_validation_models_count": PROVIDER_STATE["failed_validation_models_count"],
+        "selected_model_validation_status": PROVIDER_STATE["selected_model_validation_status"],
+        "failed_model_reasons": PROVIDER_STATE["failed_model_reasons"],
         "model_selection_strategy": PROVIDER_STATE["model_selection_strategy"],
         "provider_sdk_version": PROVIDER_STATE["sdk_version"],
         "startup_validation_time_ms": PROVIDER_STATE["startup_validation_time_ms"],
@@ -441,6 +554,10 @@ async def validate_provider_startup() -> dict[str, Any]:
             discovered_models=[],
             candidate_models_count=0,
             rejected_models_count=0,
+            validated_models_count=0,
+            failed_validation_models_count=0,
+            selected_model_validation_status="not_validated",
+            failed_model_reasons=[],
             model_selection_strategy="not_configured",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
@@ -467,6 +584,10 @@ async def validate_provider_startup() -> dict[str, Any]:
             discovered_models=[],
             candidate_models_count=0,
             rejected_models_count=0,
+            validated_models_count=0,
+            failed_validation_models_count=0,
+            selected_model_validation_status="not_validated",
+            failed_model_reasons=[],
             model_selection_strategy="discovery_failed",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
@@ -493,18 +614,31 @@ async def validate_provider_startup() -> dict[str, Any]:
             discovered_models=discovered_models,
             candidate_models_count=0,
             rejected_models_count=len(selection["rejected_models"]),
+            validated_models_count=0,
+            failed_validation_models_count=0,
+            selected_model_validation_status="not_validated",
+            failed_model_reasons=[],
             model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         return get_provider_status()
 
+    failed_model_reasons: list[dict[str, str]] = []
+
     for candidate in candidates:
         try:
-            await _probe_model_generation(candidate)
-        except ScholrGenerationError as exc:
             log_event(
                 logger,
-                "provider_generation_failed",
+                "model_probe_started",
+                model_name=candidate,
+                stage="startup_probe",
+            )
+            await _probe_model_generation(candidate)
+        except ScholrGenerationError as exc:
+            failed_model_reasons.append(_build_failed_model_reason(candidate, exc.category))
+            log_event(
+                logger,
+                "model_probe_failed",
                 model_name=candidate,
                 error_category=exc.category,
                 stage="startup_probe",
@@ -512,9 +646,10 @@ async def validate_provider_startup() -> dict[str, Any]:
             continue
         except Exception as exc:
             classified = _classify_provider_error(exc)
+            failed_model_reasons.append(_build_failed_model_reason(candidate, classified.category))
             log_event(
                 logger,
-                "provider_generation_failed",
+                "model_probe_failed",
                 model_name=candidate,
                 error_category=classified.category,
                 provider_exception_type=type(exc).__name__,
@@ -522,6 +657,13 @@ async def validate_provider_startup() -> dict[str, Any]:
                 stage="startup_probe",
             )
             continue
+
+        log_event(
+            logger,
+            "model_probe_success",
+            model_name=candidate,
+            stage="startup_probe",
+        )
 
         _update_provider_state(
             configured=True,
@@ -532,16 +674,21 @@ async def validate_provider_startup() -> dict[str, Any]:
             discovered_models=discovered_models,
             candidate_models_count=len(candidates),
             rejected_models_count=len(selection["rejected_models"]),
+            validated_models_count=1,
+            failed_validation_models_count=len(failed_model_reasons),
+            selected_model_validation_status="validated",
+            failed_model_reasons=failed_model_reasons,
             model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         log_event(
             logger,
-            "provider_model_selected",
+            "final_validated_model_selected",
             model_name=candidate,
             stage="startup_probe",
             available_models_count=len(discovered_models),
             candidate_models_count=len(candidates),
+            failed_validation_models_count=len(failed_model_reasons),
             model_selection_strategy=selection["strategy"],
         )
         return get_provider_status()
@@ -549,12 +696,16 @@ async def validate_provider_startup() -> dict[str, Any]:
     _update_provider_state(
         configured=True,
         ready=False,
-        selected_model=candidates[0],
+        selected_model=None,
         status="not_ready",
-        error_category="invalid_model",
+        error_category="no_validated_generation_model",
         discovered_models=discovered_models,
         candidate_models_count=len(candidates),
         rejected_models_count=len(selection["rejected_models"]),
+        validated_models_count=0,
+        failed_validation_models_count=len(failed_model_reasons),
+        selected_model_validation_status="not_validated",
+        failed_model_reasons=failed_model_reasons,
         model_selection_strategy=selection["strategy"],
         startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
     )
@@ -565,7 +716,8 @@ async def validate_provider_startup() -> dict[str, Any]:
         discovered_models=[descriptor["name"] for descriptor in discovered_models[:12]],
         attempted_candidates=list(candidates),
         rejected_models=selection["rejected_models"][:12],
-        error_category="invalid_model",
+        failed_model_reasons=failed_model_reasons[:12],
+        error_category="no_validated_generation_model",
         model_selection_strategy=selection["strategy"],
     )
     return get_provider_status()
@@ -576,7 +728,7 @@ def resolve_model_name(requested_model_name: str) -> str:
     if PROVIDER_STATE["ready"] and preferred:
         return preferred
     requested = _normalize_model_name(requested_model_name)
-    return requested or _normalize_model_name(CONFIGURED_MODEL_NAME) or PREFERRED_MODEL_FAMILIES[0]
+    return requested or _normalize_model_name(CONFIGURED_MODEL_NAME) or STRICT_MODEL_PRIORITY[0]
 
 
 async def stream_gemini_response(
@@ -601,7 +753,7 @@ async def stream_gemini_response(
         raise ScholrGenerationError(
             "This Gemini project does not currently expose any supported text generation models.",
             retryable=False,
-            category="no_supported_generation_model",
+            category="no_validated_generation_model",
         )
 
     last_error: ScholrGenerationError | None = None
@@ -726,6 +878,8 @@ async def stream_gemini_response(
                 "provider_error_category": None,
                 "candidate_models_count": len(candidates),
                 "rejected_models_count": len(selection["rejected_models"]),
+                "validated_models_count": max(1, PROVIDER_STATE["validated_models_count"]),
+                "selected_model_validation_status": "validated",
                 "model_selection_strategy": selection["strategy"],
             }
         )
@@ -789,6 +943,10 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
         "available_models_sample": provider_status["available_models_sample"],
         "candidate_models_count": provider_status["candidate_models_count"],
         "rejected_models_count": provider_status["rejected_models_count"],
+        "validated_models_count": provider_status["validated_models_count"],
+        "failed_validation_models_count": provider_status["failed_validation_models_count"],
+        "selected_model_validation_status": provider_status["selected_model_validation_status"],
+        "failed_model_reasons": provider_status["failed_model_reasons"],
         "model_selection_strategy": provider_status["model_selection_strategy"],
         "startup_validation_time_ms": provider_status["startup_validation_time_ms"],
         "prompt": prompt,
@@ -801,7 +959,7 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
     try:
         collected: list[str] = []
         async for chunk in stream_gemini_response(
-            model_name=provider_status["selected_model"] or PREFERRED_MODEL_FAMILIES[0],
+            model_name=provider_status["selected_model"] or STRICT_MODEL_PRIORITY[0],
             prompt=prompt,
             temperature=0.0,
             max_output_tokens=PROVIDER_PROBE_MAX_OUTPUT_TOKENS,
