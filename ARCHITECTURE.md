@@ -9,14 +9,19 @@ Scholr is an AI-powered academic intelligence and research assistance platform f
 ```mermaid
 flowchart LR
     U["Student user"] --> F["Next.js App Router frontend"]
-    F -->|"HTTPS + SSE"| B["FastAPI backend"]
-    B --> G["Gemini provider layer"]
-    B --> C["Short-TTL cache replay"]
+    F -->|"HTTPS + SSE"| M["Runtime mode detector"]
+    M --> B["FastAPI backend"]
+    B --> G["Validated Gemini provider layer"]
+    B --> A["Fallback academic engine"]
+    B --> C["History + exact/warm cache"]
     B --> H["History persistence"]
-    B --> L["Structured logs + request IDs + rate limiting"]
+    B --> L["Structured logs + request IDs + rate limiting + quota cooldown"]
     H --> S["SQLite (local) / PostgreSQL (production)"]
     B --> R["Document intelligence scaffold"]
     R --> V["ChromaDB / future pgvector"]
+    G --> B
+    A --> B
+    C --> B
 ```
 
 ## Frontend
@@ -57,19 +62,25 @@ flowchart LR
 1. Frontend sends a module request to the FastAPI backend.
 2. Backend assigns a request ID and logs `request_started`.
 3. Rate limiter checks whether the client has exceeded the current MVP quota.
-4. Backend checks recent history for a short-TTL cache hit.
-5. If cached content exists, Scholr replays it as streamed SSE chunks.
-6. Otherwise the Gemini helper selects the current validated model and begins streaming.
-7. Shared SSE helper emits JSON-safe chunks and always finishes with `data: [DONE]`.
-8. Completed output is saved to history if persistence is available.
+4. Backend checks recent history for an exact or warm-cache match.
+5. If cached content exists, Scholr replays it as streamed SSE chunks and marks the response as `Cached Academic Response`.
+6. Otherwise the provider layer checks whether a validated Gemini model is currently healthy.
+7. If Gemini is healthy, Scholr streams normal AI output in `AI Mode`.
+8. If Gemini is quota-blocked, unavailable, or unvalidated, Scholr switches to the fallback academic engine and still streams structured guidance.
+9. Shared SSE helper emits JSON-safe chunks and always finishes with `data: [DONE]`.
+10. Completed output is saved to history if persistence is available.
 
 ## Reliability Layers
 
 - startup provider validation
-- runtime model fallback
+- strict validated-model selection and runtime fallback
+- Fallback Academic Mode
+- Cached Academic Response mode
+- no-empty-output guarantee
 - request IDs for debugging
 - categorized provider errors
-- short-TTL cache replay
+- exact + warm-cache replay
+- quota observability and cooldown behavior
 - history-save isolation so generation success is not lost
 - mobile-safe frontend stream parsing
 

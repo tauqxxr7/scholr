@@ -65,10 +65,13 @@ Dashboard → AI module → response generation → learning history.
 
 **Live MVP deployed on Vercel + Render.**
 
-Currently verified in production:
+Current production state:
+- **Live MVP: stable**
+- **Gemini provider: degraded due to quota/model access**
+- **User-facing output: still functional through Fallback Academic Mode**
 - frontend loads
 - backend `/health` works
-- Research / Notes / Doubt provider reliability is under verification until live generation is confirmed healthy again
+- Research / Notes / Doubt stream useful academic output during Gemini quota exhaustion
 
 Render note:
 - the backend runs on the Render free tier, so the first request after inactivity may cold start and take longer
@@ -96,8 +99,10 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 
 1. A student opens Research, Notes, or Doubt from the shared workspace.
 2. The frontend sends one structured request to FastAPI and starts listening for SSE chunks.
-3. The backend applies rate limiting, cache lookup, provider selection, and streamed generation.
-4. The final answer is saved to history and rendered in a copy-ready format for revision, viva prep, or project ideation.
+3. The backend applies rate limiting, cache lookup, provider validation, and runtime mode selection.
+4. If Gemini is healthy, Scholr streams the answer in `AI Mode`.
+5. If Gemini is unavailable, quota-limited, or unvalidated, Scholr switches to `Fallback Academic Mode` or replays a `Cached Academic Response`.
+6. The final answer is saved to history and rendered in a copy-ready format for revision, viva prep, or project ideation.
 
 ## Features
 
@@ -113,6 +118,10 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 - In-memory IP rate limiting on AI endpoints
 - Structured backend logging and request IDs
 - Short-TTL response caching for repeated prompts
+- Warm-cache replay for similar prompts during degraded provider periods
+- Fallback Academic Mode during quota exhaustion or provider unavailability
+- Cached Academic Response mode for recently reusable answers
+- No-empty-output guarantee for Research, Notes, and Doubt
 - Retry, loading, empty, and error states
 - PWA-lite manifest for installable browser support
 - SQLite locally
@@ -133,7 +142,10 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **Analytics readiness** through an env-gated PostHog wrapper that tracks only safe product events
 - **API protection** through lightweight rate limiting, request IDs, and structured logs
 - **Short-TTL cache replay** for repeated prompts so quota is protected without changing the SSE UX
-- **Provider resilience** through startup validation, categorized Gemini errors, and safe runtime model fallback
+- **Provider resilience** through startup validation, strict validated-model orchestration, quota observability, and cooldown behavior
+- **Fallback Academic Mode** so students still receive structured study guidance during provider quota exhaustion
+- **Cached Academic Response mode** so recent successful answers can be reused without spending more quota
+- **No-empty-output guarantee** so the core student modules never collapse into blank panels
 - **RAG foundation** through isolated document routes, chunk metadata, and retrieval-ready vector storage scaffolding
 - **Responsive workspace shell** so the same product loop works across phones, tablets, laptops, and desktops
 - **PWA-lite support** with a manifest, theme color, and mobile-ready metadata
@@ -187,10 +199,15 @@ scholr/
 ```mermaid
 flowchart LR
     U["BTech student on phone, tablet, or desktop"] --> F["Next.js frontend on Vercel"]
-    F -->|"SSE requests"| B["FastAPI backend on Render"]
-    B --> G["Gemini provider layer"]
-    B --> D["History persistence (SQLite locally / PostgreSQL in production)"]
-    B --> O["Structured logs, rate limiting, cache replay"]
+    F -->|"SSE requests"| R["Frontend runtime mode detector"]
+    R --> B["FastAPI backend on Render"]
+    B --> P["Validated Gemini provider layer"]
+    B --> X["Fallback academic engine"]
+    B --> C["History + exact/warm cache"]
+    B --> O["Structured logs, rate limiting, quota cooldown"]
+    P --> B
+    X --> B
+    C --> B
 ```
 
 ### Backend
@@ -291,15 +308,18 @@ If Scholr shows `AI provider error. Please retry.` in production, check these in
    - confirm the project still has quota and Gemini API access
    - check whether the project is hitting provider-side or free-tier limits
 3. Model availability
-   - verify `selected_model`, `available_models_count`, `candidate_models_count`, `rejected_models_count`, and `model_selection_strategy` from `/health/provider`
-   - if `provider_error_category` becomes `no_supported_generation_model`, the discovered models did not pass Scholr's production-safe generation filter
+   - verify `selected_model`, `available_models_count`, `candidate_models_count`, `rejected_models_count`, `validated_models_count`, `failed_validation_models_count`, and `model_selection_strategy` from `/health/provider`
+   - if `provider_error_category` becomes `no_supported_generation_model` or `no_validated_generation_model`, the discovered models did not pass Scholr's production-safe generation filter
    - confirm the project exposes `gemini-1.5-flash` or `gemini-1.5-pro` (including versioned aliases) with `generateContent` capability
-4. Render redeploy state
+4. Quota resilience
+   - verify `quota_failure_count`, `last_successful_generation_timestamp`, and `provider_recovery_state`
+   - during quota exhaustion, Scholr should still stream `Fallback Academic Mode` or `Cached Academic Response`
+5. Render redeploy state
    - after changing env vars or backend code, force a redeploy on Render
    - verify `/health` reflects the newest provider diagnostics after rollout
-5. Backend smoke test
+6. Backend smoke test
    - run `python backend/scripts/test_provider.py` with the backend env loaded
-   - check `provider_status`, `selected_model`, `available_models_count`, `candidate_models_count`, `model_selection_strategy`, and `provider_error_category`
+   - check `provider_status`, `selected_model`, `available_models_count`, `candidate_models_count`, `validated_models_count`, `provider_recovery_state`, and `provider_error_category`
 
 ## Roadmap
 

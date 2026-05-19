@@ -97,8 +97,19 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - History works locally with SQLite and is production-ready for PostgreSQL through `DATABASE_URL`
 - Frontend is polished enough for demo, recruiter review, and deployment
 - Frontend is live on Vercel and backend health is live on Render
-- Provider diagnostics, request IDs, rate limiting, and cache replay are now part of the production MVP
-- Current production verification shows the frontend loads and backend `/health` works, while Research / Notes / Doubt provider reliability remains under verification until live generation is healthy again
+- Provider diagnostics, request IDs, rate limiting, and exact/similar cache replay are now part of the production MVP
+- Provider resilience now includes:
+  - validated-model startup probing
+  - strict fallback order
+  - Fallback Academic Mode
+  - Cached Academic Response mode
+  - quota observability
+  - provider cooldown behavior
+  - no-empty-output guarantee for the three core student modules
+- Current production verification shows:
+  - Live MVP is stable
+  - Gemini provider is degraded due to quota/model access
+  - user-facing output remains functional through Fallback Academic Mode
 - Current live URLs:
   - Frontend: https://scholr-coral.vercel.app
   - Backend health: https://scholr-k9sj.onrender.com/health
@@ -131,6 +142,7 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - centralized logging later with Sentry, Grafana, or Azure Monitor
 - stronger uptime and latency tracking after the first usage wave
 - add provider scorecards by model if fallback behavior becomes part of ongoing operations
+- track quota exhaustion, validated model failures, and provider recovery state as first-class operational signals
 
 ### Analytics
 - start lightweight with PostHog or Vercel Analytics behind env gating

@@ -40,6 +40,10 @@ Scholr is in the live MVP stage:
 - structured request logging with request IDs
 - short-TTL cache replay for repeated prompts
 - provider startup validation and runtime model fallback
+- warm-cache replay for similar prompts during degraded provider periods
+- Fallback Academic Mode for quota exhaustion or missing validated models
+- no-empty-output guarantee for Research, Notes, and Doubt
+- provider quota observability and cooldown behavior
 - pagination-ready history endpoint with `limit` and `page`
 - document upload and citation-aware RAG scaffold routes
 
@@ -156,7 +160,9 @@ Scholr is in the live MVP stage:
 - Production status:
   - frontend loads
   - backend `/health` works
-  - Research / Notes / Doubt provider reliability is under verification until live generation is confirmed healthy again
+  - Live MVP is stable
+  - Gemini provider is degraded due to quota/model access
+  - Research / Notes / Doubt remain functional through Fallback Academic Mode
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 
