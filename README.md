@@ -91,6 +91,13 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 - **Saved history** so outputs stay useful after one session
 - **BTech-focused prompting** designed around engineering coursework, viva prep, and final-year idea exploration
 
+## How Scholr Works
+
+1. A student opens Research, Notes, or Doubt from the shared workspace.
+2. The frontend sends one structured request to FastAPI and starts listening for SSE chunks.
+3. The backend applies rate limiting, cache lookup, provider selection, and streamed generation.
+4. The final answer is saved to history and rendered in a copy-ready format for revision, viva prep, or project ideation.
+
 ## Features
 
 - Research Assistant
@@ -100,6 +107,7 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 - Responsive across mobile, tablet, laptop, and desktop
 - Shared SSE streaming responses
 - Provider diagnostics with startup validation and runtime fallback
+- Document intelligence scaffold with PDF upload, chunking, retrieval, and citation-aware answer design
 - Analytics wrapper ready for PostHog when env vars are present
 - In-memory IP rate limiting on AI endpoints
 - Structured backend logging and request IDs
@@ -125,6 +133,7 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **API protection** through lightweight rate limiting, request IDs, and structured logs
 - **Short-TTL cache replay** for repeated prompts so quota is protected without changing the SSE UX
 - **Provider resilience** through startup validation, categorized Gemini errors, and safe runtime model fallback
+- **RAG foundation** through isolated document routes, chunk metadata, and retrieval-ready vector storage scaffolding
 - **Responsive workspace shell** so the same product loop works across phones, tablets, laptops, and desktops
 - **PWA-lite support** with a manifest, theme color, and mobile-ready metadata
 - **Production env handling** that keeps localhost fallback in development and requires a real API URL in production
@@ -192,6 +201,8 @@ flowchart LR
 - `POST /api/notes`
 - `POST /api/doubt`
 - `GET /api/history`
+- `POST /api/documents/upload`
+- `POST /api/documents/answer`
 
 ### Frontend
 
@@ -356,6 +367,7 @@ Project ecosystem:
 - [User Validation Plan](USER_VALIDATION_PLAN.md)
 - [Architecture](ARCHITECTURE.md)
 - [System Design](SYSTEM_DESIGN.md)
+- [Request Flow](REQUEST_FLOW.md)
 - [Engineering Decisions](ENGINEERING_DECISIONS.md)
 - [Deployment Guide](DEPLOYMENT.md)
 - [Screenshots Notes](screenshots/README.md)

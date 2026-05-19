@@ -15,6 +15,8 @@ flowchart LR
     B --> H["History persistence"]
     B --> L["Structured logs + request IDs + rate limiting"]
     H --> S["SQLite (local) / PostgreSQL (production)"]
+    B --> R["Document intelligence scaffold"]
+    R --> V["ChromaDB / future pgvector"]
 ```
 
 ## Frontend
@@ -47,6 +49,8 @@ flowchart LR
 - `POST /api/notes`
 - `POST /api/doubt`
 - `GET /api/history`
+- `POST /api/documents/upload`
+- `POST /api/documents/answer`
 
 ## Generation Flow
 
@@ -74,6 +78,21 @@ flowchart LR
 - SQLite by default for local development
 - PostgreSQL in production through `DATABASE_URL`
 - history stores completed responses so users can review recent outputs
+- document assets and chunks are scaffolded for future PDF intelligence
+
+## Future RAG Layer
+
+```mermaid
+flowchart TD
+    P["Uploaded PDF"] --> X["Text extraction"]
+    X --> K["Chunking with overlap"]
+    K --> E["Gemini embeddings"]
+    E --> V["Vector store"]
+    Q["Student question"] --> R["Retriever"]
+    V --> R
+    R --> A["Citation-aware answer generation"]
+    A --> O["Answer + cited snippets"]
+```
 
 ## Deployment
 

@@ -41,6 +41,7 @@ Scholr is in the live MVP stage:
 - short-TTL cache replay for repeated prompts
 - provider startup validation and runtime model fallback
 - pagination-ready history endpoint with `limit` and `page`
+- document upload and citation-aware RAG scaffold routes
 
 ### Data
 
@@ -93,6 +94,7 @@ Scholr is in the live MVP stage:
 6. Reintroduce auth later, only after the wedge proves retention
 7. Move production history to PostgreSQL if usage justifies it
 8. Expand SEO and legal polish only when the public launch needs become sharper
+9. Validate document intelligence scaffold with real PDFs before frontend integration
 
 ## Roadmap Extensions
 

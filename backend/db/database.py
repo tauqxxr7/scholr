@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, String, Text, create_engine
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
@@ -24,6 +24,33 @@ class SearchHistory(Base):
     module = Column(String, nullable=False)
     query = Column(Text, nullable=False)
     response = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class DocumentAsset(Base):
+    __tablename__ = "document_assets"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    title = Column(String, nullable=False)
+    original_filename = Column(String, nullable=False)
+    storage_path = Column(Text, nullable=False)
+    mime_type = Column(String, nullable=False, default="application/pdf")
+    status = Column(String, nullable=False, default="processing")
+    page_count = Column(Integer, nullable=False, default=0)
+    chunk_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DocumentChunk(Base):
+    __tablename__ = "document_chunks"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    document_id = Column(String, ForeignKey("document_assets.id"), nullable=False, index=True)
+    page_number = Column(Integer, nullable=False, default=1)
+    chunk_index = Column(Integer, nullable=False, default=0)
+    content = Column(Text, nullable=False)
+    citation_label = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 

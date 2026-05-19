@@ -108,6 +108,7 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - Gather first real student usage feedback
 - Add CI and protected-branch status checks
 - Review early analytics signal after the first student validation sprint
+- Validate the document intelligence scaffold with real uploaded course PDFs before exposing it in the core UI
 
 ## Roadmap Additions
 

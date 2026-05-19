@@ -9,7 +9,7 @@ from starlette.requests import Request
 from agents._generation import get_provider_status, validate_provider_startup
 from core.logging_utils import configure_logging, log_event
 from db.database import init_db
-from routers import doubt, history, notes, research
+from routers import documents, doubt, history, notes, research
 
 configure_logging()
 init_db()
@@ -66,6 +66,7 @@ app.include_router(research.router, prefix="/api", tags=["research"])
 app.include_router(notes.router, prefix="/api", tags=["notes"])
 app.include_router(doubt.router, prefix="/api", tags=["doubt"])
 app.include_router(history.router, prefix="/api", tags=["history"])
+app.include_router(documents.router, prefix="/api", tags=["documents"])
 
 logger = logging.getLogger("scholr.api")
 

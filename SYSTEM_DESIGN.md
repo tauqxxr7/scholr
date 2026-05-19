@@ -40,6 +40,7 @@
 - history table for completed responses
 - SQLite locally
 - PostgreSQL-ready in production
+- document metadata and chunk records scaffolded in the SQL layer
 
 ### 5. Control layer
 
@@ -86,17 +87,20 @@ This is roadmap-only for now.
 - PDF upload
 - metadata extraction
 - file ownership and storage model
+- file size limits and safe temp-file cleanup
 
 ### Phase 2
 
 - chunking
 - embeddings
 - document index
+- ChromaDB now as the MVP vector store, with pgvector as the later production path
 
 ### Phase 3
 
 - citations from uploaded files inside Notes, Research, and Doubt
 - semantic search over both uploaded documents and saved history
+- citation-aware answers using retrieved snippets as the grounding layer
 
 ### Phase 4
 
