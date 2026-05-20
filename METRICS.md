@@ -8,6 +8,7 @@ This document tracks measurable production proof without inventing data.
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 - Provider health: [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
 - Generation smoke test: [https://scholr-k9sj.onrender.com/health/generate-test](https://scholr-k9sj.onrender.com/health/generate-test)
+- Document health: [https://scholr-k9sj.onrender.com/health/documents](https://scholr-k9sj.onrender.com/health/documents)
 
 ## Instrumented runtime metrics
 
@@ -21,6 +22,11 @@ This document tracks measurable production proof without inventing data.
 | Requests per minute | `/health` runtime diagnostics | Instrumented | Current MVP quota protection view |
 | Quota cooldown remaining | `/health/provider` | Instrumented | Visible while provider is cooling down |
 | Last successful generation timestamp | `/health/provider` | Instrumented | Use for outage analysis |
+| Upload success rate | frontend analytics + backend upload logs | Instrumented | Do not report percentages until real sessions accumulate |
+| Retrieval latency | backend document logs | Instrumented | Upload and answer durations logged separately |
+| Document answer latency | frontend analytics + backend logs | Instrumented | Useful for mobile perception and RAG tuning |
+| Citation count | document answer payload + analytics | Instrumented | Track whether answers stay grounded |
+| Lexical vs semantic retrieval usage | `/health/documents` + document answer payload | Instrumented | Supports semantic upgrade planning |
 
 ## Product metrics to collect
 

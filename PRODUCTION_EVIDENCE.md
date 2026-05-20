@@ -6,6 +6,7 @@
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 - Provider health: [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
 - Generation smoke test: [https://scholr-k9sj.onrender.com/health/generate-test](https://scholr-k9sj.onrender.com/health/generate-test)
+- Document health: [https://scholr-k9sj.onrender.com/health/documents](https://scholr-k9sj.onrender.com/health/documents)
 
 ## Current production evidence table
 
@@ -17,7 +18,7 @@
 | Provider recovery | Active | Provider diagnostics and background validation loop |
 | Fallback mode | Working | No-empty-output guarantee and fallback academic mode |
 | Cache behavior | Working | Exact cache, warm cache, optimistic hydration |
-| Document intelligence backend | Foundation validated | Upload + answer routes, retrieval-only fallback, citation metadata |
+| Document intelligence | Live in retrieval-first mode | Upload UI, cited answers, lexical fallback, PYQ and study workflows |
 | User validation | Ready | Templates and research pack present, no fabricated data |
 | CI status | Live | Backend CI, Frontend CI, Repo Hygiene passing |
 
@@ -26,7 +27,7 @@
 - Live MVP: stable
 - Gemini provider: can degrade due to quota or project-level model access
 - User-facing experience: functional through AI Mode, cache-backed replay, or fallback academic mode
-- Document intelligence: backend-first foundation exists; frontend PDF UX is intentionally deferred
+- Document intelligence: frontend PDF workflow exists and stays honest about retrieval-only vs grounded AI behavior
 
 ## Honest limitation
 

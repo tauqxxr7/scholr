@@ -6,6 +6,7 @@ This document audits the current backend-first PDF and retrieval foundation.
 
 - `POST /api/documents/upload`
 - `POST /api/documents/answer`
+- `GET /health/documents`
 
 ## Upload flow
 
@@ -17,6 +18,7 @@ This document audits the current backend-first PDF and retrieval foundation.
 6. attempt embeddings when the provider and vector dependencies are available
 7. preserve retrieval-readiness even when semantic indexing is unavailable
 8. clean up temporary files
+9. expose retrieval-health status safely through `/health/documents`
 
 ## Retrieval flow
 
@@ -45,6 +47,12 @@ Each citation should preserve:
 - citation label
 - snippet
 
+Each answer should also expose:
+- retrieval mode: `lexical`, `semantic`, or future `hybrid`
+- whether provider-backed generation was used
+- confidence
+- limitations
+
 ## Current dependencies
 
 - `pypdf`
@@ -71,6 +79,7 @@ The smoke path currently validates:
 - chunk persistence
 - lexical retrieval fallback
 - cited response shape
+- retrieval mode exposure
 
 ## Known limitations
 

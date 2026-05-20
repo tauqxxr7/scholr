@@ -19,6 +19,7 @@ Live links:
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 - Provider health: [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
 - Generation smoke test: [https://scholr-k9sj.onrender.com/health/generate-test](https://scholr-k9sj.onrender.com/health/generate-test)
+- Document health: [https://scholr-k9sj.onrender.com/health/documents](https://scholr-k9sj.onrender.com/health/documents)
 
 ![Scholr hero preview](screenshots/landing.png)
 
@@ -34,6 +35,7 @@ Scholr is a live academic AI product for BTech students who need:
 - `Research`: turns a topic into papers, subtopics, and project-worthy direction
 - `Notes`: turns a syllabus topic into revision-ready structure
 - `Doubt`: turns a confusing concept into step-by-step explanation
+- `Documents`: turns uploaded PDFs into citation-grounded academic workflows
 
 ## Demo And Proof
 
@@ -94,6 +96,7 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 | Provider recovery | Active | `/health/provider` diagnostics |
 | Fallback mode | Working | useful academic output during provider degradation |
 | Cache / fallback behavior | Working | cached and recovery modes exposed to UI |
+| Document intelligence | Working in retrieval-first mode | upload, citations, and retrieval-only answers live |
 | User testing status | Ready | templates and validation plan included |
 
 ### Restore true AI Mode
@@ -140,10 +143,35 @@ Runtime modes:
 - `Fallback Academic Mode`: deterministic academic scaffolding
 - `Provider Recovering`: fallback output while provider re-validation happens in the background
 
+## Document Intelligence
+
+Scholr now exposes a frontend-first document workflow on top of the backend RAG foundation:
+
+- upload a PDF
+- wait for `Document Ready` or `Retrieval-only mode`
+- ask grounded questions about the uploaded file
+- see citation snippets with page references when available
+- use academic workflows like revision notes, viva questions, and important-question extraction
+
+This is intentionally honest:
+- if embeddings or provider-backed synthesis are unavailable, Scholr does not pretend semantic AI is active
+- retrieval-first answers stay useful through lexical fallback and citations
+
+### Retrieval modes
+
+- `Lexical Retrieval`: chunk matching from stored document text when vector search is unavailable
+- `Semantic Retrieval`: embedding-backed chunk retrieval when vector search and provider health are available
+- `Hybrid Retrieval`: planned next stage once the vector path is stabilized
+
+### Citation example
+
+`According to academic-sample, Page 1, chunk 0, DBMS normalization reduces redundancy and improves data integrity.`
+
 ## Production Resilience
 
 - provider diagnostics through `/health/provider`
 - tiny generation smoke test through `/health/generate-test`
+- document health through `/health/documents`
 - strict model validation before provider promotion
 - cooldown-aware recovery loop
 - structured logging and request IDs
@@ -151,6 +179,7 @@ Runtime modes:
 - exact and warm-cache replay paths
 - no-empty-output guarantee for Research, Notes, and Doubt
 - mobile-safe fallback rendering and optimistic skeleton states
+- retrieval-first document answers when semantic generation is unavailable
 
 ## Engineering Tradeoffs
 
@@ -257,7 +286,7 @@ Validation assets:
 
 ## Document Intelligence Foundation
 
-Scholr already includes a backend-first document intelligence scaffold. The frontend upload flow is intentionally not built yet so the current product remains stable.
+Scholr now includes a frontend-first document workflow on top of a backend-first document intelligence foundation.
 
 See:
 - [RAG_ROADMAP.md](RAG_ROADMAP.md)

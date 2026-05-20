@@ -30,10 +30,12 @@ flowchart LR
 - **Cached Academic Response**: an exact or similar recent answer is replayed to protect quota and lower latency
 - **Fallback Academic Mode**: the provider is degraded, but Scholr still streams deterministic academic guidance
 - **Provider Recovering**: the frontend remains useful while background re-validation tries to restore AI Mode
+- **Document Retrieval Mode**: document answers explicitly report whether they came from lexical, semantic, or future hybrid retrieval
 
 ## Frontend Responsibilities
 
 - collect prompts for Research, Notes, and Doubt
+- collect PDF uploads and document-grounded study questions
 - call the backend using `NEXT_PUBLIC_API_URL`
 - parse SSE chunks safely across desktop and mobile browsers
 - expose copy, clear, retry, and mode-badge feedback
@@ -48,6 +50,7 @@ flowchart LR
 - replay exact and warm-cache responses
 - save history without blocking the response path
 - keep fallback academic output available when the provider is degraded
+- surface retrieval mode, citations, confidence, and limitations for document answers
 
 ## Current Request Lifecycle
 
@@ -92,6 +95,7 @@ flowchart TD
 - history stores completed responses for replay and review
 - document assets and chunks are persisted for backend-first PDF intelligence
 - vector storage is local today and intentionally gitignored
+- `/health/documents` exposes PDF, multipart, vector, and embedding readiness without exposing secrets
 
 ## Document Intelligence Flow
 

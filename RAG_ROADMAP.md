@@ -11,7 +11,7 @@ This document explains the next careful steps from backend scaffold to productio
 - embeddings path exists when dependencies and provider access are available
 - citation-aware answer format exists
 - retrieval-only lexical fallback exists
-- frontend upload UI is intentionally not built yet
+- frontend document upload and question UI exists
 
 ## Stepwise roadmap
 
@@ -26,7 +26,7 @@ This document explains the next careful steps from backend scaffold to productio
 
 ### Phase 2
 
-- expose document status and warning states in a safe frontend upload flow
+- refine document status, warning states, and workflow quality in the frontend upload flow
 - test citation usefulness with real student documents
 - validate whether question-paper and PYQ workflows should become a dedicated mode instead of generic document Q and A
 
