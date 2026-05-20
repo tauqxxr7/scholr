@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
@@ -49,6 +49,7 @@ class DocumentChunk(Base):
     document_id = Column(String, ForeignKey("document_assets.id"), nullable=False, index=True)
     page_number = Column(Integer, nullable=False, default=1)
     chunk_index = Column(Integer, nullable=False, default=0)
+    document_name = Column(String, nullable=False, default="Uploaded document")
     content = Column(Text, nullable=False)
     citation_label = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -64,3 +65,14 @@ def get_db():
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    inspector = inspect(engine)
+    try:
+        columns = {column["name"] for column in inspector.get_columns("document_chunks")}
+    except Exception:
+        columns = set()
+
+    if "document_name" not in columns and columns:
+        with engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE document_chunks ADD COLUMN document_name VARCHAR DEFAULT 'Uploaded document' NOT NULL")
+            )

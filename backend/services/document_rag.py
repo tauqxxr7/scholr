@@ -3,6 +3,7 @@ import tempfile
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+import re
 
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
@@ -28,9 +29,19 @@ class DocumentIntelligenceError(Exception):
 
 @dataclass
 class RetrievedChunk:
+    document_name: str
     page_number: int
+    chunk_index: int
     citation_label: str
     snippet: str
+    score: float
+
+
+@dataclass
+class RetrievalResult:
+    chunks: list[RetrievedChunk]
+    retrieval_mode: str
+    warning: str | None = None
 
 
 def _safe_title(filename: str) -> str:
@@ -117,6 +128,7 @@ def _chunk_page_text(pages: list[dict[str, int | str]]) -> list[dict[str, int | 
             if chunk_text:
                 chunks.append(
                     {
+                        "document_name": "",
                         "page_number": page_number,
                         "chunk_index": chunk_index,
                         "content": chunk_text,
@@ -138,6 +150,50 @@ def _chunk_page_text(pages: list[dict[str, int | str]]) -> list[dict[str, int | 
     return chunks
 
 
+def _tokenize_text(value: str) -> set[str]:
+    return {token for token in re.findall(r"[a-z0-9]+", value.lower()) if len(token) >= 3}
+
+
+def _lexical_score(query: str, content: str) -> float:
+    query_tokens = _tokenize_text(query)
+    content_tokens = _tokenize_text(content)
+    if not query_tokens or not content_tokens:
+        return 0.0
+
+    overlap = query_tokens & content_tokens
+    if not overlap:
+        return 0.0
+
+    return len(overlap) / max(len(query_tokens), 1)
+
+
+def _retrieve_chunks_from_db(
+    *,
+    document_id: str,
+    query: str,
+    db: Session,
+    top_k: int,
+) -> list[RetrievedChunk]:
+    ranked_chunks: list[RetrievedChunk] = []
+    for chunk in crud.get_document_chunks(db, document_id):
+        score = _lexical_score(query, chunk.content)
+        if score <= 0:
+            continue
+        ranked_chunks.append(
+            RetrievedChunk(
+                document_name=chunk.document_name,
+                page_number=chunk.page_number,
+                chunk_index=chunk.chunk_index,
+                citation_label=chunk.citation_label,
+                snippet=chunk.content,
+                score=score,
+            )
+        )
+
+    ranked_chunks.sort(key=lambda item: (-item.score, item.page_number, item.chunk_index))
+    return ranked_chunks[: max(1, min(top_k, 8))]
+
+
 def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, int | str]]) -> None:
     client = _load_chroma_client()
     collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
@@ -157,6 +213,7 @@ def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, in
         metadatas=[
             {
                 "document_id": document_id,
+                "document_name": str(chunk.get("document_name", "Uploaded document")),
                 "page_number": int(chunk["page_number"]),
                 "citation_label": str(chunk["citation_label"]),
                 "chunk_index": int(chunk["chunk_index"]),
@@ -198,19 +255,25 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
         storage_path=str(document_path),
         mime_type=upload.content_type or "application/pdf",
     )
-    crud.save_document_chunks(db, document_id=record.id, chunks=chunks)
+    for chunk in chunks:
+        chunk["document_name"] = record.title
+    crud.save_document_chunks(db, document_id=record.id, document_name=record.title, chunks=chunks)
 
     retrieval_ready = True
+    status = "ready"
     try:
         _upsert_chunks_into_vector_store(record.id, chunks)
     except DocumentIntelligenceError as exc:
-        retrieval_ready = False
-        warning = exc.message
+        retrieval_ready = True
+        status = "ready_with_lexical_fallback"
+        warning = (
+            f"{exc.message} Scholr will use retrieval-only lexical grounding for this document until embeddings recover."
+        )
 
     crud.update_document_asset_status(
         db,
         document_id=record.id,
-        status="ready" if retrieval_ready else "stored_without_embeddings",
+        status=status,
         page_count=len(pages),
         chunk_count=len(chunks),
     )
@@ -219,7 +282,7 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
         {
             "document_id": record.id,
             "title": record.title,
-            "status": "ready" if retrieval_ready else "stored_without_embeddings",
+            "status": status,
             "page_count": len(pages),
             "chunk_count": len(chunks),
             "retrieval_ready": retrieval_ready,
@@ -234,51 +297,95 @@ def retrieve_document_chunks(
     query: str,
     db: Session,
     top_k: int = DEFAULT_TOP_K,
-) -> list[RetrievedChunk]:
+) -> RetrievalResult:
     _ensure_storage_dirs()
     document = crud.get_document_asset(db, document_id)
     if not document:
         raise DocumentIntelligenceError("Document not found.", category="document_not_found")
 
-    client = _load_chroma_client()
-    collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
+    try:
+        client = _load_chroma_client()
+        collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
+    except DocumentIntelligenceError as exc:
+        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        if not lexical_chunks:
+            raise DocumentIntelligenceError(
+                "No relevant document chunks were found for that question yet.",
+                category="no_retrieval_results",
+            ) from exc
+        return RetrievalResult(
+            chunks=lexical_chunks,
+            retrieval_mode="lexical_fallback",
+            warning="Vector storage is unavailable right now, so Scholr is using retrieval-only lexical grounding.",
+        )
     try:
         embeddings = embed_texts([query], task_type="RETRIEVAL_QUERY")
     except ScholrGenerationError as exc:
-        raise DocumentIntelligenceError(
-            "Embeddings could not be generated for this document question right now.",
-            category=exc.category,
-        ) from exc
-    result = collection.query(
-        query_embeddings=embeddings,
-        n_results=max(1, min(top_k, 8)),
-        where={"document_id": document_id},
-    )
+        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        if not lexical_chunks:
+            raise DocumentIntelligenceError(
+                "No relevant document chunks were found for that question yet.",
+                category="no_retrieval_results",
+            ) from exc
+        return RetrievalResult(
+            chunks=lexical_chunks,
+            retrieval_mode="lexical_fallback",
+            warning="Embedding query path is unavailable, so Scholr is using retrieval-only lexical grounding.",
+        )
+
+    try:
+        result = collection.query(
+            query_embeddings=embeddings,
+            n_results=max(1, min(top_k, 8)),
+            where={"document_id": document_id},
+        )
+    except Exception as exc:
+        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        if not lexical_chunks:
+            raise DocumentIntelligenceError(
+                "No relevant document chunks were found for that question yet.",
+                category="no_retrieval_results",
+            ) from exc
+        return RetrievalResult(
+            chunks=lexical_chunks,
+            retrieval_mode="lexical_fallback",
+            warning="Vector retrieval is unavailable right now, so Scholr is using retrieval-only lexical grounding.",
+        )
 
     documents = result.get("documents", [[]])
     metadatas = result.get("metadatas", [[]])
     if not documents or not documents[0]:
-        raise DocumentIntelligenceError(
-            "No relevant document chunks were found for that question yet.",
-            category="no_retrieval_results",
+        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        if not lexical_chunks:
+            raise DocumentIntelligenceError(
+                "No relevant document chunks were found for that question yet.",
+                category="no_retrieval_results",
+            )
+        return RetrievalResult(
+            chunks=lexical_chunks,
+            retrieval_mode="lexical_fallback",
+            warning="Semantic retrieval returned nothing useful, so Scholr fell back to lexical grounding.",
         )
 
     retrieved: list[RetrievedChunk] = []
     for snippet, metadata in zip(documents[0], metadatas[0], strict=False):
         retrieved.append(
             RetrievedChunk(
+                document_name=str(metadata.get("document_name", document.title)),
                 page_number=int(metadata.get("page_number", 1)),
+                chunk_index=int(metadata.get("chunk_index", 0)),
                 citation_label=str(metadata.get("citation_label", "Uploaded document")),
                 snippet=str(snippet),
+                score=1.0,
             )
         )
 
-    return retrieved
+    return RetrievalResult(chunks=retrieved, retrieval_mode="semantic_vector")
 
 
 def _fallback_citation_answer(question: str, retrieved: list[RetrievedChunk]) -> str:
     bullet_points = "\n".join(
-        f"- According to {chunk.citation_label}, {chunk.snippet[:220].strip()}"
+        f"- According to {chunk.document_name}, {chunk.citation_label}, chunk {chunk.chunk_index}, {chunk.snippet[:220].strip()}"
         for chunk in retrieved[:3]
     )
     return (
@@ -295,9 +402,10 @@ async def answer_from_document(
     db: Session,
     top_k: int = DEFAULT_TOP_K,
 ) -> dict[str, object]:
-    retrieved = retrieve_document_chunks(document_id=document_id, query=question, db=db, top_k=top_k)
+    retrieval = retrieve_document_chunks(document_id=document_id, query=question, db=db, top_k=top_k)
+    retrieved = retrieval.chunks
     context = "\n\n".join(
-        f"{chunk.citation_label}: {chunk.snippet}"
+        f"{chunk.document_name} | {chunk.citation_label} | chunk {chunk.chunk_index}: {chunk.snippet}"
         for chunk in retrieved
     )
     prompt = f"""
@@ -305,7 +413,7 @@ You are Scholr, an academic document intelligence assistant.
 
 Use only the cited document context below to answer the student's question.
 If the evidence is incomplete, say that clearly.
-Reference citations inline like "According to Page 4..." and keep the answer grounded in the uploaded PDF.
+Reference citations inline like "According to {retrieved[0].document_name if retrieved else 'the uploaded document'}, Page 4..." and keep the answer grounded in the uploaded PDF.
 
 Question: {question}
 
@@ -324,18 +432,34 @@ Document context:
             collected.append(chunk)
         answer = "".join(collected).strip()
         generation_used = True
-        warning = None
+        answer_mode = "grounded_generation"
+        warning = retrieval.warning
     except ScholrGenerationError:
         answer = _fallback_citation_answer(question, retrieved)
         generation_used = False
-        warning = "Document retrieval succeeded, but provider-backed answer generation is still unavailable."
+        answer_mode = "retrieval_only"
+        warning = (
+            retrieval.warning
+            or "Document retrieval succeeded, but provider-backed answer generation is still unavailable."
+        )
+
+    confidence = "high" if generation_used and len(retrieved) >= 2 else "medium" if len(retrieved) >= 2 else "low"
+    limitations = [
+        "Answers are grounded only in the uploaded document chunks retrieved for this question.",
+    ]
+    if answer_mode == "retrieval_only":
+        limitations.append("Provider-backed synthesis is currently unavailable, so Scholr is returning retrieval-only academic guidance.")
+    if retrieval.retrieval_mode != "semantic_vector":
+        limitations.append("Semantic vector retrieval was unavailable, so a lexical chunk match was used instead.")
 
     return {
         "document_id": document_id,
         "answer": answer,
         "citations": [
             {
+                "document_name": chunk.document_name,
                 "page_number": chunk.page_number,
+                "chunk_index": chunk.chunk_index,
                 "citation_label": chunk.citation_label,
                 "snippet": chunk.snippet[:280],
             }
@@ -343,5 +467,8 @@ Document context:
         ],
         "retrieval_ready": True,
         "generation_used": generation_used,
+        "answer_mode": answer_mode,
+        "confidence": confidence,
+        "limitations": limitations,
         "warning": warning,
     }

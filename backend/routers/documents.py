@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+from starlette.datastructures import UploadFile as StarletteUploadFile
 
 from db.database import get_db
 from models.schemas import (
@@ -28,7 +29,7 @@ async def upload_document(
     file = form.get("file")
     if file is None:
         raise HTTPException(status_code=400, detail="A PDF file field named 'file' is required.")
-    if not isinstance(file, UploadFile):
+    if not isinstance(file, StarletteUploadFile):
         raise HTTPException(status_code=400, detail="The uploaded file payload is invalid.")
 
     try:

@@ -37,7 +37,9 @@ class DocumentUploadResponse(BaseModel):
 
 
 class DocumentCitationItem(BaseModel):
+    document_name: str
     page_number: int
+    chunk_index: int
     citation_label: str
     snippet: str
 
@@ -54,4 +56,7 @@ class DocumentAnswerResponse(BaseModel):
     citations: list[DocumentCitationItem]
     retrieval_ready: bool
     generation_used: bool
+    answer_mode: str
+    confidence: str
+    limitations: list[str]
     warning: str | None = None

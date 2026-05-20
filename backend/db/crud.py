@@ -167,6 +167,7 @@ def save_document_chunks(
     db: Session,
     *,
     document_id: str,
+    document_name: str,
     chunks: list[dict[str, int | str]],
 ) -> list[DocumentChunk]:
     records = [
@@ -174,6 +175,7 @@ def save_document_chunks(
             document_id=document_id,
             page_number=int(chunk["page_number"]),
             chunk_index=int(chunk["chunk_index"]),
+            document_name=document_name,
             content=str(chunk["content"]),
             citation_label=str(chunk["citation_label"]),
         )
