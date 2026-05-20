@@ -123,6 +123,7 @@ export async function streamModuleResponse(
   path: string,
   payload: Record<string, string>,
   onChunk: (chunk: string) => void,
+  onMeta?: (meta: { mode?: StreamModuleResult['mode']; label?: string }) => void,
 ): Promise<StreamModuleResult> {
   let response: Response
   const controller = new AbortController()
@@ -205,6 +206,7 @@ export async function streamModuleResponse(
       if (parsed.type === 'meta') {
         mode = parsed.mode
         modeLabel = parsed.label || ''
+        onMeta?.({ mode, label: modeLabel || undefined })
       }
       return
     } catch (error) {

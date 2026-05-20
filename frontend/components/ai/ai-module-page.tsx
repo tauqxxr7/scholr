@@ -18,6 +18,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { trackEvent } from '@/lib/analytics'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
 
+const LOCAL_RESPONSE_CACHE_KEY = 'scholr-local-response-cache-v1'
+
 type SecondaryField = {
   value: string
   onChange: (value: string) => void
@@ -64,6 +66,84 @@ export default function AiModulePage({
   const [responseMode, setResponseMode] = useState<'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'>('ai')
   const [responseModeLabel, setResponseModeLabel] = useState('AI Mode')
 
+  const getCacheKey = () =>
+    [
+      moduleName,
+      secondaryField?.value.trim().toLowerCase() || '',
+      primaryValue.trim().toLowerCase(),
+    ].join('::')
+
+  const buildOptimisticTemplate = () => {
+    const topic = primaryValue.trim() || 'this topic'
+    const subject = secondaryField?.value.trim() || 'General'
+    const normalizedTopic = topic.toLowerCase()
+    const looksLikeDefinition = normalizedTopic.startsWith('what is') || normalizedTopic.startsWith('define')
+    const looksLikeSummary = normalizedTopic.includes('summary') || normalizedTopic.includes('summar')
+    const looksLikeExam = normalizedTopic.includes('exam') || normalizedTopic.includes('long answer')
+
+    if (moduleName === 'research') {
+      return `## Academic Direction Loading\nScholr is preparing your research response for **${topic}**.\n\n### Likely Key Concepts\n- core definition and background\n- practical engineering use cases\n- comparison with adjacent techniques\n\n### Suggested Paper Search Queries\n- "${topic} survey"\n- "${topic} applications"\n- "${topic} limitations"\n\n### While AI Generation Starts\n- keep the topic specific\n- think about one use case or project context\n- compare at least one survey paper with one implementation paper`
+    }
+
+    if (moduleName === 'notes') {
+      const notesFocus = looksLikeExam
+        ? '### Exam Answer Frame\n- definition or introduction\n- core explanation in 3 to 5 points\n- diagram, formula, or example\n- short conclusion for scoring answers'
+        : looksLikeSummary
+          ? '### Summary Frame\n- one-line meaning\n- top 3 to 5 ideas\n- one quick example\n- one mnemonic or memory hook'
+          : '### Revision Frame\n- definition\n- key concepts\n- formulas or conditions\n- common viva questions'
+
+      return `## Revision Notes Loading\nScholr is organizing exam-ready notes for **${topic}**.\n\n${notesFocus}\n\n### Quick Revision Scaffold\n- write the one-line meaning first\n- list the top 3 to 5 subtopics\n- add one example you can explain in an exam`
+    }
+
+    const doubtFocus = looksLikeDefinition
+      ? '### Definition Scaffold\n- textbook definition\n- plain-English meaning\n- one example\n- one related concept'
+      : looksLikeSummary
+        ? '### Summary Scaffold\n- one-paragraph explanation\n- key bullets\n- one important formula or condition\n- common mistake'
+        : looksLikeExam
+          ? '### Exam Answer Scaffold\n- intro definition\n- stepwise explanation\n- one worked example\n- conclusion point'
+          : '### Explanation Flow\n- textbook definition\n- step-by-step reasoning\n- one simple example\n- one common mistake to avoid'
+
+    return `## Concept Breakdown Loading\nScholr is preparing a clearer explanation for **${topic}** in **${subject}**.\n\n${doubtFocus}\n\n### While AI Generation Starts\n- focus on the exact confusing part\n- compare it with one related concept\n- think of one example from class or lab`
+  }
+
+  const readLocalCache = () => {
+    if (typeof window === 'undefined') {
+      return null
+    }
+
+    try {
+      const raw = window.localStorage.getItem(LOCAL_RESPONSE_CACHE_KEY)
+      if (!raw) {
+        return null
+      }
+
+      const parsed = JSON.parse(raw) as Record<string, { response: string; savedAt: string }>
+      return parsed[getCacheKey()] || null
+    } catch {
+      return null
+    }
+  }
+
+  const writeLocalCache = (response: string) => {
+    if (typeof window === 'undefined' || !response.trim()) {
+      return
+    }
+
+    try {
+      const raw = window.localStorage.getItem(LOCAL_RESPONSE_CACHE_KEY)
+      const parsed = raw
+        ? (JSON.parse(raw) as Record<string, { response: string; savedAt: string }>)
+        : {}
+      parsed[getCacheKey()] = {
+        response,
+        savedAt: new Date().toISOString(),
+      }
+      window.localStorage.setItem(LOCAL_RESPONSE_CACHE_KEY, JSON.stringify(parsed))
+    } catch {
+      return
+    }
+  }
+
   useEffect(() => {
     trackEvent('module_opened', {
       module: moduleName,
@@ -74,6 +154,9 @@ export default function AiModulePage({
   const runRequest = async () => {
     const startedAt = performance.now()
     let responseLength = 0
+    let firstTokenTracked = false
+    let finalResponse = ''
+    let streamHydrated = false
     const payload: Record<string, string> = {
       [payloadKey]: primaryValue,
     }
@@ -87,15 +170,52 @@ export default function AiModulePage({
     setError('')
     setEmptyStateMessage('')
     setLastAttemptFailed(false)
-    setResponseMode('ai')
-    setResponseModeLabel('AI Mode')
+    const cachedHydration = readLocalCache()
+    if (cachedHydration) {
+      setOutput(cachedHydration.response)
+      setResponseMode('cache')
+      setResponseModeLabel('Cached Response')
+      trackEvent('cache_hydrated', {
+        module: moduleName,
+        cache_source: 'local_storage',
+        response_length: cachedHydration.response.length,
+      })
+    } else {
+      setOutput(buildOptimisticTemplate())
+      setResponseMode('recovering')
+      setResponseModeLabel('Provider Recovering')
+    }
     trackEvent('generation_started', { module: moduleName })
 
     try {
-      const result = await streamModuleResponse(endpoint, payload, (chunk) => {
-        responseLength += chunk.length
-        setOutput((current) => current + chunk)
-      })
+      const result = await streamModuleResponse(
+        endpoint,
+        payload,
+        (chunk) => {
+          if (!streamHydrated) {
+            streamHydrated = true
+            setOutput('')
+          }
+          if (!firstTokenTracked) {
+            firstTokenTracked = true
+            trackEvent('first_token_received', {
+              module: moduleName,
+              first_token_latency_ms: Math.round(performance.now() - startedAt),
+            })
+          }
+          responseLength += chunk.length
+          finalResponse += chunk
+          setOutput((current) => current + chunk)
+        },
+        (meta) => {
+          if (meta.mode) {
+            setResponseMode(meta.mode)
+          }
+          if (meta.label) {
+            setResponseModeLabel(meta.label)
+          }
+        },
+      )
 
       if (!result.hadChunks) {
         setEmptyStateMessage(
@@ -108,6 +228,20 @@ export default function AiModulePage({
       if (result.modeLabel) {
         setResponseModeLabel(result.modeLabel)
       }
+      if (result.mode === 'fallback' || result.mode === 'recovering') {
+        trackEvent('fallback_activated', {
+          module: moduleName,
+          mode: result.mode,
+          response_length: responseLength,
+        })
+      }
+      if (result.mode === 'ai') {
+        trackEvent('provider_recovery_success', {
+          module: moduleName,
+          mode: result.mode,
+          response_length: responseLength,
+        })
+      }
 
       trackEvent('generation_completed', {
         module: moduleName,
@@ -115,6 +249,9 @@ export default function AiModulePage({
         response_length: responseLength,
         duration_ms: Math.round(performance.now() - startedAt),
       })
+      if (finalResponse.trim()) {
+        writeLocalCache(finalResponse)
+      }
       setHasGeneratedOnce(true)
     } catch (submissionError) {
       const friendlyError =
@@ -187,8 +324,23 @@ export default function AiModulePage({
   }
 
   const hasContent = output || error
+  const isOptimisticOutput =
+    output.startsWith('## Academic Direction Loading') ||
+    output.startsWith('## Revision Notes Loading') ||
+    output.startsWith('## Concept Breakdown Loading')
+  const inferredFallbackMode = output.startsWith('## Provider Temporarily Unavailable')
+  const activeMode = inferredFallbackMode ? 'fallback' : isOptimisticOutput ? 'recovering' : responseMode
+  const activeModeLabel = inferredFallbackMode
+    ? 'Fallback Academic Mode'
+    : isOptimisticOutput
+      ? 'Provider Recovering'
+      : responseModeLabel
   const outputStatus = loading
-    ? 'Streaming answer'
+    ? activeMode === 'recovering'
+      ? 'Recovering provider'
+      : activeMode === 'cache' || activeMode === 'warm_cache'
+        ? 'Refreshing cached answer'
+        : 'Streaming answer'
     : error
       ? 'Needs retry'
       : output
@@ -196,9 +348,6 @@ export default function AiModulePage({
       : emptyStateMessage
         ? 'No output returned'
       : 'Waiting for input'
-  const inferredFallbackMode = output.startsWith('## Provider Temporarily Unavailable')
-  const activeMode = inferredFallbackMode ? 'fallback' : responseMode
-  const activeModeLabel = inferredFallbackMode ? 'Fallback Academic Mode' : responseModeLabel
   const modeBadgeClass =
     activeMode === 'fallback'
       ? 'bg-amber-50 text-amber-800 border border-amber-200'
@@ -375,7 +524,11 @@ export default function AiModulePage({
                   <div className="h-4 w-[74%] rounded-full bg-slate-200" />
                 </div>
               </div>
-              <p className="text-sm text-slate-500">Generating a polished answer for you...</p>
+              <p className="text-sm text-slate-500">
+                {responseMode === 'recovering'
+                  ? 'Preparing a useful academic scaffold while the provider recovers...'
+                  : 'Generating a polished answer for you...'}
+              </p>
             </div>
           ) : null}
 

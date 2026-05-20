@@ -26,7 +26,7 @@ DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
 DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 8
 DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
-DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS = 60
+DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS = 180
 STRICT_MODEL_PRIORITY = (
     "gemini-1.5-flash",
     "gemini-1.5-pro",
@@ -152,6 +152,14 @@ def _record_provider_success(model_name: str) -> None:
     PROVIDER_STATE["quota_failure_count"] = 0
     PROVIDER_STATE["last_successful_generation_timestamp"] = _utc_timestamp()
     PROVIDER_STATE["provider_recovery_state"] = "active"
+
+
+def _was_degraded_before_success() -> bool:
+    return bool(
+        PROVIDER_STATE["provider_error_category"]
+        or PROVIDER_STATE["provider_recovery_state"] in {"degraded", "cooldown", "recovering", "probing"}
+        or not PROVIDER_STATE["ready"]
+    )
 
 
 def _mark_recovery_attempt_started() -> None:
@@ -866,6 +874,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             model_name=candidate,
             stage="startup_probe",
         )
+        recovered_from_degraded = _was_degraded_before_success()
 
         _update_provider_state(
             configured=True,
@@ -896,6 +905,15 @@ async def validate_provider_startup() -> dict[str, Any]:
             failed_validation_models_count=len(failed_model_reasons),
             model_selection_strategy=selection["strategy"],
         )
+        if recovered_from_degraded:
+            log_event(
+                logger,
+                "provider_recovery_success",
+                model_name=candidate,
+                provider_recovery_attempts=PROVIDER_STATE["provider_recovery_attempts"],
+                quota_failure_count=PROVIDER_STATE["quota_failure_count"],
+                stage="startup_probe",
+            )
         return get_provider_status()
 
     _update_provider_state(

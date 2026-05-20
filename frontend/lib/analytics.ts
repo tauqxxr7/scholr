@@ -3,6 +3,10 @@ type ScholrEventName =
   | 'generation_started'
   | 'generation_completed'
   | 'generation_failed'
+  | 'first_token_received'
+  | 'fallback_activated'
+  | 'cache_hydrated'
+  | 'provider_recovery_success'
   | 'copy_clicked'
   | 'clear_clicked'
   | 'retry_clicked'
@@ -14,6 +18,9 @@ type ScholrEventPayload = {
   duration_ms?: number
   error_category?: string
   entrypoint?: string
+  mode?: string
+  cache_source?: string
+  first_token_latency_ms?: number
   timestamp?: string
 }
 

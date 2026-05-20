@@ -59,6 +59,7 @@ def build_sse_response(
         full_response: list[str] = []
         request_id = getattr(getattr(request, "state", None), "request_id", None)
         started_at = perf_counter()
+        first_token_logged = False
 
         log_event(
             logger,
@@ -67,6 +68,14 @@ def build_sse_response(
             request_id=request_id,
             source=source,
         )
+        if source in {"fallback", "recovering"}:
+            log_event(
+                logger,
+                "fallback_activated",
+                module=module,
+                request_id=request_id,
+                source=source,
+            )
         yield _sse_event({"type": "meta", **_response_mode_payload(source)})
 
         try:
@@ -74,6 +83,16 @@ def build_sse_response(
                 if not chunk:
                     continue
 
+                if not first_token_logged:
+                    first_token_logged = True
+                    log_event(
+                        logger,
+                        "first_token_emitted",
+                        module=module,
+                        request_id=request_id,
+                        source=source,
+                        first_token_latency_ms=round((perf_counter() - started_at) * 1000),
+                    )
                 full_response.append(chunk)
                 yield _sse_event({"type": "chunk", "chunk": chunk})
         except ScholrGenerationError as exc:
