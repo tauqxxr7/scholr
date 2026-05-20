@@ -12,7 +12,8 @@ This folder stores repo-ready demo assets for screenshots, recruiter walkthrough
 ## Current status
 
 - `demo.gif` exists as a placeholder asset
-- `ios-response.mp4` is expected but not present in this workspace yet
+- source recording exists locally at `F:\Scholr ios response.MP4`
+- before adding it to Git, export or trim a repo-safe copy to `docs/demo/ios-response.mp4`
 - the polished recorded walkthrough still needs to be captured from the live app
 - the production script lives in [DEMO_SCRIPT.md](C:/Users/TAUQEER BHARDE/.codex/worktrees/944e/scholr/DEMO_SCRIPT.md)
 

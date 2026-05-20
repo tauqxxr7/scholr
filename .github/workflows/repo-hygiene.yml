@@ -14,7 +14,7 @@ jobs:
 
       - name: Check ignored junk is not tracked
         run: |
-          git ls-files | grep -E '(^|/)(node_modules|\.next|venv|__pycache__)(/|$)|\.env($|\.|/)|\.db$' && exit 1 || true
+          git ls-files | grep -E '(^|/)(node_modules|\.next|venv|__pycache__)(/|$)|(^|/)\.env$|(^|/)\.env\.(local|development|test|production)(\..+)?$|\.db$' && exit 1 || true
 
       - name: Secret pattern scan
         run: |

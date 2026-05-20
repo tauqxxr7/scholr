@@ -27,12 +27,14 @@ NEXT_PUBLIC_API_URL=https://scholr-k9sj.onrender.com
 Required environment variables:
 
 ```env
-GEMINI_API_KEY=your_real_key_here
+GEMINI_API_KEY=
 DATABASE_URL=your_postgres_connection_string
 FRONTEND_URL=https://scholr-coral.vercel.app
 ALLOWED_ORIGINS=https://scholr-coral.vercel.app
 ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
+
+Set `GEMINI_API_KEY` in Render with a real Gemini API key. Keep it blank in docs and tracked files.
 
 ## Provider Health Diagnostics
 

@@ -45,13 +45,14 @@ Scholr is a live academic AI product built for BTech students who need:
 The polished walkthrough asset is being prepared here:
 - [docs/demo/demo.gif](docs/demo/demo.gif)
 - script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
-- iOS video slot: `docs/demo/ios-response.mp4` (not committed yet in this workspace)
+- local iOS source video found at `F:\Scholr ios response.MP4`
+- repo target for an optimized copy: `docs/demo/ios-response.mp4`
 
 ### Mobile demo section
 
 - iOS/mobile live path is currently the strongest public demo proof
 - use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the 60-90 second walkthrough
-- if the `.mp4` is added later, store it as `docs/demo/ios-response.mp4`
+- export or trim a repo-safe version of the source video, then store it as `docs/demo/ios-response.mp4`
 
 ### Desktop proof
 
@@ -72,7 +73,8 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 - Notes and Doubt flows verified on iOS/mobile
 - Fallback Academic Mode verified on mobile
 - Provider Recovering UX verified on mobile
-- real iOS demo video is expected to live at `docs/demo/ios-response.mp4` when copied into the repo
+- local source video currently lives at `F:\Scholr ios response.MP4`
+- in-repo destination for the optimized copy is `docs/demo/ios-response.mp4`
 
 ## Current Production Behavior
 

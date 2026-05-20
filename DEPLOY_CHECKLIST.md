@@ -66,7 +66,7 @@ Blueprint behavior:
 Required environment variables:
 
 ```env
-GEMINI_API_KEY=your_real_key_here
+GEMINI_API_KEY=
 DATABASE_URL=your_postgres_connection_string
 FRONTEND_URL=https://your-vercel-project.vercel.app
 ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
@@ -129,7 +129,7 @@ Exact steps:
 ### Local backend
 
 ```env
-GEMINI_API_KEY=your_real_key_here
+GEMINI_API_KEY=
 DATABASE_URL=sqlite:///./scholr.db
 FRONTEND_URL=http://localhost:3000
 ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
@@ -145,7 +145,7 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ### Production backend
 
 ```env
-GEMINI_API_KEY=your_real_key_here
+GEMINI_API_KEY=
 DATABASE_URL=your_postgres_connection_string
 FRONTEND_URL=https://your-vercel-project.vercel.app
 ALLOWED_ORIGINS=https://your-vercel-project.vercel.app
