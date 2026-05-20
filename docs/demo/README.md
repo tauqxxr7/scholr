@@ -1,21 +1,22 @@
-# Scholr Demo Notes
+# Scholr Demo Assets
 
-This folder documents the expected walkthrough asset for the Scholr repository.
+This folder stores repo-ready demo assets for screenshots, recruiter walkthroughs, and public proof packaging.
 
-## Expected Demo Asset
+## Expected assets
 
-- File: `docs/demo/scholr-walkthrough.gif`
-- Duration: `10` to `15` seconds
-- Audience: recruiters, hackathon reviewers, and internship hiring teams
+- `demo.gif`
+- optional narrated screen recording export
+- short architecture or provider-health stills used in README
 
-## What The Demo Should Show
+## Current status
 
-- Landing page or dashboard
-- One AI module selection
-- Prompt submission
-- Generated response area
-- Optional learning history view
+- `demo.gif` exists as a placeholder asset
+- the polished recorded walkthrough still needs to be captured from the live app
+- the production script lives in [DEMO_SCRIPT.md](C:/Users/TAUQEER BHARDE/.codex/worktrees/944e/scholr/DEMO_SCRIPT.md)
 
-## Why This Matters
+## Capture guidance
 
-Scholr is strongest when reviewers can see the product flow quickly. A short walkthrough helps communicate that this is a working academic AI product, not just a static interface or prompt wrapper.
+- keep the full walkthrough under 90 seconds
+- show Notes, Doubt, Research
+- include one runtime mode badge
+- close on architecture or provider health proof
