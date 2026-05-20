@@ -77,6 +77,11 @@ Scholr is in the live MVP stage:
 - Vercel-ready frontend configuration
 - env examples for both apps
 - repo safety and ignore rules aligned with MVP deployment
+- proof package folders for desktop, mobile, and demo capture
+- CI workflows for backend, frontend, and repo hygiene
+- production evidence and metrics docs
+- legal ownership and disclaimer docs
+- document intelligence audit and roadmap docs
 
 ## Live URLs
 
@@ -87,8 +92,8 @@ Scholr is in the live MVP stage:
 
 - add demo video or short walkthrough
 - verify long-term production history persistence with PostgreSQL
-- capture or generate a short demo GIF for the repo hero section
-- capture dedicated mobile/iOS screenshots for the public proof package
+- replace placeholder demo GIF and placeholder mobile proof assets with real captures
+- validate GitHub Actions on first live run
 
 ## Next Milestones
 
@@ -166,6 +171,7 @@ Scholr is in the live MVP stage:
   - Gemini provider is degraded due to quota/model access
   - Research / Notes / Doubt remain functional through Fallback Academic Mode
   - desktop and iOS usage are both functional
+  - proof package, legal docs, CI workflows, and production evidence docs are now part of the repo surface
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 

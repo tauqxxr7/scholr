@@ -106,6 +106,13 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
   - quota observability
   - provider cooldown behavior
   - no-empty-output guarantee for the three core student modules
+- Public-readiness layer now includes:
+  - README proof packaging
+  - screenshot folders for desktop and mobile
+  - demo script and placeholder walkthrough asset
+  - CI workflow scaffolding
+  - production evidence and metrics docs
+  - legal ownership, privacy, terms, and disclaimer docs
 - Current production verification shows:
   - Live MVP is stable
   - Gemini provider is degraded due to quota/model access
@@ -116,9 +123,9 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
   - Backend health: https://scholr-k9sj.onrender.com/health
 
 ## Pending Work
-- Add demo GIF or short walkthrough to the repo
+- Replace placeholder proof assets with real mobile captures and a polished demo GIF
 - Gather first real student usage feedback
-- Add CI and protected-branch status checks
+- Watch GitHub Actions on real pushes and keep branch protection aligned to passing checks
 - Review early analytics signal after the first student validation sprint
 - Validate the document intelligence scaffold with real uploaded course PDFs before exposing it in the core UI
 
