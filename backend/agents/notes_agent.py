@@ -35,8 +35,8 @@ async def generate_notes_response(topic: str):
         async for chunk in stream_gemini_response(
             model_name="gemini-1.5-flash",
             prompt=prompt,
-            temperature=0.5,
-            max_output_tokens=2048,
+            temperature=0.4,
+            max_output_tokens=1400,
         ):
             yield chunk
     except ScholrGenerationError:

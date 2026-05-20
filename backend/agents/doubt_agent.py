@@ -34,7 +34,7 @@ async def generate_doubt_response(question: str, subject: str = "General"):
             model_name="gemini-1.5-flash",
             prompt=prompt,
             temperature=0.3,
-            max_output_tokens=1500,
+            max_output_tokens=1100,
         ):
             yield chunk
     except ScholrGenerationError:

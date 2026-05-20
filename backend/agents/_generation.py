@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import random
 from importlib import metadata
 from time import perf_counter
 from collections.abc import AsyncIterator
@@ -24,9 +25,13 @@ except ImportError:  # pragma: no cover - depends on local environment setup
 
 DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
-DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 8
+DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 5
 DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
 DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS = 180
+DEFAULT_PROVIDER_RECOVERY_JITTER_SECONDS = 25
+DEFAULT_PROVIDER_VALIDATED_TTL_SECONDS = 900
+DEFAULT_PROVIDER_DISCOVERY_TTL_SECONDS = 900
+DEFAULT_PROVIDER_MIN_RETRY_SECONDS = 30
 STRICT_MODEL_PRIORITY = (
     "gemini-1.5-flash",
     "gemini-1.5-pro",
@@ -37,7 +42,7 @@ MODEL_REJECTION_TOKENS = ("preview", "robotics", "embedding", "image", "vision",
 REQUIRED_GENERATION_ACTION = "generatecontent"
 CONFIGURED_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "").strip()
 PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
-PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 8
+PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 4
 EMBEDDING_MODEL_NAME = "gemini-embedding-001"
 PROVIDER_COOLDOWN_SECONDS = 180
 PROVIDER_QUOTA_COOLDOWN_THRESHOLD = 2
@@ -66,6 +71,7 @@ PROVIDER_STATE: dict[str, Any] = {
     "startup_validation_time_ms": None,
     "sdk_version": "unavailable",
     "openrouter_fallback_configured": bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
+    "last_validated_timestamp": None,
 }
 
 logger = logging.getLogger("scholr.provider")
@@ -73,6 +79,8 @@ _CLIENT = None
 _PROVIDER_COOLDOWN_UNTIL: datetime | None = None
 _RECOVERY_TASK: asyncio.Task | None = None
 _LAST_RECOVERY_ATTEMPT_AT: datetime | None = None
+_DISCOVERED_MODELS_CACHE: list[dict[str, Any]] | None = None
+_DISCOVERED_MODELS_CACHE_AT: datetime | None = None
 
 
 class ScholrGenerationError(Exception):
@@ -104,6 +112,34 @@ def _utc_now() -> datetime:
 
 def _utc_timestamp() -> str:
     return _utc_now().isoformat(timespec="seconds") + "Z"
+
+
+def _parse_timestamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
+    except ValueError:
+        return None
+
+
+def _validated_state_is_fresh() -> bool:
+    validated_at = _parse_timestamp(PROVIDER_STATE.get("last_validated_timestamp"))
+    if validated_at is None or not PROVIDER_STATE["ready"] or not PROVIDER_STATE["selected_model"]:
+        return False
+    return (_utc_now() - validated_at).total_seconds() < DEFAULT_PROVIDER_VALIDATED_TTL_SECONDS
+
+
+def _discovery_cache_is_fresh() -> bool:
+    if _DISCOVERED_MODELS_CACHE_AT is None or _DISCOVERED_MODELS_CACHE is None:
+        return False
+    return (_utc_now() - _DISCOVERED_MODELS_CACHE_AT).total_seconds() < DEFAULT_PROVIDER_DISCOVERY_TTL_SECONDS
+
+
+def _provider_recovery_sleep_seconds() -> int:
+    if _cooldown_active():
+        return max(15, _cooldown_remaining_seconds())
+    return DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS + random.randint(0, DEFAULT_PROVIDER_RECOVERY_JITTER_SECONDS)
 
 
 def _cooldown_active() -> bool:
@@ -151,6 +187,7 @@ def _record_provider_success(model_name: str) -> None:
     PROVIDER_STATE["provider_error_category"] = None
     PROVIDER_STATE["quota_failure_count"] = 0
     PROVIDER_STATE["last_successful_generation_timestamp"] = _utc_timestamp()
+    PROVIDER_STATE["last_validated_timestamp"] = _utc_timestamp()
     PROVIDER_STATE["provider_recovery_state"] = "active"
 
 
@@ -339,6 +376,10 @@ def _build_client():
 
 
 def _discover_models() -> list[dict[str, Any]]:
+    global _DISCOVERED_MODELS_CACHE, _DISCOVERED_MODELS_CACHE_AT
+    if _discovery_cache_is_fresh():
+        return list(_DISCOVERED_MODELS_CACHE or [])
+
     client = _build_client()
     discovered: dict[str, dict[str, Any]] = {}
 
@@ -358,7 +399,10 @@ def _discover_models() -> list[dict[str, Any]]:
             "supported_actions": supported_actions,
         }
 
-    return [discovered[name] for name in sorted(discovered)]
+    models = [discovered[name] for name in sorted(discovered)]
+    _DISCOVERED_MODELS_CACHE = models
+    _DISCOVERED_MODELS_CACHE_AT = _utc_now()
+    return list(models)
 
 
 def _select_candidate_models(requested_model_name: str | None, discovered_models: list[dict[str, Any]]) -> dict[str, Any]:
@@ -578,6 +622,7 @@ def _update_provider_state(
     provider_recovery_state: str | None = None,
     model_selection_strategy: str = "unknown",
     startup_validation_time_ms: int | None = None,
+    last_validated_timestamp: str | None = None,
 ) -> None:
     discovered_names = [descriptor["name"] for descriptor in discovered_models]
     PROVIDER_STATE.update(
@@ -611,6 +656,11 @@ def _update_provider_state(
             "startup_validation_time_ms": startup_validation_time_ms,
             "sdk_version": _sdk_version(),
             "openrouter_fallback_configured": bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
+            "last_validated_timestamp": (
+                PROVIDER_STATE["last_validated_timestamp"]
+                if last_validated_timestamp is None
+                else last_validated_timestamp
+            ),
         }
     )
 
@@ -641,6 +691,7 @@ def get_provider_status() -> dict[str, Any]:
         "provider_sdk_version": PROVIDER_STATE["sdk_version"],
         "startup_validation_time_ms": PROVIDER_STATE["startup_validation_time_ms"],
         "openrouter_fallback_configured": PROVIDER_STATE["openrouter_fallback_configured"],
+        "last_validated_timestamp": PROVIDER_STATE["last_validated_timestamp"],
     }
 
 
@@ -666,7 +717,7 @@ async def _provider_recovery_loop() -> None:
                 provider_exception_type=type(exc).__name__,
                 provider_exception_message=str(exc),
             )
-        await asyncio.sleep(DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS)
+        await asyncio.sleep(_provider_recovery_sleep_seconds())
 
 
 def ensure_provider_recovery_task() -> None:
@@ -708,7 +759,7 @@ def request_provider_recovery() -> bool:
     except RuntimeError:
         return True
 
-    if _LAST_RECOVERY_ATTEMPT_AT is None or (_utc_now() - _LAST_RECOVERY_ATTEMPT_AT).total_seconds() >= 15:
+    if _LAST_RECOVERY_ATTEMPT_AT is None or (_utc_now() - _LAST_RECOVERY_ATTEMPT_AT).total_seconds() >= DEFAULT_PROVIDER_MIN_RETRY_SECONDS:
         loop.create_task(validate_provider_startup())
     return True
 
@@ -716,6 +767,10 @@ def request_provider_recovery() -> bool:
 async def validate_provider_startup() -> dict[str, Any]:
     started_at = perf_counter()
     discovered_models: list[dict[str, Any]] = []
+
+    if _validated_state_is_fresh():
+        PROVIDER_STATE["startup_validation_time_ms"] = round((perf_counter() - started_at) * 1000)
+        return get_provider_status()
 
     if _cooldown_active():
         _update_provider_state(
@@ -741,7 +796,7 @@ async def validate_provider_startup() -> dict[str, Any]:
 
     if _LAST_RECOVERY_ATTEMPT_AT and not PROVIDER_STATE["ready"]:
         seconds_since_last_attempt = (_utc_now() - _LAST_RECOVERY_ATTEMPT_AT).total_seconds()
-        if seconds_since_last_attempt < 15:
+        if seconds_since_last_attempt < DEFAULT_PROVIDER_MIN_RETRY_SECONDS:
             return get_provider_status()
 
     _mark_recovery_attempt_started()
@@ -766,6 +821,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             provider_recovery_state="not_configured",
             model_selection_strategy="not_configured",
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
+            last_validated_timestamp=PROVIDER_STATE["last_validated_timestamp"],
         )
         return get_provider_status()
 
@@ -894,6 +950,7 @@ async def validate_provider_startup() -> dict[str, Any]:
             provider_recovery_state="active",
             model_selection_strategy=selection["strategy"],
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
+            last_validated_timestamp=_utc_timestamp(),
         )
         log_event(
             logger,
@@ -932,6 +989,7 @@ async def validate_provider_startup() -> dict[str, Any]:
         provider_recovery_state="degraded",
         model_selection_strategy=selection["strategy"],
         startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
+        last_validated_timestamp=None,
     )
     log_event(
         logger,
@@ -978,22 +1036,9 @@ async def stream_gemini_response(
                 retryable=True,
                 category=PROVIDER_STATE["provider_error_category"] or "no_validated_generation_model",
             )
-
-    discovered_models: list[dict[str, Any]] = []
-    if not discovered_models:
-        try:
-            discovered_models = _discover_models()
-        except Exception:
-            discovered_models = []
-
-    selection = _select_candidate_models(resolve_model_name(model_name), discovered_models)
-    candidates = selection["candidates"]
-    if not candidates:
-        raise ScholrGenerationError(
-            "This Gemini project does not currently expose any supported text generation models.",
-            retryable=False,
-            category="no_validated_generation_model",
-        )
+    selected_model = PROVIDER_STATE["selected_model"] if PROVIDER_STATE["ready"] else None
+    candidates = (selected_model,) if selected_model else (resolve_model_name(model_name),)
+    selection: dict[str, Any] = {"candidates": candidates, "rejected_models": [], "strategy": PROVIDER_STATE["model_selection_strategy"]}
 
     last_error: ScholrGenerationError | None = None
 
@@ -1194,6 +1239,7 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
         "startup_validation_time_ms": provider_status["startup_validation_time_ms"],
         "provider_tier_strategy": provider_status["provider_tier_strategy"],
         "prompt": prompt,
+        "last_validated_timestamp": provider_status["last_validated_timestamp"],
     }
 
     if not provider_status["provider_ready"]:
