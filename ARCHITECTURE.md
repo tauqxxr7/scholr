@@ -24,6 +24,12 @@ flowchart LR
     C --> B
 ```
 
+## Live Runtime Modes
+
+- **AI Mode**: a validated Gemini model is healthy and Scholr streams live generation
+- **Cached Academic Response**: an exact or similar recent answer is replayed to protect quota and keep latency low
+- **Fallback Academic Mode**: the provider is degraded, but Scholr still streams deterministic academic guidance instead of surfacing a broken UI
+
 ## Frontend
 
 - Next.js App Router with TypeScript and Tailwind CSS

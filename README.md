@@ -46,6 +46,10 @@ Dashboard → AI module → response generation → learning history.
 
 ## Screenshots
 
+### Desktop proof
+
+These screenshots are from the current live MVP and show the main desktop workspace flow.
+
 ### Landing Page
 ![Landing page](screenshots/landing.png)
 
@@ -61,6 +65,13 @@ Dashboard → AI module → response generation → learning history.
 ### Doubt Output
 ![Doubt output](screenshots/doubt-output.png)
 
+### Mobile / iOS verification
+
+- Live product has been manually verified on iPhone/iOS Safari
+- Responsive workspace navigation works
+- Fallback Academic Mode streams correctly on mobile
+- Dedicated mobile screenshots are the next proof asset to capture for the repo package
+
 ## Production Status
 
 **Live MVP deployed on Vercel + Render.**
@@ -75,6 +86,14 @@ Current production state:
 
 Render note:
 - the backend runs on the Render free tier, so the first request after inactivity may cold start and take longer
+
+## Current Live Status
+
+- Frontend live: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
+- Backend live: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
+- Provider health: [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
+- Gemini provider currently degraded due to quota/model access
+- User-facing experience remains functional through Fallback Academic Mode and Cached Academic Response mode
 
 ## Problem Scholr Solves
 
@@ -150,6 +169,34 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **Responsive workspace shell** so the same product loop works across phones, tablets, laptops, and desktops
 - **PWA-lite support** with a manifest, theme color, and mobile-ready metadata
 - **Production env handling** that keeps localhost fallback in development and requires a real API URL in production
+
+## Fallback Academic Mode
+
+Fallback Academic Mode exists so Scholr keeps helping students even when the Gemini provider is quota-degraded or temporarily unavailable.
+
+What it does:
+- returns structured academic scaffolding instead of a broken panel
+- preserves the same SSE streaming experience
+- keeps Research, Notes, and Doubt usable on desktop and mobile
+- positions resilience as product quality, not as a silent failure
+
+What students see:
+- `AI Mode` when a validated Gemini model is healthy
+- `Cached Academic Response` when a recent good answer can be replayed
+- `Fallback Academic Mode` when live generation is unavailable but Scholr still provides useful learning structure
+
+Why it matters:
+- students still get key concepts, outlines, search directions, and revision structure
+- reviewers can see Scholr behaving like a reliable academic platform rather than a brittle AI wrapper
+
+## Production Resilience
+
+- **Provider health endpoint** via [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
+- **Validated model selection** instead of trusting discovered model names blindly
+- **Fallback academic engine** for quota exhaustion, provider 5xx conditions, and missing validated models
+- **Quota observability** through `quota_failure_count`, `last_successful_generation_timestamp`, and `provider_recovery_state`
+- **SSE recovery** so students do not get empty panels or raw provider failures
+- **Warm cache layer** so similar recent prompts can still return useful academic output without spending fresh quota
 
 ## Device Support
 

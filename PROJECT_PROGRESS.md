@@ -68,6 +68,7 @@ Scholr is in the live MVP stage:
 - PWA-lite manifest and mobile browser metadata
 - env-gated PostHog analytics wrapper
 - safe product events for open, generate, copy, clear, and retry flows
+- subtle response-mode badges for AI Mode, Cached Academic Response, and Fallback Academic Mode
 
 ### Deployment prep
 
@@ -87,6 +88,7 @@ Scholr is in the live MVP stage:
 - add demo video or short walkthrough
 - verify long-term production history persistence with PostgreSQL
 - capture or generate a short demo GIF for the repo hero section
+- capture dedicated mobile/iOS screenshots for the public proof package
 
 ## Next Milestones
 
@@ -163,6 +165,7 @@ Scholr is in the live MVP stage:
   - Live MVP is stable
   - Gemini provider is degraded due to quota/model access
   - Research / Notes / Doubt remain functional through Fallback Academic Mode
+  - desktop and iOS usage are both functional
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 

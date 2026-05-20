@@ -110,6 +110,7 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
   - Live MVP is stable
   - Gemini provider is degraded due to quota/model access
   - user-facing output remains functional through Fallback Academic Mode
+  - desktop and iOS/mobile user experience remain usable despite provider degradation
 - Current live URLs:
   - Frontend: https://scholr-coral.vercel.app
   - Backend health: https://scholr-k9sj.onrender.com/health
@@ -143,6 +144,11 @@ Tauqeer has Azure for Startups access with `$1,000` in credits, but the current 
 - stronger uptime and latency tracking after the first usage wave
 - add provider scorecards by model if fallback behavior becomes part of ongoing operations
 - track quota exhaustion, validated model failures, and provider recovery state as first-class operational signals
+
+### Proof and public-readiness layer
+- keep live desktop screenshots in the repo
+- add mobile/iOS screenshots as the next proof asset
+- maintain a short demo script and user-testing templates so recruiters, mentors, and early students can evaluate the product quickly
 
 ### Analytics
 - start lightweight with PostHog or Vercel Analytics behind env gating
