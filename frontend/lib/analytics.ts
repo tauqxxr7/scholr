@@ -3,6 +3,12 @@ type ScholrEventName =
   | 'generation_started'
   | 'generation_completed'
   | 'generation_failed'
+  | 'document_upload_started'
+  | 'document_upload_completed'
+  | 'document_upload_failed'
+  | 'document_answer_started'
+  | 'document_answer_completed'
+  | 'document_answer_failed'
   | 'first_token_received'
   | 'fallback_activated'
   | 'cache_hydrated'
@@ -19,8 +25,12 @@ type ScholrEventPayload = {
   error_category?: string
   entrypoint?: string
   mode?: string
+  retrieval_mode?: string
   cache_source?: string
   first_token_latency_ms?: number
+  citations_count?: number
+  upload_pages?: number
+  chunk_count?: number
   timestamp?: string
 }
 

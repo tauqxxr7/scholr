@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, BrainCircuit, Home, Menu, NotebookPen, Sparkles, X } from 'lucide-react'
+import { BookOpen, BrainCircuit, FileText, Home, Menu, NotebookPen, Sparkles, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/research', label: 'Research', icon: BookOpen },
   { href: '/notes', label: 'Notes', icon: NotebookPen },
   { href: '/doubt', label: 'Doubt', icon: BrainCircuit },
+  { href: '/documents', label: 'Documents', icon: FileText },
 ]
 
 export default function Sidebar() {

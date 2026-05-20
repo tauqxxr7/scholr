@@ -10,6 +10,7 @@ import {
   Activity,
   Clock3,
   Database,
+  FileText,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +36,12 @@ const modules = [
     title: 'Doubt',
     description: 'Step-by-step explanations for hard engineering concepts.',
     icon: BrainCircuit,
+  },
+  {
+    href: '/documents',
+    title: 'Documents',
+    description: 'Upload PDFs, ask grounded questions, and study from cited evidence.',
+    icon: FileText,
   },
 ]
 
@@ -106,7 +113,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {modules.map((module) => {
           const Icon = module.icon
           return (

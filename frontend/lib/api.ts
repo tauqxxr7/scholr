@@ -10,6 +10,49 @@ export type HistoryItem = {
   created_at: string
 }
 
+export type DocumentUploadResult = {
+  document_id: string
+  title: string
+  status: string
+  page_count: number
+  chunk_count: number
+  retrieval_ready: boolean
+  warning?: string | null
+}
+
+export type DocumentCitation = {
+  document_name: string
+  page_number: number
+  chunk_index: number
+  citation_label: string
+  snippet: string
+}
+
+export type DocumentAnswerResult = {
+  document_id: string
+  answer: string
+  citations: DocumentCitation[]
+  retrieval_ready: boolean
+  generation_used: boolean
+  answer_mode: string
+  retrieval_mode: string
+  confidence: string
+  limitations: string[]
+  warning?: string | null
+}
+
+export type DocumentHealthResult = {
+  status: string
+  pdf_parsing_available: boolean
+  multipart_available: boolean
+  vector_store_available: boolean
+  embedding_provider_configured: boolean
+  embedding_health: string
+  retrieval_default_mode: 'lexical' | 'semantic' | 'hybrid' | string
+  documents_storage_path: string
+  vector_storage_path: string
+}
+
 type StreamEvent =
   | { type: 'chunk'; chunk: string }
   | { type: 'error'; message: string; retryable?: boolean; category?: string }
@@ -38,7 +81,7 @@ export type StreamModuleResult = {
 function describeHttpFailure(status: number) {
   if (status === 502 || status === 503 || status === 504) {
     return {
-      message: 'Backend is waking up. Please retry in 20–30 seconds.',
+      message: 'Backend is waking up. Please retry in 20-30 seconds.',
       retryable: true,
       category: 'cold_start',
     }
@@ -101,7 +144,7 @@ function describeNetworkFailure(error: unknown) {
   }
 
   if (error instanceof DOMException && error.name === 'AbortError') {
-    return new StreamModuleError('Backend is waking up. Please retry in 20–30 seconds.', true, 'cold_start')
+    return new StreamModuleError('Backend is waking up. Please retry in 20-30 seconds.', true, 'cold_start')
   }
 
   if (error instanceof TypeError) {
@@ -262,6 +305,100 @@ export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
 
   if (!response.ok) {
     throw new Error('Failed to fetch history')
+  }
+
+  return response.json()
+}
+
+export async function uploadDocument(
+  file: File,
+  onProgress?: (progress: number) => void,
+): Promise<DocumentUploadResult> {
+  const url = `${getApiUrl()}/api/documents/upload`
+
+  return new Promise<DocumentUploadResult>((resolve, reject) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const request = new XMLHttpRequest()
+    request.open('POST', url)
+
+    request.upload.onprogress = (event) => {
+      if (!event.lengthComputable) {
+        return
+      }
+      onProgress?.(Math.min(100, Math.round((event.loaded / event.total) * 100)))
+    }
+
+    request.onerror = () => {
+      reject(
+        new StreamModuleError(
+          'Scholr could not upload this PDF right now. Please check your connection and try again.',
+          true,
+          'upload_network_error',
+        ),
+      )
+    }
+
+    request.onload = () => {
+      let parsed: unknown
+      try {
+        parsed = request.responseText ? JSON.parse(request.responseText) : {}
+      } catch {
+        reject(
+          new StreamModuleError(
+            'The backend returned an unreadable upload response. Please retry.',
+            true,
+            'upload_malformed_response',
+          ),
+        )
+        return
+      }
+
+      if (request.status < 200 || request.status >= 300) {
+        const detail =
+          typeof parsed === 'object' && parsed && 'detail' in parsed && typeof parsed.detail === 'string'
+            ? parsed.detail
+            : 'Scholr could not process this PDF right now.'
+
+        reject(new StreamModuleError(detail, request.status >= 500, 'document_upload_failed'))
+        return
+      }
+
+      resolve(parsed as DocumentUploadResult)
+    }
+
+    request.send(formData)
+  })
+}
+
+export async function answerDocumentQuestion(payload: {
+  document_id: string
+  question: string
+  top_k?: number
+}): Promise<DocumentAnswerResult> {
+  const response = await fetch(`${getApiUrl()}/api/documents/answer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  const json = (await response.json()) as DocumentAnswerResult | { detail?: string }
+  if (!response.ok) {
+    const detail = 'detail' in json && typeof json.detail === 'string' ? json.detail : 'Document answer failed.'
+    throw new StreamModuleError(detail, response.status >= 500, 'document_answer_failed')
+  }
+
+  return json as DocumentAnswerResult
+}
+
+export async function getDocumentHealth(): Promise<DocumentHealthResult> {
+  const response = await fetch(`${getApiUrl()}/health/documents`, {
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch document health')
   }
 
   return response.json()
