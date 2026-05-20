@@ -5,7 +5,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from agents._generation import get_provider_status
+from agents._generation import get_provider_status, request_provider_recovery
 from core.logging_utils import log_event
 from core.rate_limit import InMemoryRateLimiter
 from db import crud
@@ -77,3 +77,20 @@ def should_use_emergency_fallback() -> bool:
         "no_validated_generation_model",
         "provider_5xx",
     } or provider_status["provider_recovery_state"] == "cooldown"
+
+
+def get_fallback_stream_source() -> str:
+    provider_status = get_provider_status()
+    if provider_status["provider_recovery_state"] in {"recovering", "degraded", "cooldown", "probing"}:
+        return "recovering"
+    return "fallback"
+
+
+def trigger_provider_recovery_if_needed() -> bool:
+    return request_provider_recovery()
+
+
+def get_runtime_diagnostics() -> dict[str, int]:
+    return {
+        "requests_per_minute": ai_rate_limiter.recent_request_count(),
+    }

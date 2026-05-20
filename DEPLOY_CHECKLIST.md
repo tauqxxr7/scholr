@@ -167,7 +167,9 @@ Live URLs:
 Current live verification:
 - Frontend loads
 - Backend `/health` works
-- Research / Notes / Doubt provider reliability is under verification until live generation is confirmed healthy again
+- Provider health available at `/health/provider`
+- Provider smoke test available at `/health/generate-test`
+- Research / Notes / Doubt remain functional through fallback academic mode while provider recovery runs in the background
 
 Recommended re-check after every redeploy:
 1. Open the live landing page.
@@ -216,12 +218,14 @@ Fix:
 
 Symptom:
 - `/health` or `/health/provider` shows `provider_ready: false`
-- `provider_error_category` becomes `invalid_model`, `no_supported_generation_model`, `provider_timeout`, or `provider_5xx`
+- `provider_error_category` becomes `invalid_model`, `no_supported_generation_model`, `no_validated_generation_model`, `provider_timeout`, `quota_exceeded`, or `provider_5xx`
 
 Fix:
 - verify `selected_model`, `available_models_count`, `candidate_models_count`, `rejected_models_count`, and `model_selection_strategy`
+- check `requests_per_minute`, `quota_cooldown_remaining_seconds`, `provider_recovery_attempts`, and `last_successful_generation_timestamp`
 - confirm the Render project key has access to at least one production-safe text-generation model in the `gemini-1.5-flash` or `gemini-1.5-pro` families
 - run `python backend/scripts/test_provider.py` with backend env loaded
+- use `/health/generate-test` to confirm real tiny generation succeeds before declaring provider recovery complete
 - force a Render redeploy after changing model or env configuration
 
 ### Missing PostgreSQL

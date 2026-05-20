@@ -61,7 +61,7 @@ export default function AiModulePage({
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false)
   const [emptyStateMessage, setEmptyStateMessage] = useState('')
   const [lastAttemptFailed, setLastAttemptFailed] = useState(false)
-  const [responseMode, setResponseMode] = useState<'ai' | 'cache' | 'warm_cache' | 'fallback'>('ai')
+  const [responseMode, setResponseMode] = useState<'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'>('ai')
   const [responseModeLabel, setResponseModeLabel] = useState('AI Mode')
 
   useEffect(() => {
@@ -202,6 +202,8 @@ export default function AiModulePage({
   const modeBadgeClass =
     activeMode === 'fallback'
       ? 'bg-amber-50 text-amber-800 border border-amber-200'
+      : activeMode === 'recovering'
+        ? 'bg-slate-100 text-slate-700 border border-slate-200'
       : activeMode === 'cache' || activeMode === 'warm_cache'
         ? 'bg-sky-50 text-sky-800 border border-sky-200'
         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'

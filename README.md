@@ -34,6 +34,7 @@ Live product:
 - Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
 - Provider health: [https://scholr-k9sj.onrender.com/health/provider](https://scholr-k9sj.onrender.com/health/provider)
+- Provider smoke test: [https://scholr-k9sj.onrender.com/health/generate-test](https://scholr-k9sj.onrender.com/health/generate-test)
 
 ## 🎥 Demo Walkthrough
 
@@ -120,8 +121,9 @@ Scholr is intentionally narrower and more product-shaped than a generic chatbot:
 2. The frontend sends one structured request to FastAPI and starts listening for SSE chunks.
 3. The backend applies rate limiting, cache lookup, provider validation, and runtime mode selection.
 4. If Gemini is healthy, Scholr streams the answer in `AI Mode`.
-5. If Gemini is unavailable, quota-limited, or unvalidated, Scholr switches to `Fallback Academic Mode` or replays a `Cached Academic Response`.
-6. The final answer is saved to history and rendered in a copy-ready format for revision, viva prep, or project ideation.
+5. If Gemini is unhealthy but recovering, Scholr keeps serving useful answers in `Provider Recovering` mode while background re-validation continues.
+6. If Gemini is unavailable, quota-limited, or unvalidated, Scholr switches to `Fallback Academic Mode` or replays a `Cached Academic Response`.
+7. The final answer is saved to history and rendered in a copy-ready format for revision, viva prep, or project ideation.
 
 ## Features
 
@@ -162,6 +164,7 @@ Scholr already goes beyond a thin AI wrapper in a few important ways:
 - **API protection** through lightweight rate limiting, request IDs, and structured logs
 - **Short-TTL cache replay** for repeated prompts so quota is protected without changing the SSE UX
 - **Provider resilience** through startup validation, strict validated-model orchestration, quota observability, and cooldown behavior
+- **Automatic provider recovery** through cooldown expiration retries, periodic background re-validation, and recovery-state badges
 - **Fallback Academic Mode** so students still receive structured study guidance during provider quota exhaustion
 - **Cached Academic Response mode** so recent successful answers can be reused without spending more quota
 - **No-empty-output guarantee** so the core student modules never collapse into blank panels

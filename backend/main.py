@@ -6,10 +6,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
-from agents._generation import get_provider_status, validate_provider_startup
+from agents._generation import (
+    ensure_provider_recovery_task,
+    get_provider_status,
+    run_provider_smoke_test,
+    shutdown_provider_recovery_task,
+    validate_provider_startup,
+)
 from core.logging_utils import configure_logging, log_event
 from db.database import init_db
 from routers import documents, doubt, history, notes, research
+from routers._runtime import get_runtime_diagnostics
 
 configure_logging()
 init_db()
@@ -73,6 +80,7 @@ logger = logging.getLogger("scholr.api")
 
 @app.on_event("startup")
 async def validate_provider_on_startup():
+    ensure_provider_recovery_task()
     provider_status = await validate_provider_startup()
 
     log_event(
@@ -108,6 +116,11 @@ async def validate_provider_on_startup():
         )
 
 
+@app.on_event("shutdown")
+async def stop_provider_recovery_task():
+    await shutdown_provider_recovery_task()
+
+
 @app.middleware("http")
 async def add_request_context(request: Request, call_next):
     request_id = request.headers.get("x-request-id", "").strip() or str(uuid.uuid4())
@@ -137,6 +150,7 @@ def health_check():
     return {
         "status": "Scholr API is running",
         "version": "1.0.0",
+        **get_runtime_diagnostics(),
         **provider_status,
     }
 
@@ -146,5 +160,16 @@ def provider_health_check():
     provider_status = get_provider_status()
     return {
         "status": "provider_health",
+        **get_runtime_diagnostics(),
         **provider_status,
+    }
+
+
+@app.get("/health/generate-test")
+async def provider_generate_test():
+    smoke_test = await run_provider_smoke_test()
+    return {
+        "status": "provider_generate_test",
+        **get_runtime_diagnostics(),
+        **smoke_test,
     }

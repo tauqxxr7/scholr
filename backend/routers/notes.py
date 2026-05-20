@@ -6,7 +6,13 @@ from agents.notes_agent import generate_notes_response
 from db import crud
 from db.database import get_db
 from models.schemas import NotesRequest
-from routers._runtime import enforce_rate_limit, find_cached_response, should_use_emergency_fallback
+from routers._runtime import (
+    enforce_rate_limit,
+    find_cached_response,
+    get_fallback_stream_source,
+    should_use_emergency_fallback,
+    trigger_provider_recovery_if_needed,
+)
 from routers._streaming import build_sse_response, stream_text_chunks
 
 router = APIRouter()
@@ -31,6 +37,8 @@ async def notes_endpoint(
     )
     use_fallback = should_use_emergency_fallback() and not cached
     fallback_text = build_provider_degraded_text("notes", request.topic)
+    if use_fallback:
+        trigger_provider_recovery_if_needed()
 
     return build_sse_response(
         generator=stream_text_chunks(cached.response.response)
@@ -47,6 +55,12 @@ async def notes_endpoint(
         empty_message="Scholr could not turn that topic into notes this time. Try a clearer exam topic or concept name.",
         request=http_request,
         module="notes",
-        source="warm_cache" if cached and cached.mode == "similar" else "cache" if cached else "fallback" if use_fallback else "live",
+        source="warm_cache"
+        if cached and cached.mode == "similar"
+        else "cache"
+        if cached
+        else get_fallback_stream_source()
+        if use_fallback
+        else "live",
         recovery_text=fallback_text,
     )

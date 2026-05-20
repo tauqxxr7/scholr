@@ -26,6 +26,7 @@ DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
 DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
 DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 8
 DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
+DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS = 60
 STRICT_MODEL_PRIORITY = (
     "gemini-1.5-flash",
     "gemini-1.5-pro",
@@ -59,14 +60,19 @@ PROVIDER_STATE: dict[str, Any] = {
     "quota_failure_count": 0,
     "last_successful_generation_timestamp": None,
     "provider_recovery_state": "probing",
+    "provider_recovery_attempts": 0,
+    "provider_tier_strategy": ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-lite", "openrouter_fallback", "academic_fallback_engine"],
     "model_selection_strategy": "uninitialized",
     "startup_validation_time_ms": None,
     "sdk_version": "unavailable",
+    "openrouter_fallback_configured": bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
 }
 
 logger = logging.getLogger("scholr.provider")
 _CLIENT = None
 _PROVIDER_COOLDOWN_UNTIL: datetime | None = None
+_RECOVERY_TASK: asyncio.Task | None = None
+_LAST_RECOVERY_ATTEMPT_AT: datetime | None = None
 
 
 class ScholrGenerationError(Exception):
@@ -112,6 +118,12 @@ def _cooldown_active() -> bool:
     return True
 
 
+def _cooldown_remaining_seconds() -> int:
+    if not _cooldown_active() or _PROVIDER_COOLDOWN_UNTIL is None:
+        return 0
+    return max(0, int((_PROVIDER_COOLDOWN_UNTIL - _utc_now()).total_seconds()))
+
+
 def _enter_provider_cooldown() -> None:
     global _PROVIDER_COOLDOWN_UNTIL
     _PROVIDER_COOLDOWN_UNTIL = _utc_now() + timedelta(seconds=PROVIDER_COOLDOWN_SECONDS)
@@ -140,6 +152,14 @@ def _record_provider_success(model_name: str) -> None:
     PROVIDER_STATE["quota_failure_count"] = 0
     PROVIDER_STATE["last_successful_generation_timestamp"] = _utc_timestamp()
     PROVIDER_STATE["provider_recovery_state"] = "active"
+
+
+def _mark_recovery_attempt_started() -> None:
+    global _LAST_RECOVERY_ATTEMPT_AT
+    _LAST_RECOVERY_ATTEMPT_AT = _utc_now()
+    PROVIDER_STATE["provider_recovery_attempts"] += 1
+    if PROVIDER_STATE["provider_recovery_state"] != "cooldown":
+        PROVIDER_STATE["provider_recovery_state"] = "recovering"
 
 
 def _get_api_key() -> str:
@@ -577,9 +597,12 @@ def _update_provider_state(
             "provider_recovery_state": (
                 PROVIDER_STATE["provider_recovery_state"] if provider_recovery_state is None else provider_recovery_state
             ),
+            "provider_recovery_attempts": PROVIDER_STATE["provider_recovery_attempts"],
+            "provider_tier_strategy": PROVIDER_STATE["provider_tier_strategy"],
             "model_selection_strategy": model_selection_strategy,
             "startup_validation_time_ms": startup_validation_time_ms,
             "sdk_version": _sdk_version(),
+            "openrouter_fallback_configured": bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
         }
     )
 
@@ -601,12 +624,85 @@ def get_provider_status() -> dict[str, Any]:
         "selected_model_validation_status": PROVIDER_STATE["selected_model_validation_status"],
         "failed_model_reasons": PROVIDER_STATE["failed_model_reasons"],
         "quota_failure_count": PROVIDER_STATE["quota_failure_count"],
+        "quota_cooldown_remaining_seconds": _cooldown_remaining_seconds(),
         "last_successful_generation_timestamp": PROVIDER_STATE["last_successful_generation_timestamp"],
         "provider_recovery_state": PROVIDER_STATE["provider_recovery_state"],
+        "provider_recovery_attempts": PROVIDER_STATE["provider_recovery_attempts"],
+        "provider_tier_strategy": PROVIDER_STATE["provider_tier_strategy"],
         "model_selection_strategy": PROVIDER_STATE["model_selection_strategy"],
         "provider_sdk_version": PROVIDER_STATE["sdk_version"],
         "startup_validation_time_ms": PROVIDER_STATE["startup_validation_time_ms"],
+        "openrouter_fallback_configured": PROVIDER_STATE["openrouter_fallback_configured"],
     }
+
+
+async def _provider_recovery_loop() -> None:
+    while True:
+        try:
+            if not PROVIDER_STATE["ready"]:
+                if _cooldown_active():
+                    log_event(
+                        logger,
+                        "provider_recovery_waiting",
+                        provider_recovery_state=PROVIDER_STATE["provider_recovery_state"],
+                        quota_cooldown_remaining_seconds=_cooldown_remaining_seconds(),
+                    )
+                else:
+                    await validate_provider_startup()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # pragma: no cover - defensive background task guard
+            log_event(
+                logger,
+                "provider_recovery_loop_failed",
+                provider_exception_type=type(exc).__name__,
+                provider_exception_message=str(exc),
+            )
+        await asyncio.sleep(DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS)
+
+
+def ensure_provider_recovery_task() -> None:
+    global _RECOVERY_TASK
+
+    if _RECOVERY_TASK is not None and not _RECOVERY_TASK.done():
+        return
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return
+
+    _RECOVERY_TASK = loop.create_task(_provider_recovery_loop())
+
+
+async def shutdown_provider_recovery_task() -> None:
+    global _RECOVERY_TASK
+
+    if _RECOVERY_TASK is None:
+        return
+
+    _RECOVERY_TASK.cancel()
+    try:
+        await _RECOVERY_TASK
+    except asyncio.CancelledError:
+        pass
+    finally:
+        _RECOVERY_TASK = None
+
+
+def request_provider_recovery() -> bool:
+    if PROVIDER_STATE["ready"] or _cooldown_active():
+        return False
+
+    ensure_provider_recovery_task()
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return True
+
+    if _LAST_RECOVERY_ATTEMPT_AT is None or (_utc_now() - _LAST_RECOVERY_ATTEMPT_AT).total_seconds() >= 15:
+        loop.create_task(validate_provider_startup())
+    return True
 
 
 async def validate_provider_startup() -> dict[str, Any]:
@@ -634,6 +730,13 @@ async def validate_provider_startup() -> dict[str, Any]:
             startup_validation_time_ms=round((perf_counter() - started_at) * 1000),
         )
         return get_provider_status()
+
+    if _LAST_RECOVERY_ATTEMPT_AT and not PROVIDER_STATE["ready"]:
+        seconds_since_last_attempt = (_utc_now() - _LAST_RECOVERY_ATTEMPT_AT).total_seconds()
+        if seconds_since_last_attempt < 15:
+            return get_provider_status()
+
+    _mark_recovery_attempt_started()
 
     try:
         _get_api_key()
@@ -1046,6 +1149,7 @@ def embed_texts(texts: list[str], *, task_type: str) -> list[list[float]]:
 
 
 async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[str, Any]:
+    started_at = perf_counter()
     provider_status = await validate_provider_startup()
     result: dict[str, Any] = {
         "provider_configured": provider_status["provider_configured"],
@@ -1066,13 +1170,17 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
         "quota_failure_count": provider_status["quota_failure_count"],
         "last_successful_generation_timestamp": provider_status["last_successful_generation_timestamp"],
         "provider_recovery_state": provider_status["provider_recovery_state"],
+        "provider_recovery_attempts": provider_status["provider_recovery_attempts"],
+        "quota_cooldown_remaining_seconds": provider_status["quota_cooldown_remaining_seconds"],
         "model_selection_strategy": provider_status["model_selection_strategy"],
         "startup_validation_time_ms": provider_status["startup_validation_time_ms"],
+        "provider_tier_strategy": provider_status["provider_tier_strategy"],
         "prompt": prompt,
     }
 
     if not provider_status["provider_ready"]:
         result["success"] = False
+        result["latency_ms"] = round((perf_counter() - started_at) * 1000)
         return result
 
     try:
@@ -1092,6 +1200,7 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
                 "response_preview": response_text[:80],
                 "response_length": len(response_text),
                 "provider_error_category": None if response_text else "empty_response",
+                "latency_ms": round((perf_counter() - started_at) * 1000),
             }
         )
         if not response_text:
@@ -1105,6 +1214,7 @@ async def run_provider_smoke_test(prompt: str = PROVIDER_PROBE_PROMPT) -> dict[s
                 "provider_error_category": exc.category,
                 "response_preview": None,
                 "response_length": 0,
+                "latency_ms": round((perf_counter() - started_at) * 1000),
             }
         )
         return result

@@ -6,7 +6,13 @@ from agents.research_agent import generate_research_response
 from db import crud
 from db.database import get_db
 from models.schemas import ResearchRequest
-from routers._runtime import enforce_rate_limit, find_cached_response, should_use_emergency_fallback
+from routers._runtime import (
+    enforce_rate_limit,
+    find_cached_response,
+    get_fallback_stream_source,
+    should_use_emergency_fallback,
+    trigger_provider_recovery_if_needed,
+)
 from routers._streaming import build_sse_response, stream_text_chunks
 
 router = APIRouter()
@@ -31,6 +37,8 @@ async def research_endpoint(
     )
     use_fallback = should_use_emergency_fallback() and not cached
     fallback_text = build_provider_degraded_text("research", request.topic)
+    if use_fallback:
+        trigger_provider_recovery_if_needed()
 
     return build_sse_response(
         generator=stream_text_chunks(cached.response.response)
@@ -47,6 +55,12 @@ async def research_endpoint(
         empty_message="Scholr could not find a usable research response for that topic. Try making the topic more specific.",
         request=http_request,
         module="research",
-        source="warm_cache" if cached and cached.mode == "similar" else "cache" if cached else "fallback" if use_fallback else "live",
+        source="warm_cache"
+        if cached and cached.mode == "similar"
+        else "cache"
+        if cached
+        else get_fallback_stream_source()
+        if use_fallback
+        else "live",
         recovery_text=fallback_text,
     )

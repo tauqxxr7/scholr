@@ -14,7 +14,7 @@ type StreamEvent =
   | { type: 'chunk'; chunk: string }
   | { type: 'error'; message: string; retryable?: boolean; category?: string }
   | { type: 'empty'; message?: string }
-  | { type: 'meta'; mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback'; label?: string }
+  | { type: 'meta'; mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'; label?: string }
 
 export class StreamModuleError extends Error {
   retryable: boolean
@@ -31,7 +31,7 @@ export class StreamModuleError extends Error {
 export type StreamModuleResult = {
   hadChunks: boolean
   emptyMessage?: string
-  mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback'
+  mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'
   modeLabel?: string
 }
 

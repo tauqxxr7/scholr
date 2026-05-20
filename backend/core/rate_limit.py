@@ -49,6 +49,22 @@ class InMemoryRateLimiter:
 
         return RateLimitResult(allowed=True, client_ip=client_ip)
 
+    def recent_request_count(self, scope: str | None = None) -> int:
+        now = time.time()
+        count = 0
+
+        with self._lock:
+            for key, bucket in self._requests.items():
+                while bucket and now - bucket[0] >= self.window_seconds:
+                    bucket.popleft()
+
+                if scope is not None and not key.startswith(f"{scope}:"):
+                    continue
+
+                count += len(bucket)
+
+        return count
+
     @staticmethod
     def _get_client_ip(request: Request) -> str:
         forwarded_for = request.headers.get("x-forwarded-for", "").strip()

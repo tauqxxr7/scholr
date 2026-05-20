@@ -24,6 +24,8 @@ def _sse_event(payload: dict[str, Any]) -> str:
 
 
 def _response_mode_payload(source: str) -> dict[str, str]:
+    if source == "recovering":
+        return {"mode": "recovering", "label": "Provider Recovering"}
     if source == "fallback":
         return {"mode": "fallback", "label": "Fallback Academic Mode"}
     if source == "warm_cache":
