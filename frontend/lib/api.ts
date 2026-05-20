@@ -47,7 +47,10 @@ export type DocumentHealthResult = {
   multipart_available: boolean
   vector_store_available: boolean
   embedding_provider_configured: boolean
+  provider_ready_for_embeddings: boolean
+  provider_error_category?: string | null
   embedding_health: string
+  retrieval_health?: string
   retrieval_default_mode: 'lexical' | 'semantic' | 'hybrid' | string
   documents_storage_path: string
   vector_storage_path: string

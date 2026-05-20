@@ -19,6 +19,19 @@ Do not fabricate outcomes. Keep placeholders until evidence is collected.
   - Laptop
   - Desktop
 
+## Document workflow validation checklist
+
+- upload one text-based class PDF
+- upload one previous year question PDF when available
+- ask one retrieval-grounded revision question
+- ask one citation-sensitive question such as "Which page explains normalization?"
+- record whether the answer stayed in lexical mode, semantic mode, or retrieval-only mode
+- record whether the citations were enough to verify the answer quickly on mobile
+
+Current repo evidence:
+- bundled academic fixture validated
+- real DBMS / OS / DSA / CN / Maths / PYQ / research-paper PDFs still need to be collected and tested
+
 ## Session structure
 
 1. Ask the student to try one Notes prompt.
@@ -34,6 +47,18 @@ Do not fabricate outcomes. Keep placeholders until evidence is collected.
 | 1 |  |  |  |  |  |  |  |
 | 2 |  |  |  |  |  |  |  |
 | 3 |  |  |  |  |  |  |  |
+
+## Real PDF subject matrix
+
+| Subject PDF | Device | Retrieval Mode | Citation Usefulness | Hallucination Risk | Mobile UX Notes | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| DBMS |  |  |  |  |  | Pending |
+| Operating Systems |  |  |  |  |  | Pending |
+| DSA |  |  |  |  |  | Pending |
+| Computer Networks |  |  |  |  |  | Pending |
+| Engineering Maths |  |  |  |  |  | Pending |
+| PYQ set |  |  |  |  |  | Pending |
+| Research paper |  |  |  |  |  | Pending |
 
 ## Issues found
 

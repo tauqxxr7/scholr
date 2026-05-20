@@ -96,6 +96,7 @@ flowchart TD
 - document assets and chunks are persisted for backend-first PDF intelligence
 - vector storage is local today and intentionally gitignored
 - `/health/documents` exposes PDF, multipart, vector, and embedding readiness without exposing secrets
+- `/health/documents` truthfully reports whether live document retrieval is currently defaulting to lexical or semantic mode
 
 ## Document Intelligence Flow
 

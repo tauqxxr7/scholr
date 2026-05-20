@@ -22,6 +22,16 @@
 | User validation | Ready | Templates and research pack present, no fabricated data |
 | CI status | Live | Backend CI, Frontend CI, Repo Hygiene passing |
 
+## Live document workflow verification
+
+Verified live against the deployed frontend and backend using the bundled fixture:
+- upload fixture: `backend/tests/fixtures/academic-sample.pdf`
+- upload result: `ready_with_lexical_fallback`
+- answer result: `retrieval_only`
+- citations: present
+- no empty output observed
+- current live retrieval default: lexical while provider-backed embeddings remain degraded
+
 ## Current runtime truth
 
 - Live MVP: stable

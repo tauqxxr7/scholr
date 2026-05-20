@@ -9,7 +9,7 @@ from pathlib import Path
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
-from agents._generation import ScholrGenerationError, embed_texts, stream_gemini_response
+from agents._generation import ScholrGenerationError, embed_texts, get_provider_status, stream_gemini_response
 from db import crud
 
 MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
@@ -489,6 +489,7 @@ def get_document_intelligence_health() -> dict[str, object]:
 
     pdf_parsing_available = _module_available("pypdf")
     multipart_available = _module_available("multipart")
+    provider_status = get_provider_status()
 
     try:
         _load_chroma_client()
@@ -496,22 +497,31 @@ def get_document_intelligence_health() -> dict[str, object]:
     except DocumentIntelligenceError:
         vector_store_available = False
 
-    embedding_provider_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
-    embedding_health = (
-        "ready"
-        if embedding_provider_configured and vector_store_available
-        else "provider_unavailable"
-        if not embedding_provider_configured
-        else "vector_unavailable"
-    )
-    retrieval_default_mode = "semantic" if vector_store_available and embedding_provider_configured else "lexical"
+    embedding_provider_configured = provider_status["provider_configured"]
+    provider_ready = provider_status["provider_ready"]
+    provider_error_category = provider_status["provider_error_category"]
+
+    if not embedding_provider_configured:
+        embedding_health = "provider_unavailable"
+    elif not vector_store_available:
+        embedding_health = "vector_unavailable"
+    elif not provider_ready:
+        embedding_health = "provider_degraded"
+    else:
+        embedding_health = "ready"
+
+    retrieval_default_mode = "semantic" if vector_store_available and provider_ready else "lexical"
+    retrieval_health = "healthy" if retrieval_default_mode == "semantic" else "degraded_lexical_fallback"
 
     return {
         "pdf_parsing_available": pdf_parsing_available,
         "multipart_available": multipart_available,
         "vector_store_available": vector_store_available,
         "embedding_provider_configured": embedding_provider_configured,
+        "provider_ready_for_embeddings": provider_ready,
+        "provider_error_category": provider_error_category,
         "embedding_health": embedding_health,
+        "retrieval_health": retrieval_health,
         "retrieval_default_mode": retrieval_default_mode,
         "documents_storage_path": str(DOCUMENTS_ROOT),
         "vector_storage_path": str(VECTOR_DB_ROOT),

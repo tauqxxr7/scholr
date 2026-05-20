@@ -27,6 +27,7 @@ This document tracks measurable production proof without inventing data.
 | Document answer latency | frontend analytics + backend logs | Instrumented | Useful for mobile perception and RAG tuning |
 | Citation count | document answer payload + analytics | Instrumented | Track whether answers stay grounded |
 | Lexical vs semantic retrieval usage | `/health/documents` + document answer payload | Instrumented | Supports semantic upgrade planning |
+| Live document workflow verification | manual live probe + smoke script | Verified with fixture | `academic-sample.pdf` upload and retrieval-only answer succeeded live |
 
 ## Product metrics to collect
 
@@ -49,4 +50,5 @@ This document tracks measurable production proof without inventing data.
 ## Known limitations
 
 - Gemini quota and project-level model access can still move Scholr into resilience-backed fallback mode.
+- Semantic document retrieval depends on provider-backed embeddings, so live `/health/documents` should be expected to report lexical default mode while the provider is degraded.
 - No production dashboard exists yet for aggregated metrics; current proof comes from endpoints, logs, and manual validation records.

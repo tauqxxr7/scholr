@@ -157,6 +157,13 @@ This is intentionally honest:
 - if embeddings or provider-backed synthesis are unavailable, Scholr does not pretend semantic AI is active
 - retrieval-first answers stay useful through lexical fallback and citations
 
+### Live document workflow status
+
+- live upload is working with the bundled academic sample PDF
+- live document answers return grounded citations and snippets
+- current provider degradation keeps the default live retrieval path in `Lexical Retrieval`
+- semantic retrieval remains available in architecture, but only activates when provider-backed embeddings recover
+
 ### Retrieval modes
 
 - `Lexical Retrieval`: chunk matching from stored document text when vector search is unavailable
@@ -321,12 +328,11 @@ Tauqeer Bharde is a BTech AI and Data Science student building practical AI syst
 1. complete 10 to 15 student validation
 2. measure retention, usefulness, and fallback-mode perception
 3. restore fully healthy provider generation once quota and model access stabilize
-4. validate the document intelligence backend with real PDFs before adding the frontend upload experience
+4. validate the live document workflow with real DBMS, OS, DSA, CN, Maths, PYQ, and research PDFs
 5. capture more polished mobile and provider-health proof assets as the live system evolves
 
 ### Later
 
-- PDF upload frontend once backend document intelligence is fully exercised
 - PYQ intelligence and question-cluster retrieval after the core document pipeline is stable
 - semantic search over history and uploaded documents
 - pgvector-backed document and history retrieval

@@ -17,7 +17,7 @@ This document explains the next careful steps from backend scaffold to productio
 
 ### Phase 1
 
-- validate upload and retrieval routes with real class notes and research PDFs
+- validate the live document workspace with real class notes and research PDFs
 - confirm dependency behavior on Render
 - verify temp cleanup and error handling
 - verify chunk metadata quality
@@ -28,6 +28,7 @@ This document explains the next careful steps from backend scaffold to productio
 
 - refine document status, warning states, and workflow quality in the frontend upload flow
 - test citation usefulness with real student documents
+- capture proof screenshots for upload, retrieval mode, citations, and mobile document UX
 - validate whether question-paper and PYQ workflows should become a dedicated mode instead of generic document Q and A
 
 ### Phase 3

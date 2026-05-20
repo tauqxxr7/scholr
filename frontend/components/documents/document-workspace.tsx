@@ -408,7 +408,7 @@ export default function DocumentWorkspace() {
                       <div>
                         <p className="text-sm font-semibold text-slate-950">{uploadedDocument.title}</p>
                         <p className="mt-1 text-sm text-slate-500">
-                          {uploadedDocument.page_count} page{uploadedDocument.page_count === 1 ? '' : 's'} •{' '}
+                          {uploadedDocument.page_count} page{uploadedDocument.page_count === 1 ? '' : 's'} |{' '}
                           {uploadedDocument.chunk_count} chunk{uploadedDocument.chunk_count === 1 ? '' : 's'}
                         </p>
                       </div>
@@ -581,6 +581,9 @@ export default function DocumentWorkspace() {
                 <div className="space-y-4">
                   <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/60 p-4">
                     <div className="flex flex-wrap gap-2">
+                      <Badge className="rounded-full bg-emerald-50 text-emerald-800 shadow-none">
+                        Document grounded answer
+                      </Badge>
                       <Badge variant="outline" className="rounded-full">
                         Confidence: {answerResult.confidence}
                       </Badge>
@@ -603,7 +606,7 @@ export default function DocumentWorkspace() {
                   <div className="rounded-[1.5rem] border border-slate-200 bg-white p-4">
                     <div className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-900">
                       <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                      Citations and evidence
+                      Citations and source chunks
                     </div>
                     <div className="space-y-3">
                       {answerResult.citations.map((citation, index) => (
@@ -677,11 +680,20 @@ export default function DocumentWorkspace() {
                 <p className="mt-2 text-sm font-medium text-slate-900">
                   {documentHealth?.embedding_health || 'Loading'}
                 </p>
+                {documentHealth?.provider_error_category ? (
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    Provider state: {documentHealth.provider_error_category}
+                  </p>
+                ) : null}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Vector retrieval</p>
                 <p className="mt-2 text-sm font-medium text-slate-900">
-                  {documentHealth?.vector_store_available ? 'Available' : 'Lexical fallback active'}
+                  {documentHealth?.retrieval_default_mode === 'semantic'
+                    ? 'Active'
+                    : documentHealth?.vector_store_available
+                      ? 'Standing by'
+                      : 'Lexical fallback active'}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
@@ -689,6 +701,11 @@ export default function DocumentWorkspace() {
                 <p className="mt-2 text-sm font-medium text-slate-900">
                   {documentHealth?.retrieval_default_mode || 'Loading'}
                 </p>
+                {documentHealth?.retrieval_health ? (
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    Retrieval health: {documentHealth.retrieval_health}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>

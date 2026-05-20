@@ -1,6 +1,6 @@
 # Scholr Document Intelligence
 
-This document audits the current backend-first PDF and retrieval foundation.
+This document audits the current live PDF workflow and the backend retrieval foundation behind it.
 
 ## Current routes
 
@@ -81,13 +81,28 @@ The smoke path currently validates:
 - cited response shape
 - retrieval mode exposure
 
+## Live verified behavior
+
+Verified against the live Render backend and the live Vercel document workspace:
+
+- PDF upload works with the bundled academic sample fixture
+- upload returns `ready_with_lexical_fallback` when embeddings are unavailable
+- document answers return:
+  - `answer`
+  - `citations`
+  - `confidence`
+  - `limitations`
+  - `retrieval_mode`
+- live retrieval currently defaults to lexical grounding while the provider remains degraded
+- no empty output panels were observed in the live document flow
+
 ## Known limitations
 
-- no frontend upload experience yet
+- real subject PDFs are not bundled in the repo yet, so DBMS, OS, DSA, CN, Maths, PYQ, and research-paper validation is still pending
 - no per-user document ownership
 - local vector storage is not a final production data path
 - semantic retrieval depends on vector dependencies and model/provider availability
-- no dedicated PYQ intelligence workflow yet
+- semantic retrieval health depends on provider-backed embeddings, so live production can truthfully remain in lexical mode during provider degradation
 
 ## Future pgvector migration
 
