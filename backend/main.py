@@ -17,6 +17,7 @@ from core.logging_utils import configure_logging, log_event
 from db.database import init_db
 from routers import documents, doubt, history, notes, research
 from routers._runtime import get_runtime_diagnostics
+from services.document_rag import get_document_intelligence_health
 
 configure_logging()
 init_db()
@@ -172,4 +173,12 @@ async def provider_generate_test():
         "status": "provider_generate_test",
         **get_runtime_diagnostics(),
         **smoke_test,
+    }
+
+
+@app.get("/health/documents")
+def document_intelligence_health():
+    return {
+        "status": "document_intelligence_health",
+        **get_document_intelligence_health(),
     }

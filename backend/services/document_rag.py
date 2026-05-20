@@ -1,9 +1,10 @@
+import re
+import os
 import shutil
 import tempfile
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-import re
 
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
@@ -80,6 +81,14 @@ def _load_chroma_client():
         ) from exc
 
     return chromadb.PersistentClient(path=str(VECTOR_DB_ROOT))
+
+
+def _module_available(module_name: str) -> bool:
+    try:
+        __import__(module_name)
+    except ImportError:
+        return False
+    return True
 
 
 async def _read_upload_bytes(upload: UploadFile) -> bytes:
@@ -468,7 +477,42 @@ Document context:
         "retrieval_ready": True,
         "generation_used": generation_used,
         "answer_mode": answer_mode,
+        "retrieval_mode": retrieval.retrieval_mode,
         "confidence": confidence,
         "limitations": limitations,
         "warning": warning,
+    }
+
+
+def get_document_intelligence_health() -> dict[str, object]:
+    _ensure_storage_dirs()
+
+    pdf_parsing_available = _module_available("pypdf")
+    multipart_available = _module_available("multipart")
+
+    try:
+        _load_chroma_client()
+        vector_store_available = True
+    except DocumentIntelligenceError:
+        vector_store_available = False
+
+    embedding_provider_configured = bool(os.getenv("GEMINI_API_KEY", "").strip())
+    embedding_health = (
+        "ready"
+        if embedding_provider_configured and vector_store_available
+        else "provider_unavailable"
+        if not embedding_provider_configured
+        else "vector_unavailable"
+    )
+    retrieval_default_mode = "semantic" if vector_store_available and embedding_provider_configured else "lexical"
+
+    return {
+        "pdf_parsing_available": pdf_parsing_available,
+        "multipart_available": multipart_available,
+        "vector_store_available": vector_store_available,
+        "embedding_provider_configured": embedding_provider_configured,
+        "embedding_health": embedding_health,
+        "retrieval_default_mode": retrieval_default_mode,
+        "documents_storage_path": str(DOCUMENTS_ROOT),
+        "vector_storage_path": str(VECTOR_DB_ROOT),
     }

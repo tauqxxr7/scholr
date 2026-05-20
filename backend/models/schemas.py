@@ -57,6 +57,7 @@ class DocumentAnswerResponse(BaseModel):
     retrieval_ready: bool
     generation_used: bool
     answer_mode: str
+    retrieval_mode: str
     confidence: str
     limitations: list[str]
     warning: str | None = None
