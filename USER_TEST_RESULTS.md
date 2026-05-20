@@ -1,42 +1,47 @@
 # Scholr User Test Results
 
-Use this sheet to capture lightweight evidence from the first 10 student validation sessions.
+Use this sheet to capture real evidence from the first 10 student validation sessions.
 
-## Session Template
+Do not enter fake user data. Use placeholders until real sessions happen.
 
-- Tester name: `optional`
+## Session capture template
+
+- Tester name: `optional / anonymized`
 - Role / year: `optional`
-- College / branch: `optional`
+- Branch / college: `optional`
 - Device used: `iPhone / Android / iPad / Laptop / Desktop`
 - Browser used: `Safari / Chrome / Edge / Other`
 - Module tested: `Research / Notes / Doubt / Multiple`
-- Prompt used:
-- Did the output help? `Yes / Partly / No`
-- What was useful?
-- What was confusing?
+- Task attempted:
+- Output result: `Helpful / Partly helpful / Not helpful`
+- Usefulness rating: `1-5`
+- Confusion points:
 - Did fallback or cached mode appear? `Yes / No / Not sure`
 - Would they use this before exams? `Yes / Maybe / No`
-- Would they use this for projects or viva prep? `Yes / Maybe / No`
-- One quote worth saving:
+- Would they use this for viva or project work? `Yes / Maybe / No`
 
-## Quick Scoring
+## Validation tracker
 
-- Session outcome: `Strong / Neutral / Weak`
-- Time-to-value under 60 seconds: `Yes / No`
-- Asked for second prompt in same session: `Yes / No`
-- Wants to use again: `Yes / No`
+| Tester | Device | Module | Task | Result | Confusion | Usefulness (1-5) | Use Before Exams? |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |
+| 4 |  |  |  |  |  |  |  |
+| 5 |  |  |  |  |  |  |  |
+| 6 |  |  |  |  |  |  |  |
+| 7 |  |  |  |  |  |  |  |
+| 8 |  |  |  |  |  |  |  |
+| 9 |  |  |  |  |  |  |  |
+| 10 |  |  |  |  |  |  |  |
 
-## Validation Tracker
+## Anonymized quotes
 
-| Tester | Device | Modules Tested | Helped? | Use Before Exams? | Follow-up Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 |  |  |  |  |  |
-| 2 |  |  |  |  |  |
-| 3 |  |  |  |  |  |
-| 4 |  |  |  |  |  |
-| 5 |  |  |  |  |  |
-| 6 |  |  |  |  |  |
-| 7 |  |  |  |  |  |
-| 8 |  |  |  |  |  |
-| 9 |  |  |  |  |  |
-| 10 |  |  |  |  |  |
+- `"Placeholder: add one short quote after each real user session."`
+- `"Placeholder: capture whether fallback mode still felt useful or not."`
+
+## Issues found and fixes made
+
+| Issue Found | Where It Appeared | Severity | Fix Made | Date |
+| --- | --- | --- | --- | --- |
+| Placeholder |  |  |  |  |

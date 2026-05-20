@@ -209,6 +209,7 @@ Validation assets:
 - [USER_VALIDATION_PLAN.md](USER_VALIDATION_PLAN.md)
 - [USER_TEST_RESULTS.md](USER_TEST_RESULTS.md)
 - [FEEDBACK_FORM.md](FEEDBACK_FORM.md)
+- [METRICS.md](METRICS.md)
 
 ## Document Intelligence Foundation
 

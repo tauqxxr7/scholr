@@ -1,20 +1,23 @@
 # Scholr Student Feedback Form
 
-Use these 10 short questions after a student tests Scholr.
+Use this after each student tries the live product.
+
+## 10 short questions
 
 1. Which module did you try first: Research, Notes, or Doubt?
-2. What topic or question did you use?
-3. Did the output feel useful within the first minute?
-4. Was the answer easy to read and understand?
-5. Did Scholr feel more structured than a generic chatbot?
-6. If fallback mode appeared, did the output still help you move forward?
-7. What part felt confusing or weak?
-8. Would you use Scholr again before exams, viva, or project work?
-9. Which module feels most valuable right now?
-10. What is the one thing you would improve first?
+2. What exact topic or question did you enter?
+3. Did the output help you within the first minute?
+4. Did the response feel more useful than a generic chatbot?
+5. Was the structure easy to read on your device?
+6. If fallback or cached mode appeared, did it still help you move forward?
+7. What part felt confusing, weak, or repetitive?
+8. Would you use this before exams, viva, or project work?
+9. Which module feels strongest right now?
+10. What should be improved first?
 
-## Optional Follow-up Prompts
+## Optional follow-up prompts
 
 - What would make you trust Scholr more?
-- Would you prefer shorter answers, deeper answers, or both?
-- Did the product feel fast enough on your device?
+- Did the response feel fast enough?
+- Did the mobile experience feel polished enough to reuse?
+- Would you want PDF or document-based answers later?
