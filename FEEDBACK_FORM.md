@@ -21,3 +21,21 @@ Use this after each student tries the live product.
 - Did the response feel fast enough?
 - Did the mobile experience feel polished enough to reuse?
 - Would you want PDF or document-based answers later?
+
+## Recommended test subjects
+
+- DBMS
+- Operating Systems
+- DSA
+- Computer Networks
+- Engineering Maths
+
+## Field capture reminder
+
+For each real student session, also record:
+- student type
+- mobile device or laptop used
+- module tested
+- usefulness rating
+- confusion point
+- whether they would use it before exams

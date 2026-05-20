@@ -1,6 +1,6 @@
 # Scholr User Test Results
 
-Use this sheet to capture real evidence from the first 10 student validation sessions.
+Use this sheet to capture real evidence from the first 10 to 15 student validation sessions.
 
 Do not enter fake user data. Use placeholders until real sessions happen.
 
@@ -8,7 +8,6 @@ Do not enter fake user data. Use placeholders until real sessions happen.
 
 - Tester name: `optional / anonymized`
 - Student type: `2nd year / 3rd year / 4th year / final-year project / exam prep`
-- Role / year: `optional`
 - Branch / college: `optional`
 - Device used: `iPhone / Android / iPad / Laptop / Desktop`
 - Browser used: `Safari / Chrome / Edge / Other`
@@ -16,10 +15,19 @@ Do not enter fake user data. Use placeholders until real sessions happen.
 - Task attempted:
 - Output result: `Helpful / Partly helpful / Not helpful`
 - Usefulness rating: `1-5`
-- Confusion points:
+- Confusion point:
 - Did fallback or cached mode appear? `Yes / No / Not sure`
-- Would they use this before exams? `Yes / Maybe / No`
-- Would they use this for viva or project work? `Yes / Maybe / No`
+- Would use before exam? `Yes / Maybe / No`
+- Issues found:
+- Fixes shipped after session:
+
+## Suggested test prompt bank
+
+- DBMS: `What is normalization and why do we use it?`
+- Operating Systems: `Operating System deadlock`
+- DSA: `Difference between BFS and DFS with example`
+- Computer Networks: `Explain the OSI model in simple terms`
+- Engineering Maths: `What is Laplace transform and where is it used?`
 
 ## Mobile testing checklist
 
@@ -33,18 +41,23 @@ Do not enter fake user data. Use placeholders until real sessions happen.
 
 ## Validation tracker
 
-| Tester | Student Type | Device | Module Tested | Task | Usefulness (1-5) | Confusion Point | Use Before Exam? |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 |  |  |  |  |  |  |  |
-| 2 |  |  |  |  |  |  |  |
-| 3 |  |  |  |  |  |  |  |
-| 4 |  |  |  |  |  |  |  |
-| 5 |  |  |  |  |  |  |  |
-| 6 |  |  |  |  |  |  |  |
-| 7 |  |  |  |  |  |  |  |
-| 8 |  |  |  |  |  |  |  |
-| 9 |  |  |  |  |  |  |  |
-| 10 |  |  |  |  |  |  |  |
+| Tester | Student Type | Device | Module Tested | Task | Usefulness (1-5) | Confusion Point | Use Before Exam? | Issues Found | Fixes Shipped |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 |  |  |  |  |  |  |  |  |  |
+| 2 |  |  |  |  |  |  |  |  |  |
+| 3 |  |  |  |  |  |  |  |  |  |
+| 4 |  |  |  |  |  |  |  |  |  |
+| 5 |  |  |  |  |  |  |  |  |  |
+| 6 |  |  |  |  |  |  |  |  |  |
+| 7 |  |  |  |  |  |  |  |  |  |
+| 8 |  |  |  |  |  |  |  |  |  |
+| 9 |  |  |  |  |  |  |  |  |  |
+| 10 |  |  |  |  |  |  |  |  |  |
+| 11 |  |  |  |  |  |  |  |  |  |
+| 12 |  |  |  |  |  |  |  |  |  |
+| 13 |  |  |  |  |  |  |  |  |  |
+| 14 |  |  |  |  |  |  |  |  |  |
+| 15 |  |  |  |  |  |  |  |  |  |
 
 ## Anonymized quotes
 
