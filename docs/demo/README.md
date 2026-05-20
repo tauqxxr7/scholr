@@ -5,12 +5,14 @@ This folder stores repo-ready demo assets for screenshots, recruiter walkthrough
 ## Expected assets
 
 - `demo.gif`
+- `ios-response.mp4`
 - optional narrated screen recording export
 - short architecture or provider-health stills used in README
 
 ## Current status
 
 - `demo.gif` exists as a placeholder asset
+- `ios-response.mp4` is expected but not present in this workspace yet
 - the polished recorded walkthrough still needs to be captured from the live app
 - the production script lives in [DEMO_SCRIPT.md](C:/Users/TAUQEER BHARDE/.codex/worktrees/944e/scholr/DEMO_SCRIPT.md)
 

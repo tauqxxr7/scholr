@@ -45,6 +45,13 @@ Scholr is a live academic AI product built for BTech students who need:
 The polished walkthrough asset is being prepared here:
 - [docs/demo/demo.gif](docs/demo/demo.gif)
 - script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- iOS video slot: `docs/demo/ios-response.mp4` (not committed yet in this workspace)
+
+### Mobile demo section
+
+- iOS/mobile live path is currently the strongest public demo proof
+- use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the 60-90 second walkthrough
+- if the `.mp4` is added later, store it as `docs/demo/ios-response.mp4`
 
 ### Desktop proof
 
@@ -58,6 +65,14 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 
 ![Mobile notes placeholder](docs/screenshots/mobile/mobile-notes.png)
 ![Mobile doubt placeholder](docs/screenshots/mobile/mobile-doubt.png)
+
+### iOS verification
+
+- landing page verified on iPhone Safari
+- Notes and Doubt flows verified on iOS/mobile
+- Fallback Academic Mode verified on mobile
+- Provider Recovering UX verified on mobile
+- real iOS demo video is expected to live at `docs/demo/ios-response.mp4` when copied into the repo
 
 ## Current Production Behavior
 
@@ -79,6 +94,23 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 | Fallback mode | Working | useful academic output during provider degradation |
 | Cache / fallback behavior | Working | cached and recovery modes exposed to UI |
 | User testing status | Ready | templates and validation plan included |
+
+### Restore true AI Mode
+
+Scholr currently preserves user-facing quality through cache, fallback, and provider recovery. To restore persistent `AI Mode` on live traffic:
+
+1. verify the Render `GEMINI_API_KEY` belongs to a project with healthy Gemini API quota
+2. confirm the provider project exposes at least one validated generation model from Scholr's priority chain
+3. check [provider health](https://scholr-k9sj.onrender.com/health/provider) for:
+   - `provider_ready`
+   - `provider_error_category`
+   - `validated_models_count`
+   - `quota_failure_count`
+   - `provider_recovery_state`
+4. check [generation smoke test](https://scholr-k9sj.onrender.com/health/generate-test) for real tiny generation success
+5. redeploy Render after key or model-access changes
+
+Until that recovers, the current live system remains useful through `Fallback Academic Mode`, `Provider Recovering`, and `Cached Academic Response`.
 
 ## Why Scholr Is Not Just ChatGPT
 
@@ -245,10 +277,12 @@ Tauqeer Bharde is a BTech AI & Data Science student building practical AI system
 2. Complete 10-student validation
 3. Measure retention, usefulness, and fallback-mode perception
 4. Restore fully healthy provider generation once quota/model access stabilizes
+5. Validate the document intelligence backend with real PDFs before adding the frontend upload experience
 
 ### Later
 
 - PDF upload frontend once backend document intelligence is fully exercised
+- PYQ intelligence and question-cluster retrieval after the core document pipeline is stable
 - semantic search over history and uploaded documents
 - pgvector-backed document and history retrieval
 - auth and user-specific history

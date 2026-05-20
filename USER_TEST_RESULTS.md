@@ -7,6 +7,7 @@ Do not enter fake user data. Use placeholders until real sessions happen.
 ## Session capture template
 
 - Tester name: `optional / anonymized`
+- Student type: `2nd year / 3rd year / 4th year / final-year project / exam prep`
 - Role / year: `optional`
 - Branch / college: `optional`
 - Device used: `iPhone / Android / iPad / Laptop / Desktop`
@@ -20,9 +21,19 @@ Do not enter fake user data. Use placeholders until real sessions happen.
 - Would they use this before exams? `Yes / Maybe / No`
 - Would they use this for viva or project work? `Yes / Maybe / No`
 
+## Mobile testing checklist
+
+- landing page opens cleanly
+- prompt area is readable without zoom frustration
+- buttons remain tappable
+- response badge is visible
+- streamed output feels active, not stalled
+- fallback or recovering mode still feels useful
+- copy and clear actions work
+
 ## Validation tracker
 
-| Tester | Device | Module | Task | Result | Confusion | Usefulness (1-5) | Use Before Exams? |
+| Tester | Student Type | Device | Module Tested | Task | Usefulness (1-5) | Confusion Point | Use Before Exam? |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 |  |  |  |  |  |  |  |
 | 2 |  |  |  |  |  |  |  |

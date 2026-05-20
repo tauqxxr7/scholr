@@ -111,6 +111,21 @@ flowchart TD
     A --> O["Answer + cited snippets"]
 ```
 
+## Future PYQ Intelligence Extension
+
+```mermaid
+flowchart TD
+    PYQ["Previous year question PDFs"] --> PX["Parsing + cleanup"]
+    PX --> PK["Chunking + metadata"]
+    PK --> PV["Vector + keyword index"]
+    Student["Student topic or question"] --> PR["Retriever + pattern matcher"]
+    PV --> PR
+    PR --> PH["Question cluster hints"]
+    PR --> PA["Citation-grounded academic answer"]
+```
+
+This remains a planning lane, not a live student-facing feature yet.
+
 ## Deployment
 
 - Frontend: Vercel

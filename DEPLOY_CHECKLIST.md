@@ -228,6 +228,19 @@ Fix:
 - use `/health/generate-test` to confirm real tiny generation succeeds before declaring provider recovery complete
 - force a Render redeploy after changing model or env configuration
 
+### Restore true AI Mode
+
+Checklist:
+1. verify the Render `GEMINI_API_KEY` belongs to the intended Google AI project
+2. confirm the project still has active Gemini quota
+3. confirm at least one validated generation model becomes available in `/health/provider`
+4. check that `/health/generate-test` returns success with a tiny generated sample
+5. once provider health shows `provider_ready: true`, re-test live Research, Notes, and Doubt
+
+Important:
+- do not disable fallback mode while troubleshooting
+- keep provider recovery enabled so the app remains student-safe during quota instability
+
 ### Missing PostgreSQL
 
 Symptom:

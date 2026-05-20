@@ -20,18 +20,24 @@ This document explains the next careful steps from backend scaffold to productio
 - confirm dependency behavior on Render
 - verify temp cleanup and error handling
 - verify chunk metadata quality
+- define a clean citation format students can trust
 
 ### Phase 2
 
 - add secure frontend upload flow
 - expose document status and warning states
 - test citation usefulness with real student documents
+- validate whether question-paper and PYQ flows should be a dedicated mode instead of generic document Q&A
 
 ### Phase 3
 
 - move local vector storage toward `pgvector` or another production-safe store
 - add document ownership and auth
 - add semantic search over history and uploaded content
+- add PYQ intelligence later:
+  - topic clustering
+  - repeated-question pattern detection
+  - exam-likelihood hints
 
 ## Target answer format
 
@@ -46,3 +52,4 @@ This document explains the next careful steps from backend scaffold to productio
 - arbitrary file ingestion
 - large-scale document memory
 - multi-tenant document sharing
+- full PYQ productization before the base document pipeline is proven

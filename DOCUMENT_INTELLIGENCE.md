@@ -26,6 +26,14 @@ This document audits the current backend-only PDF and retrieval foundation.
 4. attempt provider-backed grounded answer
 5. if provider unavailable, fall back to deterministic retrieval evidence
 
+## Citation-grounded answer target
+
+The intended answer format is:
+- direct answer first
+- short grounded explanation second
+- cited snippets third
+- language like `According to Page 4...` or `From the uploaded document...`
+
 ## Current dependencies
 
 - `pypdf`
@@ -47,6 +55,17 @@ This document audits the current backend-only PDF and retrieval foundation.
 - no per-user document ownership
 - local vector storage is not a final production data path
 - provider-backed document answers still depend on external model availability
+- no dedicated PYQ intelligence workflow yet
+
+## Future PYQ intelligence lane
+
+Once the base RAG path is stable, Scholr can extend document intelligence toward previous-year-question support:
+
+- ingest PYQ PDFs
+- detect repeated themes and question clusters
+- map questions to likely topics
+- generate citation-grounded revision hints
+- keep PYQ intelligence separate from generic PDF chat so the student value proposition stays sharp
 
 ## Future pgvector migration
 

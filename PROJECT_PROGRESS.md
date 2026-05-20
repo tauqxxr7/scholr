@@ -90,7 +90,7 @@ Scholr is in the live MVP stage:
 
 ## What Is Pending
 
-- add demo video or short walkthrough
+- add the real iOS demo video asset into `docs/demo/ios-response.mp4`
 - verify long-term production history persistence with PostgreSQL
 - replace placeholder demo GIF and placeholder mobile proof assets with real captures
 - validate GitHub Actions on first live run
@@ -172,6 +172,7 @@ Scholr is in the live MVP stage:
   - Research / Notes / Doubt remain functional through Fallback Academic Mode
   - desktop and iOS usage are both functional
   - proof package, legal docs, CI workflows, and production evidence docs are now part of the repo surface
+  - real AI Mode restoration still depends on external Gemini quota and project/model access recovery
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
 
