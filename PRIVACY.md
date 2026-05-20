@@ -1,10 +1,11 @@
 # Scholr Privacy Note
 
-Scholr is owned by Tauqeer Bharde.
+Scholr is owned by Tauqeer Bharde.  
+Copyright (c) 2026 Tauqeer Bharde. All rights reserved.
 
 ## What Scholr does
 
-Scholr accepts prompts and questions to generate academic responses across Research, Notes, and Doubt workflows.
+Scholr accepts prompts and questions to generate academic responses across Research, Notes, Doubt, and future document-intelligence workflows.
 
 ## Data handled
 
@@ -25,7 +26,7 @@ Inputs may be sent to external model providers to generate responses. Users rema
 
 ## Analytics and cookies
 
-Scholr may use analytics, cookies, or local storage in a minimal way to understand usage, preserve interface state, and improve reliability. The current MVP is designed to avoid invasive tracking.
+Scholr may use analytics, cookies, or local storage in a limited way to understand usage, preserve interface state, and improve reliability. The current MVP is designed to avoid invasive tracking.
 
 ## Uploaded files
 

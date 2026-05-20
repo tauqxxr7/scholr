@@ -1,6 +1,6 @@
 # Scholr
 
-AI-powered academic intelligence and research assistance platform for BTech students.
+Scholr is an AI-powered academic intelligence platform for BTech students, combining streaming generation, provider resilience, and future retrieval-grounded document intelligence.
 
 [![Backend CI](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml)
@@ -24,7 +24,7 @@ Live links:
 
 ## What Scholr Is
 
-Scholr is a live academic AI product built for BTech students who need:
+Scholr is a live academic AI product for BTech students who need:
 - research direction for projects and papers
 - clean revision notes for exams and viva
 - structured doubt solving without generic chatbot drift
@@ -40,33 +40,32 @@ Scholr is a live academic AI product built for BTech students who need:
 ### Hero screenshot
 ![Desktop landing](docs/screenshots/desktop/desktop-landing.png)
 
-### Demo GIF
+### Demo video and proof
 
-The polished walkthrough asset is being prepared here:
-- [docs/demo/demo.gif](docs/demo/demo.gif)
-- script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+The walkthrough assets live here:
+- demo placeholder: [docs/demo/demo.gif](docs/demo/demo.gif)
 - optimized iOS demo clip: [docs/demo/ios-response.mp4](docs/demo/ios-response.mp4)
-- local source video was exported from `F:\Scholr ios response.MP4`
+- script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- asset notes: [docs/demo/README.md](docs/demo/README.md)
 
 ### Mobile demo section
 
-- iOS/mobile live path is currently the strongest public demo proof
-- use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the 60-90 second walkthrough
-- use the committed optimized clip at [docs/demo/ios-response.mp4](docs/demo/ios-response.mp4)
-- keep the raw source outside Git; the repo stores a trimmed, compressed demo copy
+- iOS/mobile is currently the strongest public proof path
+- the committed clip at [docs/demo/ios-response.mp4](docs/demo/ios-response.mp4) shows real response flow
+- the raw source stays outside Git; the repo keeps an optimized demo asset only
 
 ### Desktop proof
 
 ![Desktop research output](docs/screenshots/desktop/desktop-research-output.png)
-![Desktop dashboard placeholder](docs/screenshots/desktop/desktop-dashboard.png)
-![Provider health placeholder](docs/screenshots/desktop/provider-health.png)
+![Desktop dashboard](docs/screenshots/desktop/desktop-dashboard.png)
+![Provider health](docs/screenshots/desktop/provider-health.png)
 
 ### Mobile proof
 
 Live product has been manually verified on iOS Safari and responsive Android-style breakpoints.
 
-![Mobile notes placeholder](docs/screenshots/mobile/mobile-notes.png)
-![Mobile doubt placeholder](docs/screenshots/mobile/mobile-doubt.png)
+![Mobile notes](docs/screenshots/mobile/mobile-notes.png)
+![Mobile doubt](docs/screenshots/mobile/mobile-doubt.png)
 
 ### iOS verification
 
@@ -81,9 +80,9 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 - Frontend is live on Vercel
 - Backend is live on Render
 - SSE streaming is active
-- Mobile and desktop flows are stable
-- Gemini provider is currently quota/model-access degraded
-- User-facing output remains functional through fallback and cache-backed resilience
+- mobile and desktop flows are stable
+- Gemini provider can still become quota or model-access degraded
+- user-facing output remains functional through AI mode, cached replay, or fallback academic mode
 
 ### Current live status
 
@@ -102,7 +101,7 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 Scholr currently preserves user-facing quality through cache, fallback, and provider recovery. To restore persistent `AI Mode` on live traffic:
 
 1. verify the Render `GEMINI_API_KEY` belongs to a project with healthy Gemini API quota
-2. confirm the provider project exposes at least one validated generation model from Scholr's priority chain
+2. confirm the project exposes at least one validated generation model from Scholr's priority chain
 3. check [provider health](https://scholr-k9sj.onrender.com/health/provider) for:
    - `provider_ready`
    - `provider_error_category`
@@ -110,19 +109,20 @@ Scholr currently preserves user-facing quality through cache, fallback, and prov
    - `quota_failure_count`
    - `provider_recovery_state`
 4. check [generation smoke test](https://scholr-k9sj.onrender.com/health/generate-test) for real tiny generation success
-5. redeploy Render after key or model-access changes
+5. redeploy Render after key or quota changes
 
-Until that recovers, the current live system remains useful through `Fallback Academic Mode`, `Provider Recovering`, and `Cached Academic Response`.
+Until that recovers, the live system remains useful through `Fallback Academic Mode`, `Provider Recovering`, and `Cached Academic Response`.
 
 ## Why Scholr Is Not Just ChatGPT
 
 Scholr is narrower, more deliberate, and more product-shaped than a generic AI chat box.
 
-- Structured academic workflows instead of blank-chat prompting
-- Notes tuned for revision and exam prep
-- Research tuned for papers, reading order, and project direction
-- Doubt solving tuned for concept clarification and stepwise explanation
-- Saved history, runtime modes, cache, and fallback behavior that preserve usefulness when providers wobble
+- structured academic workflows instead of blank-chat prompting
+- notes tuned for revision and exam prep
+- research tuned for papers, reading order, and project direction
+- doubt solving tuned for concept clarification and stepwise explanation
+- saved history, runtime modes, cache, and fallback behavior that preserve usefulness when providers wobble
+- future PDF and PYQ intelligence planned as a grounded academic layer, not random feature bloat
 
 ## Fallback Academic Mode
 
@@ -142,15 +142,23 @@ Runtime modes:
 
 ## Production Resilience
 
-- Provider diagnostics through `/health/provider`
-- Tiny generation smoke test through `/health/generate-test`
-- Strict model validation before provider promotion
-- Cooldown-aware recovery loop
-- Structured logging and request IDs
-- Rate limiting on AI endpoints
-- Exact and warm-cache replay paths
-- No-empty-output guarantee for Research, Notes, and Doubt
-- Mobile-safe fallback rendering and optimistic skeleton states
+- provider diagnostics through `/health/provider`
+- tiny generation smoke test through `/health/generate-test`
+- strict model validation before provider promotion
+- cooldown-aware recovery loop
+- structured logging and request IDs
+- rate limiting on AI endpoints
+- exact and warm-cache replay paths
+- no-empty-output guarantee for Research, Notes, and Doubt
+- mobile-safe fallback rendering and optimistic skeleton states
+
+## Engineering Tradeoffs
+
+- fallback-first reliability wins over blank-screen failure
+- provider cooldown and recovery reduce wasteful quota probes
+- exact cache and warm cache reduce repeated provider load
+- no-empty-output guarantee protects the student experience during provider outages
+- auth and payments remain intentionally deferred until retention and academic usefulness are proven
 
 ## Architecture Snapshot
 
@@ -163,6 +171,7 @@ flowchart LR
     Backend --> Recovery["Provider recovery loop"]
     Backend --> Fallback["Fallback academic engine"]
     Backend --> Cache["History + exact cache + warm cache"]
+    Backend --> RAG["Future document intelligence layer"]
     Backend --> Logs["Rate limiting + logging + telemetry"]
     Provider --> Backend
     Recovery --> Provider
@@ -181,7 +190,7 @@ Core docs:
 
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python, SQLAlchemy
-- AI provider layer: Google GenAI SDK with validated model selection, fallback, and diagnostics
+- AI provider layer: Google GenAI SDK with validated model selection, provider recovery, and diagnostics
 - Local DB: SQLite
 - Production DB path: PostgreSQL through `DATABASE_URL`
 - Hosting: Vercel frontend + Render backend
@@ -237,21 +246,26 @@ Detailed runbook:
 
 ## User Validation
 
-The next milestone is not random feature growth. It is 10-student validation with real usage.
+The next milestone is not random feature growth. It is 10 to 15 student validation with real usage.
 
 Validation assets:
 - [USER_VALIDATION_PLAN.md](USER_VALIDATION_PLAN.md)
 - [USER_TEST_RESULTS.md](USER_TEST_RESULTS.md)
 - [FEEDBACK_FORM.md](FEEDBACK_FORM.md)
 - [METRICS.md](METRICS.md)
+- [docs/research/student-validation-report.md](docs/research/student-validation-report.md)
 
 ## Document Intelligence Foundation
 
-Scholr already includes a backend-only document intelligence scaffold. The frontend upload flow is intentionally not built yet so the current product remains stable.
+Scholr already includes a backend-first document intelligence scaffold. The frontend upload flow is intentionally not built yet so the current product remains stable.
 
 See:
 - [RAG_ROADMAP.md](RAG_ROADMAP.md)
 - [DOCUMENT_INTELLIGENCE.md](DOCUMENT_INTELLIGENCE.md)
+
+Backend validation assets:
+- [backend/scripts/test_documents.py](backend/scripts/test_documents.py)
+- [backend/tests/fixtures/academic-sample.pdf](backend/tests/fixtures/academic-sample.pdf)
 
 ## Legal And Ownership
 
@@ -261,11 +275,11 @@ See:
 - [DISCLAIMER.md](DISCLAIMER.md)
 
 Scholr is owned by Tauqeer Bharde.  
-Copyright © 2026 Tauqeer Bharde. All rights reserved.
+Copyright (c) 2026 Tauqeer Bharde. All rights reserved.
 
 ## Built By Tauqeer Bharde
 
-Tauqeer Bharde is a BTech AI & Data Science student building practical AI systems around academic intelligence, productivity, and applied ML.
+Tauqeer Bharde is a BTech AI and Data Science student building practical AI systems around academic intelligence, productivity, and applied ML.
 
 - GitHub: [https://github.com/tauqxxr7](https://github.com/tauqxxr7)
 - LinkedIn: [https://www.linkedin.com/in/tauqeer-sameer-85b868235](https://www.linkedin.com/in/tauqeer-sameer-85b868235)
@@ -275,11 +289,11 @@ Tauqeer Bharde is a BTech AI & Data Science student building practical AI system
 
 ### Next
 
-1. Capture a polished demo GIF and mobile proof screenshots
-2. Complete 10-student validation
-3. Measure retention, usefulness, and fallback-mode perception
-4. Restore fully healthy provider generation once quota/model access stabilizes
-5. Validate the document intelligence backend with real PDFs before adding the frontend upload experience
+1. complete 10 to 15 student validation
+2. measure retention, usefulness, and fallback-mode perception
+3. restore fully healthy provider generation once quota and model access stabilize
+4. validate the document intelligence backend with real PDFs before adding the frontend upload experience
+5. capture more polished mobile and provider-health proof assets as the live system evolves
 
 ### Later
 
@@ -289,6 +303,13 @@ Tauqeer Bharde is a BTech AI & Data Science student building practical AI system
 - pgvector-backed document and history retrieval
 - auth and user-specific history
 - Azure scaling path after demand is proven
+
+## Lessons Learned
+
+- resilient GenAI systems need graceful degraded-mode UX, not just better prompts
+- provider orchestration matters as much as model choice in production
+- mobile-first AI UI needs visible activity, not just background correctness
+- academic products earn trust through structure, recoverability, and honest limitations
 
 ## Supporting Docs
 
@@ -310,4 +331,4 @@ Never commit:
 - `__pycache__`
 - provider keys or secrets
 
-Scholr™ is an academic AI platform created by Tauqeer Bharde.
+Scholr(TM) is an academic AI platform created by Tauqeer Bharde.

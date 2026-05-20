@@ -1,6 +1,6 @@
 # Scholr Document Intelligence
 
-This document audits the current backend-only PDF and retrieval foundation.
+This document audits the current backend-first PDF and retrieval foundation.
 
 ## Current routes
 
@@ -10,35 +10,46 @@ This document audits the current backend-only PDF and retrieval foundation.
 ## Upload flow
 
 1. accept PDF upload
-2. enforce 10 MB file size limit
+2. enforce a 10 MB file size limit
 3. parse readable text from the PDF
 4. chunk text with overlap
 5. store document metadata and chunk metadata
-6. create embeddings
-7. upsert vectors into ChromaDB
-8. return document status and warnings
+6. attempt embeddings when the provider and vector dependencies are available
+7. preserve retrieval-readiness even when semantic indexing is unavailable
+8. clean up temporary files
 
 ## Retrieval flow
 
-1. embed question
-2. query top chunks
-3. build citation-rich context
-4. attempt provider-backed grounded answer
-5. if provider unavailable, fall back to deterministic retrieval evidence
+1. look up the uploaded document and stored chunks
+2. try semantic retrieval when embeddings and vector storage are available
+3. fall back to lexical retrieval when embeddings or vector storage are unavailable
+4. build citation-rich context from the best chunks
+5. attempt provider-backed grounded answering
+6. fall back to retrieval-only academic evidence when provider generation is unavailable
 
 ## Citation-grounded answer target
 
-The intended answer format is:
-- direct answer first
-- short grounded explanation second
-- cited snippets third
-- language like `According to Page 4...` or `From the uploaded document...`
+The current target response shape is:
+- `answer`
+- `citations`
+- `answer_mode`
+- `generation_used`
+- `confidence`
+- `limitations`
+- `warning`
+
+Each citation should preserve:
+- document name
+- page number when available
+- chunk index
+- citation label
+- snippet
 
 ## Current dependencies
 
 - `pypdf`
-- `chromadb`
 - `python-multipart`
+- `chromadb`
 - Google GenAI embeddings path
 
 ## Current safeguards
@@ -47,25 +58,27 @@ The intended answer format is:
 - temp file cleanup
 - gitignored local document and vector directories
 - citation metadata preserved per chunk
-- warning path if embeddings are unavailable
+- retrieval-only lexical fallback when vector storage is unavailable
+- retrieval-only answer fallback when provider generation is unavailable
+
+## Backend validation assets
+
+- smoke script: [backend/scripts/test_documents.py](backend/scripts/test_documents.py)
+- bundled fixture: [backend/tests/fixtures/academic-sample.pdf](backend/tests/fixtures/academic-sample.pdf)
+
+The smoke path currently validates:
+- upload route
+- chunk persistence
+- lexical retrieval fallback
+- cited response shape
 
 ## Known limitations
 
 - no frontend upload experience yet
 - no per-user document ownership
 - local vector storage is not a final production data path
-- provider-backed document answers still depend on external model availability
+- semantic retrieval depends on vector dependencies and model/provider availability
 - no dedicated PYQ intelligence workflow yet
-
-## Future PYQ intelligence lane
-
-Once the base RAG path is stable, Scholr can extend document intelligence toward previous-year-question support:
-
-- ingest PYQ PDFs
-- detect repeated themes and question clusters
-- map questions to likely topics
-- generate citation-grounded revision hints
-- keep PYQ intelligence separate from generic PDF chat so the student value proposition stays sharp
 
 ## Future pgvector migration
 
@@ -79,3 +92,4 @@ The most natural long-term production migration is:
 - uploaded files may contain sensitive educational material
 - retention and deletion policies need to be explicit before broad release
 - auth is required before multi-user document intelligence can be treated as production complete
+- document upload remains backend-first until ownership, deletion, and policy flows are clearer

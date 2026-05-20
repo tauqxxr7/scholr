@@ -1,5 +1,8 @@
 # Scholr Disclaimer
 
+Scholr is owned by Tauqeer Bharde.  
+Copyright (c) 2026 Tauqeer Bharde. All rights reserved.
+
 Scholr is an academic AI assistant, not an official educational authority.
 
 ## No guarantee of correctness
@@ -27,7 +30,15 @@ Scholr is designed to assist learning, revision, research direction, and concept
 
 ## Uploaded materials and sensitive content
 
-Users should avoid uploading or entering sensitive, confidential, or regulated data until final production policies are formalized.
+Users should avoid uploading or entering sensitive, confidential, or regulated data until final production document policies are formalized.
+
+## Contact
+
+Questions, takedown concerns, or ownership requests: [tauqeerplayer@gmail.com](mailto:tauqeerplayer@gmail.com)
+
+## Jurisdiction placeholder
+
+Final jurisdiction language will be added later.
 
 ## Not legal advice
 
