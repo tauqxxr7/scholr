@@ -1,6 +1,6 @@
 # Scholr
 
-Scholr is an AI-powered academic intelligence platform for BTech students, combining streaming generation, provider resilience, and future retrieval-grounded document intelligence.
+Scholr is an AI-powered academic intelligence platform for BTech students, combining streaming generation, multi-provider resilience, and retrieval-grounded document intelligence.
 
 [![Backend CI](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml)
@@ -179,6 +179,7 @@ This is intentionally honest:
 - provider diagnostics through `/health/provider`
 - tiny generation smoke test through `/health/generate-test`
 - document health through `/health/documents`
+- multi-provider generation priority: Gemini -> OpenRouter -> academic fallback
 - strict model validation before provider promotion
 - cooldown-aware recovery loop
 - structured logging and request IDs
@@ -192,6 +193,7 @@ This is intentionally honest:
 
 - fallback-first reliability wins over blank-screen failure
 - provider cooldown and recovery reduce wasteful quota probes
+- Gemini remains the primary provider, but OpenRouter can take over without changing frontend behavior
 - exact cache and warm cache reduce repeated provider load
 - no-empty-output guarantee protects the student experience during provider outages
 - auth and payments remain intentionally deferred until retention and academic usefulness are proven
@@ -203,12 +205,14 @@ flowchart LR
     User["BTech student"] --> Frontend["Next.js frontend on Vercel"]
     Frontend --> Stream["SSE stream + runtime mode detector"]
     Stream --> Backend["FastAPI backend on Render"]
-    Backend --> Provider["Validated Gemini provider"]
+    Backend --> Provider["Validated provider abstraction"]
     Backend --> Recovery["Provider recovery loop"]
     Backend --> Fallback["Fallback academic engine"]
     Backend --> Cache["History + exact cache + warm cache"]
     Backend --> RAG["Future document intelligence layer"]
     Backend --> Logs["Rate limiting + logging + telemetry"]
+    Provider --> Gemini["Gemini primary"]
+    Provider --> OpenRouter["OpenRouter fallback"]
     Provider --> Backend
     Recovery --> Provider
     Fallback --> Backend
@@ -226,7 +230,7 @@ Core docs:
 
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python, SQLAlchemy
-- AI provider layer: Google GenAI SDK with validated model selection, provider recovery, and diagnostics
+- AI provider layer: Google GenAI SDK for Gemini primary routing plus OpenRouter fallback support with validated model selection, provider recovery, and diagnostics
 - Local DB: SQLite
 - Production DB path: PostgreSQL through `DATABASE_URL`
 - Hosting: Vercel frontend + Render backend
@@ -275,6 +279,8 @@ Environment examples:
 - Build Command: `cd backend && pip install -r requirements.txt`
 - Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 - `PYTHON_VERSION=3.12.4`
+- Primary generation env: `GEMINI_API_KEY=`
+- Fallback generation env: `OPENROUTER_API_KEY=`
 
 Detailed runbook:
 - [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md)

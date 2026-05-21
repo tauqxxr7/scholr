@@ -497,8 +497,8 @@ def get_document_intelligence_health() -> dict[str, object]:
     except DocumentIntelligenceError:
         vector_store_available = False
 
-    embedding_provider_configured = provider_status["provider_configured"]
-    provider_ready = provider_status["provider_ready"]
+    embedding_provider_configured = bool(provider_status["provider_configured"])
+    provider_ready = bool(provider_status.get("gemini_provider_ready"))
     provider_error_category = provider_status["provider_error_category"]
 
     if not embedding_provider_configured:

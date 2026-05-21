@@ -2,7 +2,7 @@
 
 ## Positioning
 
-Scholr is an academic intelligence platform for BTech students. The live architecture is intentionally lean: a responsive Next.js frontend, a FastAPI backend, provider-aware SSE streaming, fallback academic generation, lightweight persistence, and a staged backend-first document intelligence layer.
+Scholr is an academic intelligence platform for BTech students. The live architecture is intentionally lean: a responsive Next.js frontend, a FastAPI backend, provider-aware SSE streaming, multi-provider generation recovery, fallback academic generation, lightweight persistence, and a staged backend-first document intelligence layer.
 
 ## High-Level Diagram
 
@@ -11,7 +11,7 @@ flowchart LR
     U["Student user"] --> F["Next.js App Router frontend"]
     F -->|"HTTPS + SSE"| M["Runtime mode detector"]
     M --> B["FastAPI backend"]
-    B --> G["Validated Gemini provider layer"]
+    B --> G["Validated provider abstraction"]
     B --> A["Fallback academic engine"]
     B --> C["History + exact cache + warm cache"]
     B --> H["History persistence"]
@@ -19,6 +19,8 @@ flowchart LR
     H --> S["SQLite (local) or PostgreSQL (production)"]
     B --> D["Document intelligence backend"]
     D --> V["ChromaDB today / pgvector later"]
+    G --> GP["Gemini primary"]
+    G --> OR["OpenRouter fallback"]
     G --> B
     A --> B
     C --> B
@@ -26,7 +28,7 @@ flowchart LR
 
 ## Live Runtime Modes
 
-- **AI Mode**: a validated Gemini model is healthy and Scholr streams live generation
+- **AI Mode**: a validated provider-model pair is healthy and Scholr streams live generation
 - **Cached Academic Response**: an exact or similar recent answer is replayed to protect quota and lower latency
 - **Fallback Academic Mode**: the provider is degraded, but Scholr still streams deterministic academic guidance
 - **Provider Recovering**: the frontend remains useful while background re-validation tries to restore AI Mode
@@ -46,6 +48,7 @@ flowchart LR
 - assign request IDs and structured logs
 - protect Gemini quota with rate limiting
 - validate provider capability before promoting a model
+- validate provider failover from Gemini to OpenRouter before dropping into academic fallback
 - stream JSON-safe SSE output
 - replay exact and warm-cache responses
 - save history without blocking the response path
@@ -82,7 +85,9 @@ flowchart TD
 
 ## Provider Recovery Strategy
 
-- strict priority chain for model validation
+- strict priority chain for provider validation
+- primary provider: Gemini
+- secondary provider: OpenRouter
 - real generation probe before a model becomes active
 - degraded mode remains student-safe while background recovery keeps retrying
 - cooldown prevents wasteful repeated probes during quota exhaustion
@@ -95,6 +100,7 @@ flowchart TD
 - history stores completed responses for replay and review
 - document assets and chunks are persisted for backend-first PDF intelligence
 - vector storage is local today and intentionally gitignored
+- document embeddings still depend on the primary embedding path, so generation failover and embedding readiness can differ
 - `/health/documents` exposes PDF, multipart, vector, and embedding readiness without exposing secrets
 - `/health/documents` truthfully reports whether live document retrieval is currently defaulting to lexical or semantic mode
 
