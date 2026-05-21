@@ -50,6 +50,11 @@ PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
 PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 4
 EMBEDDING_MODEL_NAME = "gemini-embedding-001"
 DEFAULT_OPENROUTER_EMBEDDING_MODEL = ""
+OPENROUTER_EMBEDDING_MODEL_PRIORITY = (
+    "openai/text-embedding-3-small",
+    "openai/text-embedding-3-large",
+    "google/gemini-embedding-001",
+)
 PROVIDER_COOLDOWN_SECONDS = 180
 PROVIDER_QUOTA_COOLDOWN_THRESHOLD = 2
 OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
@@ -120,6 +125,8 @@ _DISCOVERED_MODELS_CACHE: list[dict[str, Any]] | None = None
 _DISCOVERED_MODELS_CACHE_AT: datetime | None = None
 _OPENROUTER_DISCOVERED_MODELS_CACHE: list[dict[str, Any]] | None = None
 _OPENROUTER_DISCOVERED_MODELS_CACHE_AT: datetime | None = None
+_OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE: list[dict[str, Any]] | None = None
+_OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE_AT: datetime | None = None
 
 
 class ScholrGenerationError(Exception):
@@ -194,6 +201,12 @@ def _openrouter_discovery_cache_is_fresh() -> bool:
     if _OPENROUTER_DISCOVERED_MODELS_CACHE_AT is None or _OPENROUTER_DISCOVERED_MODELS_CACHE is None:
         return False
     return (_utc_now() - _OPENROUTER_DISCOVERED_MODELS_CACHE_AT).total_seconds() < DEFAULT_PROVIDER_DISCOVERY_TTL_SECONDS
+
+
+def _openrouter_embedding_discovery_cache_is_fresh() -> bool:
+    if _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE_AT is None or _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE is None:
+        return False
+    return (_utc_now() - _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE_AT).total_seconds() < DEFAULT_PROVIDER_DISCOVERY_TTL_SECONDS
 
 
 def _provider_recovery_sleep_seconds() -> int:
@@ -316,10 +329,14 @@ def _get_embedding_provider_preference() -> str | None:
     if configured in {"gemini", "openrouter"}:
         return configured
 
+    configured_model = os.getenv("EMBEDDING_MODEL", "").strip()
+    if configured_model and "/" in configured_model and _openrouter_configured():
+        return "openrouter"
+
     if os.getenv("GEMINI_API_KEY", "").strip():
         return "gemini"
 
-    if _openrouter_configured() and os.getenv("EMBEDDING_MODEL", DEFAULT_OPENROUTER_EMBEDDING_MODEL).strip():
+    if _openrouter_configured():
         return "openrouter"
 
     return None
@@ -332,6 +349,19 @@ def _get_embedding_model_name(provider_name: str) -> str:
     if provider_name == "gemini":
         return EMBEDDING_MODEL_NAME
     return DEFAULT_OPENROUTER_EMBEDDING_MODEL
+
+
+def _get_embedding_provider_attempts() -> list[str]:
+    explicit_provider = os.getenv("EMBEDDING_PROVIDER", "").strip().lower()
+    if explicit_provider in {"gemini", "openrouter"}:
+        return [explicit_provider]
+
+    attempts: list[str] = []
+    if os.getenv("GEMINI_API_KEY", "").strip():
+        attempts.append("gemini")
+    if _openrouter_configured():
+        attempts.append("openrouter")
+    return attempts
 
 
 def _normalize_model_name(model_name: str | None) -> str:
@@ -389,6 +419,15 @@ def _matches_openrouter_family(model_name: str, family: str) -> bool:
 def _get_openrouter_preferred_family(model_name: str) -> str | None:
     for family in OPENROUTER_MODEL_PRIORITY:
         if _matches_openrouter_family(model_name, family):
+            return family
+    return None
+
+
+def _get_openrouter_preferred_embedding_family(model_name: str) -> str | None:
+    lowered_name = model_name.lower()
+    for family in OPENROUTER_EMBEDDING_MODEL_PRIORITY:
+        lowered_family = family.lower()
+        if lowered_name == lowered_family or lowered_name.startswith(f"{lowered_family}:"):
             return family
     return None
 
@@ -725,6 +764,112 @@ def _discover_openrouter_models() -> list[dict[str, Any]]:
     _OPENROUTER_DISCOVERED_MODELS_CACHE = discovered
     _OPENROUTER_DISCOVERED_MODELS_CACHE_AT = _utc_now()
     return list(discovered)
+
+
+def _discover_openrouter_embedding_models() -> list[dict[str, Any]]:
+    global _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE, _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE_AT
+    if _openrouter_embedding_discovery_cache_is_fresh():
+        return list(_OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE or [])
+
+    with httpx.Client(timeout=DEFAULT_CONNECT_TIMEOUT_SECONDS, headers=_build_openrouter_headers()) as client:
+        response = client.get(f"{OPENROUTER_API_BASE}/embeddings/models")
+        response.raise_for_status()
+        payload = response.json()
+
+    discovered: list[dict[str, Any]] = []
+    for item in payload.get("data", []):
+        model_id = str(item.get("id") or "").strip()
+        if not model_id:
+            continue
+        discovered.append(
+            {
+                "name": model_id,
+                "dimensions": item.get("dimensions"),
+                "description": str(item.get("description") or ""),
+            }
+        )
+
+    _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE = discovered
+    _OPENROUTER_DISCOVERED_EMBEDDING_MODELS_CACHE_AT = _utc_now()
+    return list(discovered)
+
+
+def _reject_openrouter_embedding_reasons(model_name: str) -> list[str]:
+    lowered = model_name.lower()
+    reasons: list[str] = []
+    for token in ("preview", "experimental", "image", "vision", "audio", "rerank"):
+        if token in lowered:
+            reasons.append(f"excluded_token:{token}")
+            break
+    return reasons
+
+
+def _select_openrouter_embedding_model(requested_model_name: str | None, discovered_models: list[dict[str, Any]]) -> dict[str, Any]:
+    normalized_requested = (requested_model_name or "").strip().lower()
+    rejected_models: list[dict[str, Any]] = []
+    candidates: list[str] = []
+
+    for descriptor in discovered_models:
+        model_name = str(descriptor["name"])
+        reasons = _reject_openrouter_embedding_reasons(model_name)
+        if reasons:
+            rejected_models.append({"name": model_name, "reasons": reasons})
+            continue
+        candidates.append(model_name)
+
+    if normalized_requested:
+        for model_name in candidates:
+            if model_name.lower() == normalized_requested:
+                return {
+                    "selected_model": model_name,
+                    "candidate_models": candidates,
+                    "rejected_models": rejected_models,
+                    "strategy": "configured_openrouter_embedding_model",
+                }
+
+    for family in OPENROUTER_EMBEDDING_MODEL_PRIORITY:
+        for model_name in candidates:
+            if _get_openrouter_preferred_embedding_family(model_name) == family:
+                return {
+                    "selected_model": model_name,
+                    "candidate_models": candidates,
+                    "rejected_models": rejected_models,
+                    "strategy": "openrouter_embedding_priority",
+                }
+
+    return {
+        "selected_model": candidates[0] if candidates else None,
+        "candidate_models": candidates,
+        "rejected_models": rejected_models,
+        "strategy": "openrouter_embedding_first_available" if candidates else "no_openrouter_embedding_model",
+    }
+
+
+def _resolve_openrouter_embedding_model_name() -> str:
+    configured_model = _get_embedding_model_name("openrouter")
+    if configured_model:
+        return configured_model
+
+    discovered = _discover_openrouter_embedding_models()
+    selection = _select_openrouter_embedding_model(None, discovered)
+    model_name = selection["selected_model"]
+    if model_name:
+        log_event(
+            logger,
+            "embedding_model_selected",
+            embedding_provider="openrouter",
+            embedding_model=model_name,
+            candidate_models_count=len(selection["candidate_models"]),
+            rejected_models_count=len(selection["rejected_models"]),
+            model_selection_strategy=selection["strategy"],
+        )
+        return model_name
+
+    raise ScholrGenerationError(
+        "OpenRouter embedding support is not configured yet and no embedding-capable model was discovered.",
+        retryable=False,
+        category="invalid_model",
+    )
 
 
 def _reject_openrouter_model_reasons(descriptor: dict[str, Any]) -> list[str]:
@@ -1744,13 +1889,17 @@ def _embed_with_gemini(texts: list[str], *, task_type: str) -> list[list[float]]
 
 
 def _embed_with_openrouter(texts: list[str]) -> list[list[float]]:
-    model_name = _get_embedding_model_name("openrouter")
-    if not model_name:
+    try:
+        model_name = _resolve_openrouter_embedding_model_name()
+    except ScholrGenerationError:
+        raise
+    except Exception as exc:
+        classified = _classify_openrouter_error(exc)
         raise ScholrGenerationError(
-            "OpenRouter embedding support is not configured yet. Set EMBEDDING_MODEL to an embedding-capable model.",
-            retryable=False,
-            category="invalid_model",
-        )
+            "OpenRouter embedding model discovery failed.",
+            retryable=classified.retryable,
+            category=classified.category,
+        ) from exc
 
     payload = {
         "model": model_name,
@@ -1779,8 +1928,8 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
     if not force and _embedding_state_is_fresh():
         return get_embedding_provider_status()
 
-    provider_name = _get_embedding_provider_preference()
-    if provider_name is None:
+    provider_attempts = _get_embedding_provider_attempts()
+    if not provider_attempts:
         _update_embedding_state(
             configured=False,
             ready=False,
@@ -1790,60 +1939,61 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
         )
         return get_embedding_provider_status()
 
-    model_name = _get_embedding_model_name(provider_name)
-    try:
-        if provider_name == "gemini":
-            _embed_with_gemini(["embedding health probe"], task_type="RETRIEVAL_DOCUMENT")
-        else:
-            _embed_with_openrouter(["embedding health probe"])
-    except ScholrGenerationError as exc:
+    first_error_category: str | None = None
+    for provider_name in provider_attempts:
+        model_name = _get_embedding_model_name(provider_name) if provider_name == "gemini" else None
+        try:
+            if provider_name == "gemini":
+                _embed_with_gemini(["embedding health probe"], task_type="RETRIEVAL_DOCUMENT")
+            else:
+                model_name = _resolve_openrouter_embedding_model_name()
+                _embed_with_openrouter(["embedding health probe"])
+        except ScholrGenerationError as exc:
+            first_error_category = first_error_category or exc.category
+            log_event(
+                logger,
+                "embedding_provider_unavailable",
+                embedding_provider=provider_name,
+                embedding_model=model_name or None,
+                error_category=exc.category,
+            )
+            continue
+        except Exception as exc:
+            classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
+            first_error_category = first_error_category or classified.category
+            log_event(
+                logger,
+                "embedding_provider_unavailable",
+                embedding_provider=provider_name,
+                embedding_model=model_name or None,
+                error_category=classified.category,
+                provider_exception_type=type(exc).__name__,
+                provider_exception_message=str(exc),
+            )
+            continue
+
+        resolved_model_name = model_name or _get_embedding_model_name(provider_name)
         _update_embedding_state(
             configured=True,
-            ready=False,
+            ready=True,
             provider_name=provider_name,
-            model_name=model_name,
-            error_category=exc.category,
+            model_name=resolved_model_name,
+            error_category=None,
         )
         log_event(
             logger,
-            "embedding_provider_unavailable",
+            "embedding_provider_ready",
             embedding_provider=provider_name,
-            embedding_model=model_name,
-            error_category=exc.category,
-        )
-        return get_embedding_provider_status()
-    except Exception as exc:
-        classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
-        _update_embedding_state(
-            configured=True,
-            ready=False,
-            provider_name=provider_name,
-            model_name=model_name,
-            error_category=classified.category,
-        )
-        log_event(
-            logger,
-            "embedding_provider_unavailable",
-            embedding_provider=provider_name,
-            embedding_model=model_name,
-            error_category=classified.category,
-            provider_exception_type=type(exc).__name__,
-            provider_exception_message=str(exc),
+            embedding_model=resolved_model_name,
         )
         return get_embedding_provider_status()
 
     _update_embedding_state(
         configured=True,
-        ready=True,
-        provider_name=provider_name,
-        model_name=model_name,
-        error_category=None,
-    )
-    log_event(
-        logger,
-        "embedding_provider_ready",
-        embedding_provider=provider_name,
-        embedding_model=model_name,
+        ready=False,
+        provider_name=provider_attempts[0],
+        model_name=_get_embedding_model_name(provider_attempts[0]) or None,
+        error_category=first_error_category or "provider_5xx",
     )
     return get_embedding_provider_status()
 
