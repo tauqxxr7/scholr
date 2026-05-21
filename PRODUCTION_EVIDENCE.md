@@ -16,11 +16,29 @@
 | Mobile responsiveness | Verified | iOS/manual verification and responsive workspace shell |
 | SSE streaming | Working | Shared FastAPI SSE routes and client stream parser |
 | Provider recovery | Active | Provider diagnostics and background validation loop |
+| Provider failover | Working | OpenRouter is currently serving validated AI generation when Gemini is quota-blocked |
 | Fallback mode | Working | No-empty-output guarantee and fallback academic mode |
 | Cache behavior | Working | Exact cache, warm cache, optimistic hydration |
 | Document intelligence | Live in retrieval-first mode | Upload UI, cited answers, lexical fallback, PYQ and study workflows |
 | User validation | Ready | Templates and research pack present, no fabricated data |
 | CI status | Live | Backend CI, Frontend CI, Repo Hygiene passing |
+
+## Provider failover proof
+
+Live provider snapshot confirmed on 2026-05-21:
+
+- `provider_ready: true`
+- `active_provider: openrouter`
+- `selected_model: google/gemini-2.0-flash-lite-001`
+- `selected_model_validation_status: validated`
+- `provider_recovery_state: active`
+- `gemini_provider_ready: false`
+- `openrouter_provider_ready: true`
+
+Real output proof files:
+- [docs/proof/research-sample.md](docs/proof/research-sample.md)
+- [docs/proof/notes-sample.md](docs/proof/notes-sample.md)
+- [docs/proof/doubt-sample.md](docs/proof/doubt-sample.md)
 
 ## Live document workflow verification
 
@@ -28,6 +46,7 @@ Verified live against the deployed frontend and backend using the bundled fixtur
 - upload fixture: `backend/tests/fixtures/academic-sample.pdf`
 - upload result: `ready_with_lexical_fallback`
 - answer result: `retrieval_only`
+- retrieval mode: `lexical`
 - citations: present
 - no empty output observed
 - current live retrieval default: lexical while provider-backed embeddings remain degraded
@@ -35,7 +54,8 @@ Verified live against the deployed frontend and backend using the bundled fixtur
 ## Current runtime truth
 
 - Live MVP: stable
-- Gemini provider: can degrade due to quota or project-level model access
+- Gemini provider: degraded by quota, but no longer blocks production usefulness
+- OpenRouter provider: currently validated and serving true AI generation
 - User-facing experience: functional through AI Mode, cache-backed replay, or fallback academic mode
 - Document intelligence: frontend PDF workflow exists and stays honest about retrieval-only vs grounded AI behavior
 

@@ -14,7 +14,7 @@ This document tracks measurable production proof without inventing data.
 
 | Metric | Source | Current status | Notes |
 | --- | --- | --- | --- |
-| First token latency | frontend analytics + SSE logs | Instrumented | Collect real values after validation traffic |
+| First token latency | frontend analytics + SSE logs | Measured live | Research `7883 ms`, Notes `6663 ms`, Doubt `6239 ms` from live production checks on 2026-05-21 |
 | Fallback activation rate | frontend analytics + backend logs | Instrumented | Useful for quota degradation analysis |
 | Cache hit rate | backend cache logs | Instrumented | Includes exact cache and warm-cache behavior |
 | Provider recovery attempts | `/health/provider` | Instrumented | Background recovery loop exposes attempts |
@@ -28,6 +28,33 @@ This document tracks measurable production proof without inventing data.
 | Citation count | document answer payload + analytics | Instrumented | Track whether answers stay grounded |
 | Lexical vs semantic retrieval usage | `/health/documents` + document answer payload | Instrumented | Supports semantic upgrade planning |
 | Live document workflow verification | manual live probe + smoke script | Verified with fixture | `academic-sample.pdf` upload and retrieval-only answer succeeded live |
+
+## Real production measurements
+
+### Live AI generation proof
+
+| Route | Topic / Question | Active Provider | First Token Latency | Full Completion Latency | `[DONE]` Integrity | Fallback Used |
+| --- | --- | --- | --- | --- | --- | --- |
+| Research | `DBMS normalization` | `openrouter` | `7883 ms` | `7904 ms` | Yes | No |
+| Notes | `Operating system deadlock` | `openrouter` | `6663 ms` | `6673 ms` | Yes | No |
+| Doubt | `What is normalization in DBMS?` | `openrouter` | `6239 ms` | `6390 ms` | Yes | No |
+
+### Live provider health snapshot
+
+- Active provider: `openrouter`
+- Selected model: `google/gemini-2.0-flash-lite-001`
+- Gemini provider ready: `false`
+- OpenRouter provider ready: `true`
+- Selected model validation status: `validated`
+- Fallback provider: `academic_fallback_engine`
+
+### Live document workflow snapshot
+
+- Upload status: `ready_with_lexical_fallback`
+- Answer mode: `retrieval_only`
+- Retrieval mode: `lexical`
+- Citations: present
+- Semantic retrieval ready: not yet live
 
 ## Product metrics to collect
 
