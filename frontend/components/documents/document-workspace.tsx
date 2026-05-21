@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { trackEvent } from '@/lib/analytics'
+import { clerkEnabled } from '@/lib/auth-config'
 import {
   answerDocumentQuestion,
   getDocumentHealth,
@@ -107,8 +108,9 @@ const retrievalModeLabel: Record<string, string> = {
   hybrid: 'Hybrid Retrieval',
 }
 
-export default function DocumentWorkspace() {
-  const { getToken } = useAuth()
+type TokenGetter = () => Promise<string | null>
+
+function DocumentWorkspaceContent({ getToken }: { getToken: TokenGetter }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [documentHealth, setDocumentHealth] = useState<DocumentHealthResult | null>(null)
   const [healthError, setHealthError] = useState('')
@@ -734,4 +736,17 @@ export default function DocumentWorkspace() {
       </section>
     </div>
   )
+}
+
+function AuthenticatedDocumentWorkspace() {
+  const { getToken } = useAuth()
+  return <DocumentWorkspaceContent getToken={getToken} />
+}
+
+function PublicDocumentWorkspace() {
+  return <DocumentWorkspaceContent getToken={async () => null} />
+}
+
+export default function DocumentWorkspace() {
+  return clerkEnabled ? <AuthenticatedDocumentWorkspace /> : <PublicDocumentWorkspace />
 }

@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { trackEvent } from '@/lib/analytics'
+import { clerkEnabled } from '@/lib/auth-config'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
 
 const LOCAL_RESPONSE_CACHE_KEY = 'scholr-local-response-cache-v1'
@@ -43,7 +44,11 @@ type AiModulePageProps = {
   idleLabel: string
 }
 
-export default function AiModulePage({
+type AiModulePageContentProps = AiModulePageProps & {
+  getToken: () => Promise<string | null>
+}
+
+function AiModulePageContent({
   moduleName,
   title,
   description,
@@ -57,8 +62,8 @@ export default function AiModulePage({
   setOutput,
   loadingLabel,
   idleLabel,
-}: AiModulePageProps) {
-  const { getToken } = useAuth()
+  getToken,
+}: AiModulePageContentProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
@@ -576,4 +581,17 @@ export default function AiModulePage({
       </section>
     </div>
   )
+}
+
+function AuthenticatedAiModulePage(props: AiModulePageProps) {
+  const { getToken } = useAuth()
+  return <AiModulePageContent {...props} getToken={getToken} />
+}
+
+function PublicAiModulePage(props: AiModulePageProps) {
+  return <AiModulePageContent {...props} getToken={async () => null} />
+}
+
+export default function AiModulePage(props: AiModulePageProps) {
+  return clerkEnabled ? <AuthenticatedAiModulePage {...props} /> : <PublicAiModulePage {...props} />
 }

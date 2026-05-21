@@ -16,6 +16,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { trackEvent } from '@/lib/analytics'
+import { clerkEnabled } from '@/lib/auth-config'
 import type { HistoryItem } from '@/lib/api'
 import { getHistory } from '@/lib/api'
 
@@ -46,8 +47,9 @@ const modules = [
   },
 ]
 
-export default function DashboardPage() {
-  const { getToken } = useAuth()
+type TokenGetter = () => Promise<string | null>
+
+function DashboardPageContent({ getToken }: { getToken: TokenGetter }) {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(true)
@@ -216,4 +218,17 @@ export default function DashboardPage() {
       </section>
     </div>
   )
+}
+
+function AuthenticatedDashboardPage() {
+  const { getToken } = useAuth()
+  return <DashboardPageContent getToken={getToken} />
+}
+
+function PublicDashboardPage() {
+  return <DashboardPageContent getToken={async () => null} />
+}
+
+export default function DashboardPage() {
+  return clerkEnabled ? <AuthenticatedDashboardPage /> : <PublicDashboardPage />
 }
