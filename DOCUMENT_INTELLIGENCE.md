@@ -29,6 +29,23 @@ This document audits the current live PDF workflow and the backend retrieval fou
 5. attempt provider-backed grounded answering
 6. fall back to retrieval-only academic evidence when provider generation is unavailable
 
+## Embedding provider abstraction
+
+Scholr now treats embedding readiness separately from generation readiness.
+
+- generation provider strategy:
+  - Gemini primary
+  - OpenRouter fallback
+  - academic fallback engine
+- embedding provider strategy:
+  - Gemini embeddings when available
+  - OpenRouter-compatible embeddings when configured and discoverable
+  - lexical fallback when embeddings are unavailable
+
+This matters because:
+- live AI generation can be healthy through OpenRouter
+- semantic retrieval can still remain degraded if no validated embedding provider is available
+
 ## Citation-grounded answer target
 
 The current target response shape is:
@@ -99,6 +116,23 @@ Verified against the live Render backend and the live Vercel document workspace:
 - grounded document answer generation can still succeed through the active generation provider even while semantic embeddings are degraded
 - embedding-provider diagnostics now truthfully report configured provider, model, and semantic readiness
 - no empty output panels were observed in the live document flow
+
+## Real validation status
+
+Currently verified:
+- bundled fixture PDF upload
+- lexical retrieval fallback
+- citation rendering
+- grounded answer generation through live provider failover
+
+Still pending with real subject PDFs:
+- DBMS
+- Operating Systems
+- DSA
+- Computer Networks
+- Engineering Maths
+- PYQ sets
+- research papers
 
 ## Known limitations
 

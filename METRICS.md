@@ -14,7 +14,7 @@ This document tracks measurable production proof without inventing data.
 
 | Metric | Source | Current status | Notes |
 | --- | --- | --- | --- |
-| First token latency | frontend analytics + SSE logs | Measured live | Research `7883 ms`, Notes `6663 ms`, Doubt `6239 ms` from live production checks on 2026-05-21 |
+| First token latency | frontend analytics + SSE logs | Measured live | Research `7752 ms`, Notes `8666 ms`, Doubt `4729 ms` from live production proof capture on 2026-05-21 |
 | Fallback activation rate | frontend analytics + backend logs | Instrumented | Useful for quota degradation analysis |
 | Cache hit rate | backend cache logs | Instrumented | Includes exact cache and warm-cache behavior |
 | Provider recovery attempts | `/health/provider` | Instrumented | Background recovery loop exposes attempts |
@@ -27,7 +27,8 @@ This document tracks measurable production proof without inventing data.
 | Document answer latency | frontend analytics + backend logs | Instrumented | Useful for mobile perception and RAG tuning |
 | Citation count | document answer payload + analytics | Instrumented | Track whether answers stay grounded |
 | Lexical vs semantic retrieval usage | `/health/documents` + document answer payload | Instrumented | Supports semantic upgrade planning |
-| Live document workflow verification | manual live probe + smoke script | Verified with fixture | `academic-sample.pdf` upload and retrieval-only answer succeeded live |
+| Live document workflow verification | manual live probe + smoke script | Verified with fixture | `academic-sample.pdf` upload and grounded lexical answer succeeded live |
+| Failure recovery rate | provider diagnostics + live proof capture | Not enough real history yet | Do not calculate a rate until longer-lived production telemetry exists |
 
 ## Real production measurements
 
@@ -35,9 +36,16 @@ This document tracks measurable production proof without inventing data.
 
 | Route | Topic / Question | Active Provider | First Token Latency | Full Completion Latency | `[DONE]` Integrity | Fallback Used |
 | --- | --- | --- | --- | --- | --- | --- |
-| Research | `DBMS normalization` | `openrouter` | `7883 ms` | `7904 ms` | Yes | No |
-| Notes | `Operating system deadlock` | `openrouter` | `6663 ms` | `6673 ms` | Yes | No |
-| Doubt | `What is normalization in DBMS?` | `openrouter` | `6239 ms` | `6390 ms` | Yes | No |
+| Research | `DBMS normalization` | `openrouter` | `7752 ms` | `7970 ms` | Yes | No |
+| Notes | `Operating system deadlock` | `openrouter` | `8666 ms` | `8890 ms` | Yes | No |
+| Doubt | `What is normalization in DBMS?` | `openrouter` | `4729 ms` | `4746 ms` | Yes | No |
+
+### Live response lengths
+
+- Research response length: `5557`
+- Notes response length: `5980`
+- Doubt response length: `3040`
+- Generate-test latency: `579 ms`
 
 ### Live provider health snapshot
 
@@ -55,6 +63,16 @@ This document tracks measurable production proof without inventing data.
 - Retrieval mode: `lexical`
 - Citations: present
 - Semantic retrieval ready: not yet live
+
+## Visual production proof
+
+- Desktop home screenshot: [docs/proof/desktop-home-live.png](docs/proof/desktop-home-live.png)
+- Desktop research screenshot: [docs/proof/desktop-research-live.png](docs/proof/desktop-research-live.png)
+- Mobile notes screenshot: [docs/proof/mobile-notes-live.png](docs/proof/mobile-notes-live.png)
+- Mobile documents screenshot: [docs/proof/mobile-documents-live.png](docs/proof/mobile-documents-live.png)
+- Live stream proof panel: [docs/proof/live-stream-proof.png](docs/proof/live-stream-proof.png)
+- Provider proof panel: [docs/proof/provider-proof.png](docs/proof/provider-proof.png)
+- Document proof panel: [docs/proof/document-proof.png](docs/proof/document-proof.png)
 
 ## Product metrics to collect
 

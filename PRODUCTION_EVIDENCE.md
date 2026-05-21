@@ -39,6 +39,16 @@ Real output proof files:
 - [docs/proof/research-sample.md](docs/proof/research-sample.md)
 - [docs/proof/notes-sample.md](docs/proof/notes-sample.md)
 - [docs/proof/doubt-sample.md](docs/proof/doubt-sample.md)
+- [docs/proof/live-proof.json](docs/proof/live-proof.json)
+
+Visual proof assets:
+- [docs/proof/desktop-home-live.png](docs/proof/desktop-home-live.png)
+- [docs/proof/desktop-research-live.png](docs/proof/desktop-research-live.png)
+- [docs/proof/mobile-notes-live.png](docs/proof/mobile-notes-live.png)
+- [docs/proof/mobile-documents-live.png](docs/proof/mobile-documents-live.png)
+- [docs/proof/live-stream-proof.png](docs/proof/live-stream-proof.png)
+- [docs/proof/provider-proof.png](docs/proof/provider-proof.png)
+- [docs/proof/document-proof.png](docs/proof/document-proof.png)
 
 ## Live document workflow verification
 
@@ -51,6 +61,13 @@ Verified live against the deployed frontend and backend using the bundled fixtur
 - no empty output observed
 - current live retrieval default: lexical while provider-backed embeddings remain degraded
 - provider-backed answer synthesis is still possible through OpenRouter when generation is healthy
+
+## Honest semantic retrieval status
+
+- generation provider failover is healthy
+- embedding provider path is still degraded
+- semantic retrieval is not yet restored in live production
+- lexical retrieval remains the active grounded backup
 
 ## Current runtime truth
 

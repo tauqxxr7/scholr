@@ -31,6 +31,7 @@ This document explains the next careful steps from backend scaffold to productio
 - capture proof screenshots for upload, retrieval mode, citations, and mobile document UX
 - validate whether question-paper and PYQ workflows should become a dedicated mode instead of generic document Q and A
 - validate semantic retrieval separately from generation-provider health
+- validate OpenRouter-compatible embedding models without assuming universal support
 
 ### Phase 3
 
@@ -58,3 +59,10 @@ This document explains the next careful steps from backend scaffold to productio
 - large-scale document memory
 - multi-tenant document sharing
 - full PYQ productization before the base document pipeline is proven
+
+## Current honest status
+
+- document workflow is live
+- lexical fallback is stable
+- grounded answers can still be generated when the active generation provider is healthy
+- semantic retrieval is architecture-ready but not yet restored in live production

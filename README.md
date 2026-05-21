@@ -62,6 +62,22 @@ The walkthrough assets live here:
 ![Desktop dashboard](docs/screenshots/desktop/desktop-dashboard.png)
 ![Provider health](docs/screenshots/desktop/provider-health.png)
 
+### Live production proof
+
+![Live desktop home](docs/proof/desktop-home-live.png)
+![Live desktop research](docs/proof/desktop-research-live.png)
+![Live mobile notes](docs/proof/mobile-notes-live.png)
+![Live mobile documents](docs/proof/mobile-documents-live.png)
+
+Additional proof panels from live production payloads:
+- [Live stream proof](docs/proof/live-stream-proof.png)
+- [Provider recovery proof](docs/proof/provider-proof.png)
+- [Document workflow proof](docs/proof/document-proof.png)
+- [Raw live proof capture](docs/proof/live-proof.json)
+
+Architecture GIF:
+- pending real export; no fake animation is committed yet
+
 ### Mobile proof
 
 Live product has been manually verified on iOS Safari and responsive Android-style breakpoints.
@@ -269,6 +285,10 @@ See:
 - [docs/proof/research-sample.md](docs/proof/research-sample.md)
 - [docs/proof/notes-sample.md](docs/proof/notes-sample.md)
 - [docs/proof/doubt-sample.md](docs/proof/doubt-sample.md)
+- [docs/proof/live-proof.json](docs/proof/live-proof.json)
+- [docs/proof/live-stream-proof.png](docs/proof/live-stream-proof.png)
+- [docs/proof/provider-proof.png](docs/proof/provider-proof.png)
+- [docs/proof/document-proof.png](docs/proof/document-proof.png)
 
 ## How To Run Locally
 
