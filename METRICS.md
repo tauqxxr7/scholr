@@ -27,6 +27,11 @@ This document tracks measurable production proof without inventing data.
 | Document answer latency | frontend analytics + backend logs | Instrumented | Useful for mobile perception and RAG tuning |
 | Citation count | document answer payload + analytics | Instrumented | Track whether answers stay grounded |
 | Lexical vs semantic retrieval usage | `/health/documents` + document answer payload | Instrumented | Supports semantic upgrade planning |
+| Embedding latency | `/health/documents` | Instrumented | Reports the last embedding-provider latency snapshot |
+| Vector query latency | `/health/documents` | Instrumented | Reports the last semantic-vector query latency snapshot |
+| Vector store health | `/health/documents` | Instrumented | Distinguishes provider degradation from vector-store unavailability |
+| Upload failure rate | `/health/documents` + backend logs | Instrumented | Raw counts only until real traffic volume accumulates |
+| SSE interruption rate | `/health` runtime diagnostics | Instrumented | Exposed as stream interruption counts, not fabricated percentages |
 | Live document workflow verification | manual live probe + smoke script | Verified with fixture | `academic-sample.pdf` upload and grounded lexical answer succeeded live |
 | Failure recovery rate | provider diagnostics + live proof capture | Not enough real history yet | Do not calculate a rate until longer-lived production telemetry exists |
 
@@ -63,6 +68,8 @@ This document tracks measurable production proof without inventing data.
 - Retrieval mode: `lexical`
 - Citations: present
 - Semantic retrieval ready: not yet live
+- Embedding provider ready: false in the latest honest live document-health check
+- Vector store health: reported separately from provider health through `/health/documents`
 
 ## Visual production proof
 
@@ -95,5 +102,5 @@ This document tracks measurable production proof without inventing data.
 ## Known limitations
 
 - Gemini quota and project-level model access can still move Scholr into resilience-backed fallback mode.
-- Semantic document retrieval depends on provider-backed embeddings, so live `/health/documents` should be expected to report lexical default mode while the provider is degraded.
+- Semantic document retrieval still depends on a validated embedding provider, so live `/health/documents` may continue to report lexical default mode even while generation is healthy through OpenRouter.
 - No production dashboard exists yet for aggregated metrics; current proof comes from endpoints, logs, and manual validation records.

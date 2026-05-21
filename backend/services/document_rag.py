@@ -5,6 +5,7 @@ import tempfile
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from time import perf_counter
 
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
@@ -26,6 +27,28 @@ DEFAULT_TOP_K = 4
 DOCUMENTS_ROOT = Path("data/documents")
 VECTOR_DB_ROOT = Path("data/chromadb")
 DOCUMENT_COLLECTION_NAME = "scholr_documents"
+DOCUMENT_OBSERVABILITY: dict[str, int | str | None] = {
+    "document_upload_success_count": 0,
+    "document_upload_failure_count": 0,
+    "document_answer_success_count": 0,
+    "document_answer_failure_count": 0,
+    "semantic_retrieval_success_count": 0,
+    "lexical_retrieval_usage_count": 0,
+    "vector_query_failure_count": 0,
+    "embedding_generation_failure_count": 0,
+    "last_upload_latency_ms": None,
+    "last_retrieval_latency_ms": None,
+    "last_vector_query_latency_ms": None,
+    "last_document_answer_latency_ms": None,
+}
+
+
+def record_document_upload_failure() -> None:
+    DOCUMENT_OBSERVABILITY["document_upload_failure_count"] += 1
+
+
+def record_document_answer_failure() -> None:
+    DOCUMENT_OBSERVABILITY["document_answer_failure_count"] += 1
 
 
 class DocumentIntelligenceError(Exception):
@@ -217,6 +240,7 @@ def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, in
     try:
         embeddings = embed_texts(texts, task_type="RETRIEVAL_DOCUMENT")
     except ScholrGenerationError as exc:
+        DOCUMENT_OBSERVABILITY["embedding_generation_failure_count"] += 1
         raise DocumentIntelligenceError(
             "Embeddings could not be generated for this document right now.",
             category=exc.category,
@@ -240,7 +264,9 @@ def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, in
 
 
 async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, int | str | bool], str | None]:
+    started_at = perf_counter()
     if upload.content_type not in {"application/pdf", "application/octet-stream"}:
+        DOCUMENT_OBSERVABILITY["document_upload_failure_count"] += 1
         raise DocumentIntelligenceError(
             "Only PDF uploads are supported in the current document intelligence scaffold.",
             category="invalid_file_type",
@@ -293,6 +319,8 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
         page_count=len(pages),
         chunk_count=len(chunks),
     )
+    DOCUMENT_OBSERVABILITY["document_upload_success_count"] += 1
+    DOCUMENT_OBSERVABILITY["last_upload_latency_ms"] = round((perf_counter() - started_at) * 1000)
 
     return (
         {
@@ -314,6 +342,7 @@ def retrieve_document_chunks(
     db: Session,
     top_k: int = DEFAULT_TOP_K,
 ) -> RetrievalResult:
+    started_at = perf_counter()
     _ensure_storage_dirs()
     document = crud.get_document_asset(db, document_id)
     if not document:
@@ -323,12 +352,15 @@ def retrieve_document_chunks(
         client = _load_chroma_client()
         collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
     except DocumentIntelligenceError as exc:
+        DOCUMENT_OBSERVABILITY["vector_query_failure_count"] += 1
         lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
                 category="no_retrieval_results",
             ) from exc
+        DOCUMENT_OBSERVABILITY["lexical_retrieval_usage_count"] += 1
+        DOCUMENT_OBSERVABILITY["last_retrieval_latency_ms"] = round((perf_counter() - started_at) * 1000)
         return RetrievalResult(
             chunks=lexical_chunks,
             retrieval_mode="lexical",
@@ -337,18 +369,22 @@ def retrieve_document_chunks(
     try:
         embeddings = embed_texts([query], task_type="RETRIEVAL_QUERY")
     except ScholrGenerationError as exc:
+        DOCUMENT_OBSERVABILITY["embedding_generation_failure_count"] += 1
         lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
                 category="no_retrieval_results",
             ) from exc
+        DOCUMENT_OBSERVABILITY["lexical_retrieval_usage_count"] += 1
+        DOCUMENT_OBSERVABILITY["last_retrieval_latency_ms"] = round((perf_counter() - started_at) * 1000)
         return RetrievalResult(
             chunks=lexical_chunks,
             retrieval_mode="lexical",
             warning="Embedding query path is unavailable, so Scholr is using retrieval-only lexical grounding.",
         )
 
+    vector_query_started_at = perf_counter()
     try:
         result = collection.query(
             query_embeddings=embeddings,
@@ -356,17 +392,22 @@ def retrieve_document_chunks(
             where={"document_id": document_id},
         )
     except Exception as exc:
+        DOCUMENT_OBSERVABILITY["vector_query_failure_count"] += 1
+        DOCUMENT_OBSERVABILITY["last_vector_query_latency_ms"] = round((perf_counter() - vector_query_started_at) * 1000)
         lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
                 category="no_retrieval_results",
             ) from exc
+        DOCUMENT_OBSERVABILITY["lexical_retrieval_usage_count"] += 1
+        DOCUMENT_OBSERVABILITY["last_retrieval_latency_ms"] = round((perf_counter() - started_at) * 1000)
         return RetrievalResult(
             chunks=lexical_chunks,
             retrieval_mode="lexical",
             warning="Vector retrieval is unavailable right now, so Scholr is using retrieval-only lexical grounding.",
         )
+    DOCUMENT_OBSERVABILITY["last_vector_query_latency_ms"] = round((perf_counter() - vector_query_started_at) * 1000)
 
     documents = result.get("documents", [[]])
     metadatas = result.get("metadatas", [[]])
@@ -377,6 +418,8 @@ def retrieve_document_chunks(
                 "No relevant document chunks were found for that question yet.",
                 category="no_retrieval_results",
             )
+        DOCUMENT_OBSERVABILITY["lexical_retrieval_usage_count"] += 1
+        DOCUMENT_OBSERVABILITY["last_retrieval_latency_ms"] = round((perf_counter() - started_at) * 1000)
         return RetrievalResult(
             chunks=lexical_chunks,
             retrieval_mode="lexical",
@@ -396,6 +439,8 @@ def retrieve_document_chunks(
             )
         )
 
+    DOCUMENT_OBSERVABILITY["semantic_retrieval_success_count"] += 1
+    DOCUMENT_OBSERVABILITY["last_retrieval_latency_ms"] = round((perf_counter() - started_at) * 1000)
     return RetrievalResult(chunks=retrieved, retrieval_mode="semantic")
 
 
@@ -418,6 +463,7 @@ async def answer_from_document(
     db: Session,
     top_k: int = DEFAULT_TOP_K,
 ) -> dict[str, object]:
+    started_at = perf_counter()
     safe_question, warning_prefix = sanitize_user_input("documents", question)
     retrieval = retrieve_document_chunks(document_id=document_id, query=safe_question, db=db, top_k=top_k)
     retrieved = retrieval.chunks
@@ -471,6 +517,9 @@ Document context:
         limitations.append("Provider-backed synthesis is currently unavailable, so Scholr is returning retrieval-only academic guidance.")
     if retrieval.retrieval_mode != "semantic":
         limitations.append("Semantic vector retrieval was unavailable, so a lexical chunk match was used instead.")
+
+    DOCUMENT_OBSERVABILITY["document_answer_success_count"] += 1
+    DOCUMENT_OBSERVABILITY["last_document_answer_latency_ms"] = round((perf_counter() - started_at) * 1000)
 
     return {
         "document_id": document_id,
@@ -528,21 +577,37 @@ def get_document_intelligence_health() -> dict[str, object]:
     retrieval_default_mode = "semantic" if semantic_retrieval_ready else "lexical"
     retrieval_health = "healthy" if retrieval_default_mode == "semantic" else "degraded_lexical_fallback"
 
+    vector_store_health = "ready" if vector_store_available else "unavailable"
+
     return {
         "pdf_parsing_available": pdf_parsing_available,
         "multipart_available": multipart_available,
         "vector_store_available": vector_store_available,
+        "vector_store_health": vector_store_health,
         "embedding_provider_configured": embedding_provider_configured,
         "embedding_provider_ready": embedding_provider_ready,
         "provider_ready_for_embeddings": embedding_provider_ready,
         "embedding_provider": embedding_provider,
         "embedding_model": embedding_model,
+        "embedding_latency_ms": embedding_status["embedding_latency_ms"],
         "semantic_retrieval_ready": semantic_retrieval_ready,
         "lexical_fallback_ready": lexical_fallback_ready,
         "provider_error_category": provider_error_category,
         "embedding_health": embedding_health,
         "retrieval_health": retrieval_health,
         "retrieval_default_mode": retrieval_default_mode,
+        "semantic_retrieval_success_count": DOCUMENT_OBSERVABILITY["semantic_retrieval_success_count"],
+        "lexical_retrieval_usage_count": DOCUMENT_OBSERVABILITY["lexical_retrieval_usage_count"],
+        "vector_query_failure_count": DOCUMENT_OBSERVABILITY["vector_query_failure_count"],
+        "embedding_generation_failure_count": DOCUMENT_OBSERVABILITY["embedding_generation_failure_count"],
+        "document_upload_success_count": DOCUMENT_OBSERVABILITY["document_upload_success_count"],
+        "document_upload_failure_count": DOCUMENT_OBSERVABILITY["document_upload_failure_count"],
+        "document_answer_success_count": DOCUMENT_OBSERVABILITY["document_answer_success_count"],
+        "document_answer_failure_count": DOCUMENT_OBSERVABILITY["document_answer_failure_count"],
+        "last_upload_latency_ms": DOCUMENT_OBSERVABILITY["last_upload_latency_ms"],
+        "last_retrieval_latency_ms": DOCUMENT_OBSERVABILITY["last_retrieval_latency_ms"],
+        "last_vector_query_latency_ms": DOCUMENT_OBSERVABILITY["last_vector_query_latency_ms"],
+        "last_document_answer_latency_ms": DOCUMENT_OBSERVABILITY["last_document_answer_latency_ms"],
         "documents_storage_path": str(DOCUMENTS_ROOT),
         "vector_storage_path": str(VECTOR_DB_ROOT),
     }

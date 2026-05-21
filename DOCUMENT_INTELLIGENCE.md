@@ -45,6 +45,7 @@ Scholr now treats embedding readiness separately from generation readiness.
 This matters because:
 - live AI generation can be healthy through OpenRouter
 - semantic retrieval can still remain degraded if no validated embedding provider is available
+- `/health/documents` can now report the retrieval layer honestly without conflating generation-provider health and embedding-provider health
 
 ## Citation-grounded answer target
 
@@ -86,6 +87,9 @@ Each answer should also expose:
 - citation metadata preserved per chunk
 - retrieval-only lexical fallback when vector storage is unavailable
 - retrieval-only answer fallback when provider generation is unavailable
+- embedding retry envelope for timeout-class failures
+- vector-query recovery back to lexical retrieval
+- document telemetry for upload failures, retrieval latency, vector-query failures, and lexical-vs-semantic usage
 
 ## Backend validation assets
 
@@ -115,6 +119,7 @@ Verified against the live Render backend and the live Vercel document workspace:
 - live retrieval currently defaults to lexical grounding while the provider remains degraded
 - grounded document answer generation can still succeed through the active generation provider even while semantic embeddings are degraded
 - embedding-provider diagnostics now truthfully report configured provider, model, and semantic readiness
+- embedding diagnostics now also report latency snapshots and vector-store health
 - no empty output panels were observed in the live document flow
 
 ## Real validation status

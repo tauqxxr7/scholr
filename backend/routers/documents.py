@@ -14,6 +14,7 @@ from models.schemas import (
 )
 from routers._runtime import enforce_document_rate_limit
 from services.document_rag import DocumentIntelligenceError, answer_from_document, ingest_document
+from services.document_rag import record_document_answer_failure, record_document_upload_failure
 
 router = APIRouter()
 logger = logging.getLogger("scholr.documents")
@@ -58,6 +59,7 @@ async def upload_document(
         )
         return DocumentUploadResponse(**payload, warning=warning)
     except DocumentIntelligenceError as exc:
+        record_document_upload_failure()
         log_event(
             logger,
             "document_upload_failed",
@@ -100,6 +102,7 @@ async def answer_document_question(
         )
         return DocumentAnswerResponse(**payload)
     except DocumentIntelligenceError as exc:
+        record_document_answer_failure()
         log_event(
             logger,
             "document_answer_failed",

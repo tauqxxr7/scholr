@@ -11,6 +11,9 @@ from agents._generation import ScholrGenerationError
 from core.logging_utils import log_event
 
 logger = logging.getLogger(__name__)
+STREAM_OBSERVABILITY: dict[str, int] = {
+    "stream_interruption_count": 0,
+}
 
 SSE_HEADERS = {
     "Cache-Control": "no-cache",
@@ -38,6 +41,10 @@ def _response_mode_payload(source: str) -> dict[str, str]:
 def _safe_history_summary(text: str) -> str:
     cleaned = text.strip()
     return cleaned[:160] if cleaned else ""
+
+
+def get_stream_observability() -> dict[str, int]:
+    return dict(STREAM_OBSERVABILITY)
 
 
 async def stream_text_chunks(text: str, chunk_size: int = 180) -> AsyncIterator[str]:
@@ -96,6 +103,7 @@ def build_sse_response(
                 full_response.append(chunk)
                 yield _sse_event({"type": "chunk", "chunk": chunk})
         except ScholrGenerationError as exc:
+            STREAM_OBSERVABILITY["stream_interruption_count"] += 1
             if recovery_text:
                 full_response.clear()
                 yield _sse_event({"type": "meta", **_response_mode_payload("fallback")})
@@ -134,6 +142,7 @@ def build_sse_response(
                 }
             )
         except Exception:
+            STREAM_OBSERVABILITY["stream_interruption_count"] += 1
             if recovery_text:
                 full_response.clear()
                 yield _sse_event({"type": "meta", **_response_mode_payload("fallback")})

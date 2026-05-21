@@ -68,6 +68,7 @@ Verified live against the deployed frontend and backend using the bundled fixtur
 - embedding provider path is still degraded
 - semantic retrieval is not yet restored in live production
 - lexical retrieval remains the active grounded backup
+- `/health/documents` now reports embedding provider, embedding model, embedding latency, vector-store health, retrieval counters, and upload/answer telemetry separately from generation-provider health
 
 ## Current runtime truth
 

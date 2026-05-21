@@ -199,6 +199,7 @@ This is intentionally honest:
 - live document answers return grounded citations and snippets
 - current provider degradation keeps the default live retrieval path in `Lexical Retrieval`
 - semantic retrieval remains available in architecture, but only activates when embedding-provider validation recovers
+- `/health/documents` now exposes embedding provider, embedding model, embedding latency, vector-store health, and retrieval counters honestly
 
 ### Retrieval modes
 
@@ -217,6 +218,7 @@ This is intentionally honest:
 - document health through `/health/documents`
 - multi-provider generation priority: Gemini -> OpenRouter -> academic fallback
 - separate embedding-provider abstraction: Gemini embeddings -> optional provider override -> lexical fallback
+- document observability through `/health/documents`: vector-store health, embedding latency, retrieval counters, and upload/answer telemetry
 - strict model validation before provider promotion
 - cooldown-aware recovery loop
 - structured logging and request IDs
@@ -273,6 +275,7 @@ Core docs:
 - Backend: FastAPI, Python, SQLAlchemy
 - AI provider layer: Google GenAI SDK for Gemini primary routing plus OpenRouter fallback support with validated model selection, provider recovery, and diagnostics
 - Embedding provider layer: Gemini embeddings primary, optional embedding-provider override, lexical fallback when semantic retrieval is unavailable
+- Retrieval observability: `/health/documents` reports vector-store health, semantic readiness, lexical fallback readiness, retrieval counters, and latency snapshots
 - Local DB: SQLite
 - Production DB path: PostgreSQL through `DATABASE_URL`
 - Hosting: Vercel frontend + Render backend

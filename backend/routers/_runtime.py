@@ -10,6 +10,7 @@ from core.logging_utils import log_event
 from core.rate_limit import InMemoryRateLimiter
 from db import crud
 from db.database import SearchHistory
+from routers._streaming import get_stream_observability
 
 logger = logging.getLogger(__name__)
 
@@ -126,4 +127,5 @@ def get_runtime_diagnostics() -> dict[str, int]:
         "requests_per_minute": ai_rate_limiter.recent_request_count(),
         "document_uploads_per_minute": document_upload_rate_limiter.recent_request_count(),
         "document_answers_per_minute": document_answer_rate_limiter.recent_request_count(),
+        **get_stream_observability(),
     }

@@ -105,6 +105,10 @@ PROVIDER_STATE: dict[str, Any] = {
     "gemini_provider_ready": False,
     "openrouter_provider_ready": False,
     "last_validated_timestamp": None,
+    "provider_last_latency_ms": None,
+    "provider_generation_success_count": 0,
+    "provider_generation_failure_count": 0,
+    "provider_failover_count": 0,
 }
 
 EMBEDDING_STATE: dict[str, Any] = {
@@ -114,6 +118,10 @@ EMBEDDING_STATE: dict[str, Any] = {
     "model": None,
     "error_category": None,
     "last_validated_timestamp": None,
+    "embedding_latency_ms": None,
+    "embedding_generation_success_count": 0,
+    "embedding_generation_failure_count": 0,
+    "embedding_retry_count": 0,
 }
 
 logger = logging.getLogger("scholr.provider")
@@ -619,6 +627,10 @@ def get_embedding_provider_status() -> dict[str, Any]:
         "semantic_retrieval_ready": EMBEDDING_STATE["ready"],
         "lexical_fallback_ready": True,
         "embedding_last_validated_timestamp": EMBEDDING_STATE["last_validated_timestamp"],
+        "embedding_latency_ms": EMBEDDING_STATE["embedding_latency_ms"],
+        "embedding_generation_success_count": EMBEDDING_STATE["embedding_generation_success_count"],
+        "embedding_generation_failure_count": EMBEDDING_STATE["embedding_generation_failure_count"],
+        "embedding_retry_count": EMBEDDING_STATE["embedding_retry_count"],
     }
 
 
@@ -1215,6 +1227,10 @@ def _update_provider_state(
                 if last_validated_timestamp is None
                 else last_validated_timestamp
             ),
+            "provider_last_latency_ms": PROVIDER_STATE["provider_last_latency_ms"],
+            "provider_generation_success_count": PROVIDER_STATE["provider_generation_success_count"],
+            "provider_generation_failure_count": PROVIDER_STATE["provider_generation_failure_count"],
+            "provider_failover_count": PROVIDER_STATE["provider_failover_count"],
         }
     )
 
@@ -1251,6 +1267,10 @@ def get_provider_status() -> dict[str, Any]:
         "gemini_provider_ready": PROVIDER_STATE["gemini_provider_ready"],
         "openrouter_provider_ready": PROVIDER_STATE["openrouter_provider_ready"],
         "last_validated_timestamp": PROVIDER_STATE["last_validated_timestamp"],
+        "provider_last_latency_ms": PROVIDER_STATE["provider_last_latency_ms"],
+        "provider_generation_success_count": PROVIDER_STATE["provider_generation_success_count"],
+        "provider_generation_failure_count": PROVIDER_STATE["provider_generation_failure_count"],
+        "provider_failover_count": PROVIDER_STATE["provider_failover_count"],
     }
 
 
@@ -1928,6 +1948,7 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
     if not force and _embedding_state_is_fresh():
         return get_embedding_provider_status()
 
+    started_at = perf_counter()
     provider_attempts = _get_embedding_provider_attempts()
     if not provider_attempts:
         _update_embedding_state(
@@ -1937,6 +1958,7 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
             model_name=None,
             error_category="invalid_api_key",
         )
+        EMBEDDING_STATE["embedding_latency_ms"] = round((perf_counter() - started_at) * 1000)
         return get_embedding_provider_status()
 
     first_error_category: str | None = None
@@ -1957,6 +1979,7 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
                 embedding_model=model_name or None,
                 error_category=exc.category,
             )
+            EMBEDDING_STATE["embedding_generation_failure_count"] += 1
             continue
         except Exception as exc:
             classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
@@ -1970,6 +1993,7 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
                 provider_exception_type=type(exc).__name__,
                 provider_exception_message=str(exc),
             )
+            EMBEDDING_STATE["embedding_generation_failure_count"] += 1
             continue
 
         resolved_model_name = model_name or _get_embedding_model_name(provider_name)
@@ -1980,6 +2004,7 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
             model_name=resolved_model_name,
             error_category=None,
         )
+        EMBEDDING_STATE["embedding_latency_ms"] = round((perf_counter() - started_at) * 1000)
         log_event(
             logger,
             "embedding_provider_ready",
@@ -1995,6 +2020,7 @@ def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
         model_name=_get_embedding_model_name(provider_attempts[0]) or None,
         error_category=first_error_category or "provider_5xx",
     )
+    EMBEDDING_STATE["embedding_latency_ms"] = round((perf_counter() - started_at) * 1000)
     return get_embedding_provider_status()
 
 
@@ -2005,6 +2031,7 @@ async def stream_gemini_response(
     temperature: float,
     max_output_tokens: int,
 ) -> AsyncIterator[str]:
+    request_started_at = perf_counter()
     if not PROVIDER_STATE["ready"]:
         await validate_provider_startup()
         if not PROVIDER_STATE["ready"]:
@@ -2034,6 +2061,7 @@ async def stream_gemini_response(
         last_error = None
 
         for retry_index in range(2):
+            attempt_started_at = perf_counter()
             try:
                 log_event(
                     logger,
@@ -2090,6 +2118,7 @@ async def stream_gemini_response(
             break
 
         if last_error:
+            PROVIDER_STATE["provider_generation_failure_count"] += 1
             _record_provider_failure(last_error.category)
             log_event(
                 logger,
@@ -2102,6 +2131,7 @@ async def stream_gemini_response(
                 stage="stream",
             )
             if _should_try_fallback(last_error) and index < len(attempts) - 1:
+                PROVIDER_STATE["provider_failover_count"] += 1
                 next_provider, next_model, _ = attempts[index + 1]
                 log_event(
                     logger,
@@ -2116,6 +2146,7 @@ async def stream_gemini_response(
             raise last_error
 
         if chunks_received == 0:
+            PROVIDER_STATE["provider_generation_failure_count"] += 1
             last_error = ScholrGenerationError(
                 "Scholr did not receive any usable text from the provider for this prompt. Please try rephrasing it.",
                 retryable=True,
@@ -2131,6 +2162,7 @@ async def stream_gemini_response(
                 stage="stream",
             )
             if index < len(attempts) - 1:
+                PROVIDER_STATE["provider_failover_count"] += 1
                 next_provider, next_model, _ = attempts[index + 1]
                 log_event(
                     logger,
@@ -2145,6 +2177,8 @@ async def stream_gemini_response(
             raise last_error
 
         _record_provider_success(candidate, provider_name, failover_reason=failover_reason)
+        PROVIDER_STATE["provider_generation_success_count"] += 1
+        PROVIDER_STATE["provider_last_latency_ms"] = round((perf_counter() - request_started_at) * 1000)
         PROVIDER_STATE.update(
             {
                 "candidate_models_count": max(1, PROVIDER_STATE["candidate_models_count"]),
@@ -2158,6 +2192,7 @@ async def stream_gemini_response(
             model_name=candidate,
             provider_failover_reason=failover_reason,
             streamed_chunks=chunks_received,
+            duration_ms=round((perf_counter() - attempt_started_at) * 1000),
         )
         return
 
@@ -2171,6 +2206,7 @@ async def stream_gemini_response(
 def embed_texts(texts: list[str], *, task_type: str) -> list[list[float]]:
     embedding_status = validate_embedding_provider()
     if not embedding_status["embedding_provider_ready"]:
+        EMBEDDING_STATE["embedding_generation_failure_count"] += 1
         raise ScholrGenerationError(
             "Embeddings could not be generated for this document right now.",
             retryable=True,
@@ -2178,23 +2214,50 @@ def embed_texts(texts: list[str], *, task_type: str) -> list[list[float]]:
         )
 
     provider_name = embedding_status["embedding_provider"]
+    last_error: ScholrGenerationError | None = None
     started_at = perf_counter()
-    try:
-        values = (
-            _embed_with_gemini(texts, task_type=task_type)
-            if provider_name == "gemini"
-            else _embed_with_openrouter(texts)
-        )
-    except ScholrGenerationError:
-        raise
-    except Exception as exc:  # pragma: no cover - depends on provider runtime
-        classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
-        raise ScholrGenerationError(
+    for attempt_index in range(2):
+        try:
+            values = (
+                _embed_with_gemini(texts, task_type=task_type)
+                if provider_name == "gemini"
+                else _embed_with_openrouter(texts)
+            )
+            break
+        except ScholrGenerationError as exc:
+            last_error = exc
+        except Exception as exc:  # pragma: no cover - depends on provider runtime
+            classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
+            last_error = ScholrGenerationError(
+                "Embeddings could not be generated for this document right now.",
+                retryable=True,
+                category=classified.category,
+            )
+
+        if last_error and last_error.category == "provider_timeout" and attempt_index == 0:
+            EMBEDDING_STATE["embedding_retry_count"] += 1
+            log_event(
+                logger,
+                "embedding_generation_retry",
+                embedding_provider=provider_name,
+                embedding_model=embedding_status["embedding_model"],
+                task_type=task_type,
+                retry_attempt=attempt_index + 1,
+                error_category=last_error.category,
+            )
+            continue
+        EMBEDDING_STATE["embedding_generation_failure_count"] += 1
+        raise last_error
+    else:  # pragma: no cover - defensive
+        EMBEDDING_STATE["embedding_generation_failure_count"] += 1
+        raise last_error or ScholrGenerationError(
             "Embeddings could not be generated for this document right now.",
             retryable=True,
-            category=classified.category,
-        ) from exc
+            category="provider_5xx",
+        )
 
+    EMBEDDING_STATE["embedding_generation_success_count"] += 1
+    EMBEDDING_STATE["embedding_latency_ms"] = round((perf_counter() - started_at) * 1000)
     log_event(
         logger,
         "embedding_generation_success",
