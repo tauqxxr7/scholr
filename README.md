@@ -308,9 +308,9 @@ Environment examples:
 - Build Command: `cd backend && pip install -r requirements.txt`
 - Start Command: `cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT`
 - `PYTHON_VERSION=3.12.4`
-- Primary generation env: `GEMINI_API_KEY=`
-- Fallback generation env: `OPENROUTER_API_KEY=`
-- Optional embedding envs: `EMBEDDING_PROVIDER=` and `EMBEDDING_MODEL=`
+- Primary generation env: `GEMINI_API_KEY`
+- Fallback generation env: `OPENROUTER_API_KEY`
+- Optional embedding envs: `EMBEDDING_PROVIDER` and `EMBEDDING_MODEL`
 
 Detailed runbook:
 - [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md)
