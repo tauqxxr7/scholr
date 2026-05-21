@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { useAuth } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
 import {
   AlertCircle,
@@ -23,7 +22,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { trackEvent } from '@/lib/analytics'
-import { clerkEnabled } from '@/lib/auth-config'
 import {
   answerDocumentQuestion,
   getDocumentHealth,
@@ -108,9 +106,7 @@ const retrievalModeLabel: Record<string, string> = {
   hybrid: 'Hybrid Retrieval',
 }
 
-type TokenGetter = () => Promise<string | null>
-
-function DocumentWorkspaceContent({ getToken }: { getToken: TokenGetter }) {
+function DocumentWorkspaceContent() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [documentHealth, setDocumentHealth] = useState<DocumentHealthResult | null>(null)
   const [healthError, setHealthError] = useState('')
@@ -208,8 +204,7 @@ function DocumentWorkspaceContent({ getToken }: { getToken: TokenGetter }) {
     })
 
     try {
-      const authToken = await getToken()
-      const result = await uploadDocument(file, setUploadProgress, authToken ?? undefined)
+      const result = await uploadDocument(file, setUploadProgress)
       setUploadedDocument(result)
       setUploadProgress(100)
       trackEvent('document_upload_completed', {
@@ -262,12 +257,11 @@ function DocumentWorkspaceContent({ getToken }: { getToken: TokenGetter }) {
     const startedAt = performance.now()
 
     try {
-      const authToken = await getToken()
       const result = await answerDocumentQuestion({
         document_id: uploadedDocument.document_id,
         question: question.trim(),
         top_k: 4,
-      }, authToken ?? undefined)
+      })
       setAnswerResult(result)
       trackEvent('document_answer_completed', {
         module: 'documents_answer',
@@ -738,15 +732,6 @@ function DocumentWorkspaceContent({ getToken }: { getToken: TokenGetter }) {
   )
 }
 
-function AuthenticatedDocumentWorkspace() {
-  const { getToken } = useAuth()
-  return <DocumentWorkspaceContent getToken={getToken} />
-}
-
-function PublicDocumentWorkspace() {
-  return <DocumentWorkspaceContent getToken={async () => null} />
-}
-
 export default function DocumentWorkspace() {
-  return clerkEnabled ? <AuthenticatedDocumentWorkspace /> : <PublicDocumentWorkspace />
+  return <DocumentWorkspaceContent />
 }

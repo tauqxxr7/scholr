@@ -23,8 +23,6 @@ const modules = [
 ]
 
 export default function LandingPage() {
-  const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
-
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.22),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(125,211,252,0.18),_transparent_26%),linear-gradient(180deg,#fffdf7_0%,#ffffff_55%,#f8fafc_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
@@ -36,13 +34,6 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            {clerkEnabled ? (
-              <Link href="/sign-in">
-                <Button variant="ghost" className="min-h-11 w-full text-slate-600 hover:text-slate-950 sm:w-auto">
-                  Sign in
-                </Button>
-              </Link>
-            ) : null}
             <Link href="/research">
               <Button variant="outline" className="min-h-11 w-full sm:w-auto">Try research</Button>
             </Link>
@@ -53,7 +44,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/dashboard">
               <Button className="min-h-11 w-full bg-slate-950 text-white hover:bg-slate-800 sm:w-auto">
-                {clerkEnabled ? 'Open workspace' : 'Open dashboard'}
+                Open dashboard
               </Button>
             </Link>
           </div>
@@ -70,7 +61,7 @@ export default function LandingPage() {
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
               Scholr focuses on the wedge that matters first: one fast, polished academic platform
-              with streaming AI, identity-safe history, document grounding, and resilient fallback behavior.
+              with streaming AI, document grounding, and resilient fallback behavior.
             </p>
             <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-2">
               <div className="rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm">
@@ -82,7 +73,7 @@ export default function LandingPage() {
               <div className="rounded-[1.5rem] border border-white/70 bg-white/80 p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-                  <p className="text-sm font-medium text-slate-900">Identity-scoped history</p>
+                  <p className="text-sm font-medium text-slate-900">Public-access study workspace</p>
                 </div>
               </div>
             </div>

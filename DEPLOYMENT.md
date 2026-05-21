@@ -16,6 +16,8 @@ Required environment variable:
 NEXT_PUBLIC_API_URL=https://scholr-k9sj.onrender.com
 ```
 
+No Clerk or auth-specific frontend variables are required for the current public MVP.
+
 ## Backend Deployment
 
 - Platform: Render
@@ -35,6 +37,17 @@ ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
 ```
 
 Set `GEMINI_API_KEY` in Render with a real Gemini API key. Keep it blank in docs and tracked files.
+
+## Public Access
+
+Scholr currently ships as a public-access academic workspace. These routes should open directly without sign-in:
+
+- `/`
+- `/dashboard`
+- `/research`
+- `/notes`
+- `/doubt`
+- `/documents`
 
 ## Provider Health Diagnostics
 

@@ -3,7 +3,7 @@
 ## Current Stage
 
 Scholr is in the live MVP stage:
-- Clerk-ready auth foundation
+- public-access academic workspace
 - one focused student workflow
 - deployed monorepo
 - local SQLite support with user-scoped persistence
@@ -70,7 +70,7 @@ Scholr is in the live MVP stage:
 - env-gated PostHog analytics wrapper
 - safe product events for open, generate, copy, clear, and retry flows
 - subtle response-mode badges for AI Mode, Cached Academic Response, and Fallback Academic Mode
-- Clerk-ready sign-in, sign-up, and account surfaces
+- public dashboard and module access without sign-in friction
 
 ### Deployment prep
 
@@ -96,7 +96,7 @@ Scholr is in the live MVP stage:
 - verify long-term production history persistence with PostgreSQL
 - replace placeholder demo GIF and placeholder mobile proof assets with real captures
 - validate GitHub Actions on first live run
-- complete production Clerk rollout with real keys and end-to-end tenant verification
+- keep tenant-safe persistence groundwork inactive until a future auth rollout is intentionally reintroduced
 
 ## Next Milestones
 
@@ -105,7 +105,7 @@ Scholr is in the live MVP stage:
 3. Add demo video and a polished repo GIF or walkthrough asset
 4. Add CI checks for lint, typecheck, backend validation, and build
 5. Validate provider fallback behavior under real student usage
-6. Complete real multi-user validation once Clerk production keys are configured
+6. Reintroduce multi-user auth only after PostgreSQL and persistent user storage are ready
 7. Move production history to PostgreSQL if usage justifies it
 8. Expand SEO and legal polish only when the public launch needs become sharper
 9. Validate document intelligence scaffold with real PDFs before frontend integration

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
 import {
   Copy,
@@ -17,7 +16,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { trackEvent } from '@/lib/analytics'
-import { clerkEnabled } from '@/lib/auth-config'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
 
 const LOCAL_RESPONSE_CACHE_KEY = 'scholr-local-response-cache-v1'
@@ -44,10 +42,6 @@ type AiModulePageProps = {
   idleLabel: string
 }
 
-type AiModulePageContentProps = AiModulePageProps & {
-  getToken: () => Promise<string | null>
-}
-
 function AiModulePageContent({
   moduleName,
   title,
@@ -62,8 +56,7 @@ function AiModulePageContent({
   setOutput,
   loadingLabel,
   idleLabel,
-  getToken,
-}: AiModulePageContentProps) {
+}: AiModulePageProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
@@ -195,7 +188,6 @@ function AiModulePageContent({
     trackEvent('generation_started', { module: moduleName })
 
     try {
-      const authToken = await getToken()
       const result = await streamModuleResponse(
         endpoint,
         payload,
@@ -223,7 +215,6 @@ function AiModulePageContent({
             setResponseModeLabel(meta.label)
           }
         },
-        authToken ?? undefined,
       )
 
       if (!result.hadChunks) {
@@ -583,15 +574,6 @@ function AiModulePageContent({
   )
 }
 
-function AuthenticatedAiModulePage(props: AiModulePageProps) {
-  const { getToken } = useAuth()
-  return <AiModulePageContent {...props} getToken={getToken} />
-}
-
-function PublicAiModulePage(props: AiModulePageProps) {
-  return <AiModulePageContent {...props} getToken={async () => null} />
-}
-
 export default function AiModulePage(props: AiModulePageProps) {
-  return clerkEnabled ? <AuthenticatedAiModulePage {...props} /> : <PublicAiModulePage {...props} />
+  return <AiModulePageContent {...props} />
 }

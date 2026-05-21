@@ -13,7 +13,7 @@ from agents._generation import (
     shutdown_provider_recovery_task,
     validate_provider_startup,
 )
-from core.auth import get_auth_context, is_auth_configured, is_auth_enabled, is_auth_required
+from core.auth import get_auth_context
 from core.logging_utils import configure_logging, log_event
 from db import crud
 from db.database import SessionLocal, init_db
@@ -181,9 +181,6 @@ def health_check():
     return {
         "status": "Scholr API is running",
         "version": "1.0.0",
-        "auth_configured": is_auth_configured(),
-        "auth_required": is_auth_required(),
-        "auth_enabled": is_auth_enabled(),
         **get_runtime_diagnostics(),
         **provider_status,
     }

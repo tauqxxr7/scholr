@@ -5,7 +5,7 @@ This checklist now documents the live Scholr MVP deployment and the safest path 
 Deployment status:
 1. backend deployed on Render
 2. frontend deployed on Vercel
-3. production smoke test partially completed
+3. production smoke test completed for the public MVP path
 
 ## 1. Local Smoke Test
 
@@ -114,6 +114,7 @@ NEXT_PUBLIC_API_URL=https://your-render-backend-url.onrender.com
 Important:
 - `NEXT_PUBLIC_API_URL` is required in production.
 - Vercel env var changes require a redeploy.
+- No Clerk variables are required for the current public MVP.
 
 Exact steps:
 1. Open Vercel.
@@ -240,6 +241,20 @@ Checklist:
 Important:
 - do not disable fallback mode while troubleshooting
 - keep provider recovery enabled so the app remains student-safe during quota instability
+
+### Removed auth layer
+
+The current public MVP does not require these variables:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
+- `CLERK_JWKS_URL`
+- `CLERK_JWT_ISSUER`
+- `CLERK_JWT_AUDIENCE`
+- `CLERK_AUTHORIZED_PARTIES`
+- `AUTH_REQUIRED`
+
+If older deployment environments still contain them, they can be removed without breaking the live public app.
 
 ### Missing PostgreSQL
 

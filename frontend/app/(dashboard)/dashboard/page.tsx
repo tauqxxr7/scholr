@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -16,7 +15,6 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { trackEvent } from '@/lib/analytics'
-import { clerkEnabled } from '@/lib/auth-config'
 import type { HistoryItem } from '@/lib/api'
 import { getHistory } from '@/lib/api'
 
@@ -47,9 +45,7 @@ const modules = [
   },
 ]
 
-type TokenGetter = () => Promise<string | null>
-
-function DashboardPageContent({ getToken }: { getToken: TokenGetter }) {
+function DashboardPageContent() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(true)
@@ -57,18 +53,17 @@ function DashboardPageContent({ getToken }: { getToken: TokenGetter }) {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const authToken = await getToken()
-        const items = await getHistory(6, 1, authToken ?? undefined)
+        const items = await getHistory(6, 1)
         setHistory(items)
       } catch {
-        setHistoryError('History will appear here once authentication and the backend are reachable.')
+        setHistoryError('History will appear here once the backend is reachable.')
       } finally {
         setHistoryLoading(false)
       }
     }
 
     void loadHistory()
-  }, [getToken])
+  }, [])
 
   return (
     <div className="space-y-8 lg:space-y-10">
@@ -220,15 +215,6 @@ function DashboardPageContent({ getToken }: { getToken: TokenGetter }) {
   )
 }
 
-function AuthenticatedDashboardPage() {
-  const { getToken } = useAuth()
-  return <DashboardPageContent getToken={getToken} />
-}
-
-function PublicDashboardPage() {
-  return <DashboardPageContent getToken={async () => null} />
-}
-
 export default function DashboardPage() {
-  return clerkEnabled ? <AuthenticatedDashboardPage /> : <PublicDashboardPage />
+  return <DashboardPageContent />
 }

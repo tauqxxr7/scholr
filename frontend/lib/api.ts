@@ -147,15 +147,6 @@ function getApiUrl() {
   )
 }
 
-function buildAuthHeaders(authToken?: string): HeadersInit {
-  if (!authToken) {
-    return {}
-  }
-  return {
-    Authorization: `Bearer ${authToken}`,
-  }
-}
-
 function describeNetworkFailure(error: unknown) {
   if (error instanceof StreamModuleError) {
     return error
@@ -185,7 +176,6 @@ export async function streamModuleResponse(
   payload: Record<string, string>,
   onChunk: (chunk: string) => void,
   onMeta?: (meta: { mode?: StreamModuleResult['mode']; label?: string }) => void,
-  authToken?: string,
 ): Promise<StreamModuleResult> {
   let response: Response
   const controller = new AbortController()
@@ -194,7 +184,7 @@ export async function streamModuleResponse(
   try {
     response = await fetch(`${getApiUrl()}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...buildAuthHeaders(authToken) },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: controller.signal,
     })
@@ -317,10 +307,9 @@ export async function streamModuleResponse(
   return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
 }
 
-export async function getHistory(limit = 6, page = 1, authToken?: string): Promise<HistoryItem[]> {
+export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
   const response = await fetch(`${getApiUrl()}/api/history?limit=${limit}&page=${page}`, {
     cache: 'no-store',
-    headers: buildAuthHeaders(authToken),
   })
 
   if (!response.ok) {
@@ -333,7 +322,6 @@ export async function getHistory(limit = 6, page = 1, authToken?: string): Promi
 export async function uploadDocument(
   file: File,
   onProgress?: (progress: number) => void,
-  authToken?: string,
 ): Promise<DocumentUploadResult> {
   const url = `${getApiUrl()}/api/documents/upload`
 
@@ -343,9 +331,6 @@ export async function uploadDocument(
 
     const request = new XMLHttpRequest()
     request.open('POST', url)
-    if (authToken) {
-      request.setRequestHeader('Authorization', `Bearer ${authToken}`)
-    }
 
     request.upload.onprogress = (event) => {
       if (!event.lengthComputable) {
@@ -400,10 +385,10 @@ export async function answerDocumentQuestion(payload: {
   document_id: string
   question: string
   top_k?: number
-}, authToken?: string): Promise<DocumentAnswerResult> {
+}): Promise<DocumentAnswerResult> {
   const response = await fetch(`${getApiUrl()}/api/documents/answer`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...buildAuthHeaders(authToken) },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
 

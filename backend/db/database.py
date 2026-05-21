@@ -82,7 +82,7 @@ class UserSession(Base):
 
     session_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, nullable=False, index=True)
-    auth_provider = Column(String, nullable=False, default="clerk")
+    auth_provider = Column(String, nullable=False, default="public")
     user_agent = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     last_seen_at = Column(DateTime, nullable=False, default=datetime.utcnow)
