@@ -45,11 +45,12 @@ Real output proof files:
 Verified live against the deployed frontend and backend using the bundled fixture:
 - upload fixture: `backend/tests/fixtures/academic-sample.pdf`
 - upload result: `ready_with_lexical_fallback`
-- answer result: `retrieval_only`
+- answer result: `grounded_generation`
 - retrieval mode: `lexical`
 - citations: present
 - no empty output observed
 - current live retrieval default: lexical while provider-backed embeddings remain degraded
+- provider-backed answer synthesis is still possible through OpenRouter when generation is healthy
 
 ## Current runtime truth
 

@@ -175,6 +175,7 @@ Scholr now exposes a frontend-first document workflow on top of the backend RAG 
 This is intentionally honest:
 - if embeddings or provider-backed synthesis are unavailable, Scholr does not pretend semantic AI is active
 - retrieval-first answers stay useful through lexical fallback and citations
+- lexical retrieval does not block grounded answer generation when the active generation provider is healthy
 
 ### Live document workflow status
 

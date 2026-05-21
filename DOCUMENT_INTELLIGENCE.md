@@ -96,6 +96,7 @@ Verified against the live Render backend and the live Vercel document workspace:
   - `limitations`
   - `retrieval_mode`
 - live retrieval currently defaults to lexical grounding while the provider remains degraded
+- grounded document answer generation can still succeed through the active generation provider even while semantic embeddings are degraded
 - embedding-provider diagnostics now truthfully report configured provider, model, and semantic readiness
 - no empty output panels were observed in the live document flow
 

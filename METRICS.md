@@ -51,7 +51,7 @@ This document tracks measurable production proof without inventing data.
 ### Live document workflow snapshot
 
 - Upload status: `ready_with_lexical_fallback`
-- Answer mode: `retrieval_only`
+- Answer mode: `grounded_generation`
 - Retrieval mode: `lexical`
 - Citations: present
 - Semantic retrieval ready: not yet live
