@@ -115,6 +115,7 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 | Fallback mode | Working | useful academic output during provider degradation |
 | Cache / fallback behavior | Working | cached and recovery modes exposed to UI |
 | Document intelligence | Working in retrieval-first mode | upload, citations, and retrieval-only answers live |
+| Identity and tenant isolation | Foundation shipped | Clerk-ready auth, user-scoped history, tenant-safe document ownership |
 | User testing status | Ready | templates and validation plan included |
 
 ### Provider failover proof
@@ -234,20 +235,23 @@ This is intentionally honest:
 - Gemini remains the primary provider, but OpenRouter can take over without changing frontend behavior
 - exact cache and warm cache reduce repeated provider load
 - no-empty-output guarantee protects the student experience during provider outages
-- auth and payments remain intentionally deferred until retention and academic usefulness are proven
+- tenant-safe auth foundation is now in place, while billing and subscriptions remain intentionally deferred until retention and academic usefulness are proven
 
 ## Architecture Snapshot
 
 ```mermaid
 flowchart LR
     User["BTech student"] --> Frontend["Next.js frontend on Vercel"]
+    Frontend --> Auth["Clerk identity + protected routes"]
     Frontend --> Stream["SSE stream + runtime mode detector"]
     Stream --> Backend["FastAPI backend on Render"]
+    Auth --> Backend
     Backend --> Provider["Validated provider abstraction"]
     Backend --> Embeddings["Embedding provider abstraction"]
     Backend --> Recovery["Provider recovery loop"]
     Backend --> Fallback["Fallback academic engine"]
-    Backend --> Cache["History + exact cache + warm cache"]
+    Backend --> Cache["User-scoped history + exact cache + warm cache"]
+    Backend --> Tenancy["Tenant-safe document storage + usage governance"]
     Backend --> RAG["Future document intelligence layer"]
     Backend --> Logs["Rate limiting + logging + telemetry"]
     Provider --> Gemini["Gemini primary"]
@@ -270,13 +274,13 @@ Core docs:
 
 ## Tech Stack
 
-- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
-- Backend: FastAPI, Python, SQLAlchemy
+- Frontend: Next.js App Router, React, TypeScript, Tailwind CSS, Clerk auth
+- Backend: FastAPI, Python, SQLAlchemy, tenant-aware request context
 - AI provider layer: Google GenAI SDK for Gemini primary routing plus OpenRouter fallback support with validated model selection, provider recovery, and diagnostics
 - Embedding provider layer: Gemini embeddings primary, OpenRouter-compatible embedding fallback, lexical fallback when semantic retrieval is unavailable
 - Retrieval observability: `/health/documents` reports vector-store health, semantic readiness, lexical fallback readiness, retrieval counters, and latency snapshots
-- Local DB: SQLite
-- Production DB path: PostgreSQL through `DATABASE_URL`
+- Local DB: SQLite with user-scoped history, sessions, documents, and usage ledgers
+- Production DB path: PostgreSQL through `DATABASE_URL`, with pgvector as the intended long-term semantic retrieval target
 - Hosting: Vercel frontend + Render backend
 
 ## Production Evidence
@@ -389,6 +393,7 @@ Tauqeer Bharde is a BTech AI and Data Science student building practical AI syst
 3. restore fully healthy provider generation once quota and model access stabilize
 4. validate the live document workflow with real DBMS, OS, DSA, CN, Maths, PYQ, and research PDFs
 5. capture more polished mobile and provider-health proof assets as the live system evolves
+6. complete production Clerk rollout and validate multi-user sessions end to end
 
 ### Later
 
@@ -396,7 +401,7 @@ Tauqeer Bharde is a BTech AI and Data Science student building practical AI syst
 - semantic search over history and uploaded documents
 - semantic retrieval stabilization through provider-backed embeddings or pgvector-backed migration
 - pgvector-backed document and history retrieval
-- auth and user-specific history
+- subscription and usage-tier enforcement
 - Azure scaling path after demand is proven
 
 ## Lessons Learned

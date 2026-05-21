@@ -3,10 +3,10 @@
 ## Current Stage
 
 Scholr is in the live MVP stage:
-- no auth
+- Clerk-ready auth foundation
 - one focused student workflow
 - deployed monorepo
-- local SQLite support
+- local SQLite support with user-scoped persistence
 - production-ready PostgreSQL path through `DATABASE_URL`
 
 ## What Is Completed
@@ -50,7 +50,8 @@ Scholr is in the live MVP stage:
 ### Data
 
 - SQLite works locally by default
-- full completed responses are saved
+- full completed responses are saved with user and session context
+- user sessions and usage ledgers are persisted
 - PostgreSQL can be used in production through `DATABASE_URL` without code changes
 
 ### Frontend
@@ -69,6 +70,7 @@ Scholr is in the live MVP stage:
 - env-gated PostHog analytics wrapper
 - safe product events for open, generate, copy, clear, and retry flows
 - subtle response-mode badges for AI Mode, Cached Academic Response, and Fallback Academic Mode
+- Clerk-ready sign-in, sign-up, and account surfaces
 
 ### Deployment prep
 
@@ -94,6 +96,7 @@ Scholr is in the live MVP stage:
 - verify long-term production history persistence with PostgreSQL
 - replace placeholder demo GIF and placeholder mobile proof assets with real captures
 - validate GitHub Actions on first live run
+- complete production Clerk rollout with real keys and end-to-end tenant verification
 
 ## Next Milestones
 
@@ -102,7 +105,7 @@ Scholr is in the live MVP stage:
 3. Add demo video and a polished repo GIF or walkthrough asset
 4. Add CI checks for lint, typecheck, backend validation, and build
 5. Validate provider fallback behavior under real student usage
-6. Reintroduce auth later, only after the wedge proves retention
+6. Complete real multi-user validation once Clerk production keys are configured
 7. Move production history to PostgreSQL if usage justifies it
 8. Expand SEO and legal polish only when the public launch needs become sharper
 9. Validate document intelligence scaffold with real PDFs before frontend integration
@@ -117,6 +120,7 @@ Scholr is in the live MVP stage:
 - email verification
 - password reset only if password auth is introduced
 - rate limiting and abuse protection
+- tenant-safe document ownership and session isolation
 
 ### API pagination roadmap
 
@@ -135,7 +139,7 @@ Scholr is in the live MVP stage:
 - structured backend log shipping for operational visibility
 - stronger rate limiting once public usage starts increasing
 - keep sanitized error handling as a non-negotiable default
-- optional multi-provider abstraction only if Gemini reliability needs a second backend path
+- continue hardening multi-provider abstraction and usage governance as real traffic grows
 
 ### Analytics roadmap
 
