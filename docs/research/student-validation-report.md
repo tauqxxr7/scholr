@@ -19,6 +19,12 @@ Do not fabricate outcomes. Keep placeholders until evidence is collected.
   - Laptop
   - Desktop
 
+## Current production scope
+
+- true AI generation is available again through validated OpenRouter failover
+- document intelligence is live with lexical retrieval fallback
+- semantic retrieval remains a next-stage validation track and should be tested honestly when embeddings are healthy
+
 ## Document workflow validation checklist
 
 - upload one text-based class PDF
@@ -39,6 +45,7 @@ Current repo evidence:
 3. Ask the student to try one Research prompt.
 4. Record whether fallback or cached mode appeared.
 5. Record whether the student would reuse Scholr before exams.
+6. For PDF tests, record whether citation snippets were enough to verify the answer quickly.
 
 ## Placeholder summary table
 

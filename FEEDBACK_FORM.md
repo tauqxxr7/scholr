@@ -4,7 +4,7 @@ Use this after each student tries the live product.
 
 ## 10 short questions
 
-1. Which module did you try first: Research, Notes, or Doubt?
+1. Which module did you try first: Research, Notes, Doubt, or Documents?
 2. What exact topic or question did you enter?
 3. Did the output help you within the first minute?
 4. Did the response feel more useful than a generic chatbot?
@@ -21,6 +21,8 @@ Use this after each student tries the live product.
 - Did the response feel fast enough?
 - Did the mobile experience feel polished enough to reuse?
 - Would you want PDF or document-based answers later?
+- Were the citations helpful enough to trust the answer quickly?
+- Did the retrieval mode label make sense to you?
 
 ## Recommended test subjects
 
@@ -29,6 +31,8 @@ Use this after each student tries the live product.
 - DSA
 - Computer Networks
 - Engineering Maths
+- Previous Year Questions
+- Research Papers
 
 ## Field capture reminder
 
@@ -39,3 +43,5 @@ For each real student session, also record:
 - usefulness rating
 - confusion point
 - whether they would use it before exams
+- whether citations were enough to verify the answer
+- whether fallback or recovering mode still felt useful
