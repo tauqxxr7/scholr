@@ -3,11 +3,25 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from db.database import DocumentAsset, DocumentChunk, SearchHistory
+from db.database import DocumentAsset, DocumentChunk, SearchHistory, UsageLedger, UserSession
 
 
-def save_search(db: Session, module: str, query: str, response: str) -> SearchHistory:
-    record = SearchHistory(module=module, query=query, response=response)
+def save_search(
+    db: Session,
+    module: str,
+    query: str,
+    response: str,
+    *,
+    user_id: str,
+    session_id: str,
+) -> SearchHistory:
+    record = SearchHistory(
+        user_id=user_id,
+        session_id=session_id,
+        module=module,
+        query=query,
+        response=response,
+    )
     db.add(record)
     db.commit()
     db.refresh(record)
@@ -37,10 +51,11 @@ def _similarity_score(left: str, right: str) -> float:
     return len(overlap) / max(len(union), 1)
 
 
-def get_recent_searches(db: Session, limit: int = 20, page: int = 1) -> list[SearchHistory]:
+def get_recent_searches(db: Session, *, user_id: str, limit: int = 20, page: int = 1) -> list[SearchHistory]:
     offset = max(page - 1, 0) * limit
     return (
         db.query(SearchHistory)
+        .filter(SearchHistory.user_id == user_id)
         .order_by(SearchHistory.created_at.desc())
         .offset(offset)
         .limit(limit)
@@ -51,13 +66,14 @@ def get_recent_searches(db: Session, limit: int = 20, page: int = 1) -> list[Sea
 def get_searches_by_module(
     db: Session,
     module: str,
+    user_id: str,
     limit: int = 20,
     page: int = 1,
 ) -> list[SearchHistory]:
     offset = max(page - 1, 0) * limit
     return (
         db.query(SearchHistory)
-        .filter(SearchHistory.module == module)
+        .filter(SearchHistory.user_id == user_id, SearchHistory.module == module)
         .order_by(SearchHistory.created_at.desc())
         .offset(offset)
         .limit(limit)
@@ -69,6 +85,7 @@ def get_cached_search(
     db: Session,
     *,
     module: str,
+    user_id: str,
     query: str,
     ttl_minutes: int = 15,
     scan_limit: int = 25,
@@ -78,7 +95,11 @@ def get_cached_search(
 
     recent_rows = (
         db.query(SearchHistory)
-        .filter(SearchHistory.module == module, SearchHistory.created_at >= cutoff)
+        .filter(
+            SearchHistory.user_id == user_id,
+            SearchHistory.module == module,
+            SearchHistory.created_at >= cutoff,
+        )
         .order_by(SearchHistory.created_at.desc())
         .limit(scan_limit)
         .all()
@@ -95,6 +116,7 @@ def get_similar_cached_search(
     db: Session,
     *,
     module: str,
+    user_id: str,
     query: str,
     ttl_minutes: int = 30,
     scan_limit: int = 40,
@@ -103,7 +125,11 @@ def get_similar_cached_search(
     cutoff = datetime.utcnow() - timedelta(minutes=ttl_minutes)
     recent_rows = (
         db.query(SearchHistory)
-        .filter(SearchHistory.module == module, SearchHistory.created_at >= cutoff)
+        .filter(
+            SearchHistory.user_id == user_id,
+            SearchHistory.module == module,
+            SearchHistory.created_at >= cutoff,
+        )
         .order_by(SearchHistory.created_at.desc())
         .limit(scan_limit)
         .all()
@@ -123,12 +149,16 @@ def get_similar_cached_search(
 def create_document_asset(
     db: Session,
     *,
+    user_id: str,
+    session_id: str,
     title: str,
     original_filename: str,
     storage_path: str,
     mime_type: str = "application/pdf",
 ) -> DocumentAsset:
     record = DocumentAsset(
+        user_id=user_id,
+        session_id=session_id,
         title=title,
         original_filename=original_filename,
         storage_path=storage_path,
@@ -166,12 +196,14 @@ def update_document_asset_status(
 def save_document_chunks(
     db: Session,
     *,
+    user_id: str,
     document_id: str,
     document_name: str,
     chunks: list[dict[str, int | str]],
 ) -> list[DocumentChunk]:
     records = [
         DocumentChunk(
+            user_id=user_id,
             document_id=document_id,
             page_number=int(chunk["page_number"]),
             chunk_index=int(chunk["chunk_index"]),
@@ -188,14 +220,91 @@ def save_document_chunks(
     return records
 
 
-def get_document_asset(db: Session, document_id: str) -> DocumentAsset | None:
-    return db.query(DocumentAsset).filter(DocumentAsset.id == document_id).first()
+def get_document_asset(db: Session, document_id: str, *, user_id: str) -> DocumentAsset | None:
+    return (
+        db.query(DocumentAsset)
+        .filter(DocumentAsset.id == document_id, DocumentAsset.user_id == user_id)
+        .first()
+    )
 
 
-def get_document_chunks(db: Session, document_id: str) -> list[DocumentChunk]:
+def get_document_chunks(db: Session, document_id: str, *, user_id: str) -> list[DocumentChunk]:
     return (
         db.query(DocumentChunk)
-        .filter(DocumentChunk.document_id == document_id)
+        .filter(DocumentChunk.document_id == document_id, DocumentChunk.user_id == user_id)
         .order_by(DocumentChunk.page_number.asc(), DocumentChunk.chunk_index.asc())
         .all()
     )
+
+
+def upsert_user_session(
+    db: Session,
+    *,
+    user_id: str,
+    session_id: str,
+    auth_provider: str,
+    user_agent: str | None,
+) -> UserSession:
+    record = db.query(UserSession).filter(UserSession.session_id == session_id).first()
+    if record is None:
+        record = UserSession(
+            session_id=session_id,
+            user_id=user_id,
+            auth_provider=auth_provider,
+            user_agent=user_agent,
+        )
+        db.add(record)
+    else:
+        record.user_id = user_id
+        record.auth_provider = auth_provider
+        record.user_agent = user_agent
+        record.last_seen_at = datetime.utcnow()
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+def count_usage(
+    db: Session,
+    *,
+    user_id: str,
+    scope: str,
+    period_key: str,
+    period: str = "daily",
+) -> int:
+    total = (
+        db.query(UsageLedger)
+        .filter(
+            UsageLedger.user_id == user_id,
+            UsageLedger.scope == scope,
+            UsageLedger.period == period,
+            UsageLedger.period_key == period_key,
+        )
+        .with_entities(UsageLedger.amount)
+        .all()
+    )
+    return sum(item[0] for item in total)
+
+
+def record_usage(
+    db: Session,
+    *,
+    user_id: str,
+    session_id: str,
+    scope: str,
+    amount: int = 1,
+    period: str = "daily",
+    period_key: str,
+) -> UsageLedger:
+    record = UsageLedger(
+        user_id=user_id,
+        session_id=session_id,
+        scope=scope,
+        amount=amount,
+        period=period,
+        period_key=period_key,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record

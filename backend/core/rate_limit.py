@@ -30,7 +30,9 @@ class InMemoryRateLimiter:
     def check(self, request: Request, scope: str) -> RateLimitResult:
         now = time.time()
         client_ip = self._get_client_ip(request)
-        key = f"{scope}:{client_ip}"
+        auth_context = getattr(request.state, "auth_context", None)
+        actor_key = getattr(auth_context, "user_id", None) or client_ip
+        key = f"{scope}:{actor_key}"
 
         with self._lock:
             bucket = self._requests[key]

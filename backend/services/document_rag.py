@@ -85,6 +85,10 @@ def _safe_storage_name(filename: str) -> str:
     return f"{uuid.uuid4().hex}{suffix}"
 
 
+def _safe_user_storage_segment(user_id: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9_-]+", "_", user_id)[:80] or "public-demo"
+
+
 def _ensure_storage_dirs() -> None:
     DOCUMENTS_ROOT.mkdir(parents=True, exist_ok=True)
     VECTOR_DB_ROOT.mkdir(parents=True, exist_ok=True)
@@ -208,13 +212,14 @@ def _lexical_score(query: str, content: str) -> float:
 
 def _retrieve_chunks_from_db(
     *,
+    user_id: str,
     document_id: str,
     query: str,
     db: Session,
     top_k: int,
 ) -> list[RetrievedChunk]:
     ranked_chunks: list[RetrievedChunk] = []
-    for chunk in crud.get_document_chunks(db, document_id):
+    for chunk in crud.get_document_chunks(db, document_id, user_id=user_id):
         score = _lexical_score(query, chunk.content)
         if score <= 0:
             continue
@@ -233,7 +238,11 @@ def _retrieve_chunks_from_db(
     return ranked_chunks[: max(1, min(top_k, 8))]
 
 
-def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, int | str]]) -> None:
+def _upsert_chunks_into_vector_store(
+    document_id: str,
+    user_id: str,
+    chunks: list[dict[str, int | str]],
+) -> None:
     client = _load_chroma_client()
     collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
     texts = [str(chunk["content"]) for chunk in chunks]
@@ -253,6 +262,7 @@ def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, in
         metadatas=[
             {
                 "document_id": document_id,
+                "user_id": user_id,
                 "document_name": str(chunk.get("document_name", "Uploaded document")),
                 "page_number": int(chunk["page_number"]),
                 "citation_label": str(chunk["citation_label"]),
@@ -263,7 +273,13 @@ def _upsert_chunks_into_vector_store(document_id: str, chunks: list[dict[str, in
     )
 
 
-async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, int | str | bool], str | None]:
+async def ingest_document(
+    upload: UploadFile,
+    db: Session,
+    *,
+    user_id: str,
+    session_id: str,
+) -> tuple[dict[str, int | str | bool], str | None]:
     started_at = perf_counter()
     if upload.content_type not in {"application/pdf", "application/octet-stream"}:
         DOCUMENT_OBSERVABILITY["document_upload_failure_count"] += 1
@@ -276,7 +292,9 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
     warning: str | None = None
     raw_bytes = await _read_upload_bytes(upload)
     storage_name = _safe_storage_name(upload.filename or "document.pdf")
-    document_path = DOCUMENTS_ROOT / storage_name
+    user_root = DOCUMENTS_ROOT / _safe_user_storage_segment(user_id)
+    user_root.mkdir(parents=True, exist_ok=True)
+    document_path = user_root / storage_name
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
         temp_file.write(raw_bytes)
@@ -292,6 +310,8 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
 
     record = crud.create_document_asset(
         db,
+        user_id=user_id,
+        session_id=session_id,
         title=_safe_title(upload.filename or "document.pdf"),
         original_filename=upload.filename or "document.pdf",
         storage_path=str(document_path),
@@ -299,12 +319,18 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
     )
     for chunk in chunks:
         chunk["document_name"] = record.title
-    crud.save_document_chunks(db, document_id=record.id, document_name=record.title, chunks=chunks)
+    crud.save_document_chunks(
+        db,
+        user_id=user_id,
+        document_id=record.id,
+        document_name=record.title,
+        chunks=chunks,
+    )
 
     retrieval_ready = True
     status = "ready"
     try:
-        _upsert_chunks_into_vector_store(record.id, chunks)
+        _upsert_chunks_into_vector_store(record.id, user_id, chunks)
     except DocumentIntelligenceError as exc:
         retrieval_ready = True
         status = "ready_with_lexical_fallback"
@@ -337,6 +363,7 @@ async def ingest_document(upload: UploadFile, db: Session) -> tuple[dict[str, in
 
 def retrieve_document_chunks(
     *,
+    user_id: str,
     document_id: str,
     query: str,
     db: Session,
@@ -344,7 +371,7 @@ def retrieve_document_chunks(
 ) -> RetrievalResult:
     started_at = perf_counter()
     _ensure_storage_dirs()
-    document = crud.get_document_asset(db, document_id)
+    document = crud.get_document_asset(db, document_id, user_id=user_id)
     if not document:
         raise DocumentIntelligenceError("Document not found.", category="document_not_found")
 
@@ -353,7 +380,13 @@ def retrieve_document_chunks(
         collection = client.get_or_create_collection(name=DOCUMENT_COLLECTION_NAME)
     except DocumentIntelligenceError as exc:
         DOCUMENT_OBSERVABILITY["vector_query_failure_count"] += 1
-        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        lexical_chunks = _retrieve_chunks_from_db(
+            user_id=user_id,
+            document_id=document_id,
+            query=query,
+            db=db,
+            top_k=top_k,
+        )
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
@@ -370,7 +403,13 @@ def retrieve_document_chunks(
         embeddings = embed_texts([query], task_type="RETRIEVAL_QUERY")
     except ScholrGenerationError as exc:
         DOCUMENT_OBSERVABILITY["embedding_generation_failure_count"] += 1
-        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        lexical_chunks = _retrieve_chunks_from_db(
+            user_id=user_id,
+            document_id=document_id,
+            query=query,
+            db=db,
+            top_k=top_k,
+        )
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
@@ -389,12 +428,18 @@ def retrieve_document_chunks(
         result = collection.query(
             query_embeddings=embeddings,
             n_results=max(1, min(top_k, 8)),
-            where={"document_id": document_id},
+            where={"user_id": user_id, "document_id": document_id},
         )
     except Exception as exc:
         DOCUMENT_OBSERVABILITY["vector_query_failure_count"] += 1
         DOCUMENT_OBSERVABILITY["last_vector_query_latency_ms"] = round((perf_counter() - vector_query_started_at) * 1000)
-        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        lexical_chunks = _retrieve_chunks_from_db(
+            user_id=user_id,
+            document_id=document_id,
+            query=query,
+            db=db,
+            top_k=top_k,
+        )
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
@@ -412,7 +457,13 @@ def retrieve_document_chunks(
     documents = result.get("documents", [[]])
     metadatas = result.get("metadatas", [[]])
     if not documents or not documents[0]:
-        lexical_chunks = _retrieve_chunks_from_db(document_id=document_id, query=query, db=db, top_k=top_k)
+        lexical_chunks = _retrieve_chunks_from_db(
+            user_id=user_id,
+            document_id=document_id,
+            query=query,
+            db=db,
+            top_k=top_k,
+        )
         if not lexical_chunks:
             raise DocumentIntelligenceError(
                 "No relevant document chunks were found for that question yet.",
@@ -458,6 +509,7 @@ def _fallback_citation_answer(question: str, retrieved: list[RetrievedChunk]) ->
 
 async def answer_from_document(
     *,
+    user_id: str,
     document_id: str,
     question: str,
     db: Session,
@@ -465,7 +517,13 @@ async def answer_from_document(
 ) -> dict[str, object]:
     started_at = perf_counter()
     safe_question, warning_prefix = sanitize_user_input("documents", question)
-    retrieval = retrieve_document_chunks(document_id=document_id, query=safe_question, db=db, top_k=top_k)
+    retrieval = retrieve_document_chunks(
+        user_id=user_id,
+        document_id=document_id,
+        query=safe_question,
+        db=db,
+        top_k=top_k,
+    )
     retrieved = retrieval.chunks
     context = "\n\n".join(
         f"{chunk.document_name} | {chunk.citation_label} | chunk {chunk.chunk_index}: {chunk.snippet}"

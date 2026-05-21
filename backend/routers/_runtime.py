@@ -1,11 +1,13 @@
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from agents._generation import get_provider_status, request_provider_recovery
+from core.auth import AuthContext
 from core.logging_utils import log_event
 from core.rate_limit import InMemoryRateLimiter
 from db import crud
@@ -17,12 +19,23 @@ logger = logging.getLogger(__name__)
 ai_rate_limiter = InMemoryRateLimiter(limit=10, window_seconds=60)
 document_upload_rate_limiter = InMemoryRateLimiter(limit=6, window_seconds=60)
 document_answer_rate_limiter = InMemoryRateLimiter(limit=12, window_seconds=60)
+FREE_TIER_LIMITS = {
+    "research": 40,
+    "notes": 40,
+    "doubt": 40,
+    "documents_upload": 8,
+    "documents_answer": 30,
+}
 
 
 @dataclass
 class CachedResponseMatch:
     response: SearchHistory
     mode: str
+
+
+def _daily_period_key() -> str:
+    return datetime.utcnow().strftime("%Y-%m-%d")
 
 
 def enforce_rate_limit(request: Request, module: str) -> JSONResponse | None:
@@ -78,18 +91,73 @@ def enforce_document_rate_limit(request: Request, scope: str) -> JSONResponse | 
     )
 
 
+def enforce_usage_quota(
+    db: Session,
+    *,
+    auth_context: AuthContext,
+    scope: str,
+    request_id: str | None,
+) -> JSONResponse | None:
+    limit = FREE_TIER_LIMITS.get(scope)
+    if not limit or not auth_context.is_authenticated:
+        return None
+
+    used = crud.count_usage(
+        db,
+        user_id=auth_context.user_id,
+        scope=scope,
+        period_key=_daily_period_key(),
+    )
+    if used < limit:
+        return None
+
+    log_event(
+        logger,
+        "usage_quota_exceeded",
+        module=scope,
+        request_id=request_id,
+        user_id=auth_context.user_id,
+        quota_limit=limit,
+        quota_used=used,
+    )
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": "Your current free-tier limit for this workflow is used up for today. Please come back tomorrow or upgrade when subscriptions launch."
+        },
+    )
+
+
+def record_usage_event(
+    db: Session,
+    *,
+    auth_context: AuthContext,
+    scope: str,
+    amount: int = 1,
+) -> None:
+    crud.record_usage(
+        db,
+        user_id=auth_context.user_id,
+        session_id=auth_context.session_id,
+        scope=scope,
+        amount=amount,
+        period_key=_daily_period_key(),
+    )
+
+
 def find_cached_response(
     db: Session,
     *,
     module: str,
+    user_id: str,
     query: str,
     request_id: str | None,
 ) -> CachedResponseMatch | None:
-    cached = crud.get_cached_search(db, module=module, query=query)
+    cached = crud.get_cached_search(db, module=module, user_id=user_id, query=query)
     cache_mode = "exact"
 
     if not cached:
-        cached = crud.get_similar_cached_search(db, module=module, query=query)
+        cached = crud.get_similar_cached_search(db, module=module, user_id=user_id, query=query)
         cache_mode = "similar" if cached else "miss"
 
     log_event(

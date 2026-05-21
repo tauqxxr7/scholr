@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -46,16 +47,26 @@ const modules = [
 ]
 
 export default function DashboardPage() {
+  const { getToken } = useAuth()
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(true)
 
   useEffect(() => {
-    getHistory(6, 1)
-      .then(setHistory)
-      .catch(() => setHistoryError('History will appear here once the backend is reachable.'))
-      .finally(() => setHistoryLoading(false))
-  }, [])
+    const loadHistory = async () => {
+      try {
+        const authToken = await getToken()
+        const items = await getHistory(6, 1, authToken ?? undefined)
+        setHistory(items)
+      } catch {
+        setHistoryError('History will appear here once authentication and the backend are reachable.')
+      } finally {
+        setHistoryLoading(false)
+      }
+    }
+
+    void loadHistory()
+  }, [getToken])
 
   return (
     <div className="space-y-8 lg:space-y-10">

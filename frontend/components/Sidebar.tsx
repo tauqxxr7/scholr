@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BookOpen, BrainCircuit, FileText, Home, Menu, NotebookPen, Sparkles, X } from 'lucide-react'
 
+import AccountPanel from '@/components/auth/account-panel'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const clerkEnabled = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
 
   const sidebarContent = (
     <div className="flex h-full flex-col gap-5 px-4 py-5 sm:px-6 lg:px-6 lg:py-6">
@@ -33,9 +35,11 @@ export default function Sidebar() {
           Live MVP
         </div>
         <p className="hidden text-sm leading-6 text-slate-500 lg:mt-3 lg:block">
-          Ship the wedge first, then layer on auth, monetization, and deploy polish.
+          Streamed academic workflows with identity-safe history, user-scoped documents, and multi-provider resilience.
         </p>
       </div>
+
+      {clerkEnabled ? <AccountPanel /> : null}
 
       <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-1 lg:flex-col lg:overflow-visible lg:pb-0">
         {navItems.map((item) => {

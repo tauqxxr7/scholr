@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from core.auth import AuthContext, require_auth_context
 from db import crud
 from db.database import get_db
 from models.schemas import SearchHistoryItem
@@ -16,6 +17,7 @@ def get_history(
     limit: int = 12,
     page: int = 1,
     db: Session = Depends(get_db),
+    auth_context: AuthContext = Depends(require_auth_context),
 ):
     safe_limit = max(1, min(limit, 50))
     safe_page = max(page, 1)
@@ -24,7 +26,8 @@ def get_history(
         return crud.get_searches_by_module(
             db,
             module=module,
+            user_id=auth_context.user_id,
             limit=safe_limit,
             page=safe_page,
         )
-    return crud.get_recent_searches(db, limit=safe_limit, page=safe_page)
+    return crud.get_recent_searches(db, user_id=auth_context.user_id, limit=safe_limit, page=safe_page)

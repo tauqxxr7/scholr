@@ -13,8 +13,10 @@ from agents._generation import (
     shutdown_provider_recovery_task,
     validate_provider_startup,
 )
+from core.auth import get_auth_context, is_auth_configured, is_auth_enabled, is_auth_required
 from core.logging_utils import configure_logging, log_event
-from db.database import init_db
+from db import crud
+from db.database import SessionLocal, init_db
 from routers import documents, doubt, history, notes, research
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
@@ -146,6 +148,28 @@ async def add_request_context(request: Request, call_next):
         client_ip=client_ip,
     )
 
+    auth_context = get_auth_context(request, allow_unauthenticated=True)
+    db = SessionLocal()
+    try:
+        crud.upsert_user_session(
+            db,
+            user_id=auth_context.user_id,
+            session_id=auth_context.session_id,
+            auth_provider=auth_context.auth_provider,
+            user_agent=request.headers.get("user-agent"),
+        )
+    finally:
+        db.close()
+    log_event(
+        logger,
+        "request_authenticated",
+        request_id=request_id,
+        user_id=auth_context.user_id,
+        session_id=auth_context.session_id,
+        is_authenticated=auth_context.is_authenticated,
+        auth_mode=auth_context.auth_mode,
+    )
+
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     return response
@@ -157,6 +181,9 @@ def health_check():
     return {
         "status": "Scholr API is running",
         "version": "1.0.0",
+        "auth_configured": is_auth_configured(),
+        "auth_required": is_auth_required(),
+        "auth_enabled": is_auth_enabled(),
         **get_runtime_diagnostics(),
         **provider_status,
     }

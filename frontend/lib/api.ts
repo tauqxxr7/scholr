@@ -122,9 +122,9 @@ function describeHttpFailure(status: number) {
 
   if (status === 401 || status === 403) {
     return {
-      message: 'AI provider configuration error. Please try again later.',
+      message: 'Your session is missing or expired. Please sign in again to continue using your Scholr workspace.',
       retryable: false,
-      category: 'provider_configuration',
+      category: 'authentication_required',
     }
   }
 
@@ -145,6 +145,15 @@ function getApiUrl() {
     false,
     'configuration',
   )
+}
+
+function buildAuthHeaders(authToken?: string): HeadersInit {
+  if (!authToken) {
+    return {}
+  }
+  return {
+    Authorization: `Bearer ${authToken}`,
+  }
 }
 
 function describeNetworkFailure(error: unknown) {
@@ -176,6 +185,7 @@ export async function streamModuleResponse(
   payload: Record<string, string>,
   onChunk: (chunk: string) => void,
   onMeta?: (meta: { mode?: StreamModuleResult['mode']; label?: string }) => void,
+  authToken?: string,
 ): Promise<StreamModuleResult> {
   let response: Response
   const controller = new AbortController()
@@ -184,7 +194,7 @@ export async function streamModuleResponse(
   try {
     response = await fetch(`${getApiUrl()}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...buildAuthHeaders(authToken) },
       body: JSON.stringify(payload),
       signal: controller.signal,
     })
@@ -307,9 +317,10 @@ export async function streamModuleResponse(
   return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
 }
 
-export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
+export async function getHistory(limit = 6, page = 1, authToken?: string): Promise<HistoryItem[]> {
   const response = await fetch(`${getApiUrl()}/api/history?limit=${limit}&page=${page}`, {
     cache: 'no-store',
+    headers: buildAuthHeaders(authToken),
   })
 
   if (!response.ok) {
@@ -322,6 +333,7 @@ export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
 export async function uploadDocument(
   file: File,
   onProgress?: (progress: number) => void,
+  authToken?: string,
 ): Promise<DocumentUploadResult> {
   const url = `${getApiUrl()}/api/documents/upload`
 
@@ -331,6 +343,9 @@ export async function uploadDocument(
 
     const request = new XMLHttpRequest()
     request.open('POST', url)
+    if (authToken) {
+      request.setRequestHeader('Authorization', `Bearer ${authToken}`)
+    }
 
     request.upload.onprogress = (event) => {
       if (!event.lengthComputable) {
@@ -385,10 +400,10 @@ export async function answerDocumentQuestion(payload: {
   document_id: string
   question: string
   top_k?: number
-}): Promise<DocumentAnswerResult> {
+}, authToken?: string): Promise<DocumentAnswerResult> {
   const response = await fetch(`${getApiUrl()}/api/documents/answer`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...buildAuthHeaders(authToken) },
     body: JSON.stringify(payload),
   })
 

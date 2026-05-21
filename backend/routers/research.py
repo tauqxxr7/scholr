@@ -3,13 +3,16 @@ from sqlalchemy.orm import Session
 
 from agents._generation import build_provider_degraded_text
 from agents.research_agent import generate_research_response
+from core.auth import AuthContext, require_auth_context
 from db import crud
 from db.database import get_db
 from models.schemas import ResearchRequest
 from routers._runtime import (
     enforce_rate_limit,
+    enforce_usage_quota,
     find_cached_response,
     get_fallback_stream_source,
+    record_usage_event,
     should_use_emergency_fallback,
     trigger_provider_recovery_if_needed,
 )
@@ -23,15 +26,26 @@ async def research_endpoint(
     request: ResearchRequest,
     http_request: Request,
     db: Session = Depends(get_db),
+    auth_context: AuthContext = Depends(require_auth_context),
 ):
     rate_limit_response = enforce_rate_limit(http_request, "research")
     if rate_limit_response:
         return rate_limit_response
 
     request_id = getattr(http_request.state, "request_id", None)
+    quota_response = enforce_usage_quota(
+        db,
+        auth_context=auth_context,
+        scope="research",
+        request_id=request_id,
+    )
+    if quota_response:
+        return quota_response
+    record_usage_event(db, auth_context=auth_context, scope="research")
     cached = find_cached_response(
         db,
         module="research",
+        user_id=auth_context.user_id,
         query=request.topic,
         request_id=request_id,
     )
@@ -51,6 +65,8 @@ async def research_endpoint(
             module="research",
             query=request.topic,
             response=response,
+            user_id=auth_context.user_id,
+            session_id=auth_context.session_id,
         ),
         empty_message="Scholr could not find a usable research response for that topic. Try making the topic more specific.",
         request=http_request,

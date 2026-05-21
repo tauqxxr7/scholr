@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile as StarletteUploadFile
 
+from core.auth import AuthContext, require_auth_context
 from core.logging_utils import log_event
 from db.database import get_db
 from models.schemas import (
@@ -12,7 +13,7 @@ from models.schemas import (
     DocumentAnswerResponse,
     DocumentUploadResponse,
 )
-from routers._runtime import enforce_document_rate_limit
+from routers._runtime import enforce_document_rate_limit, enforce_usage_quota, record_usage_event
 from services.document_rag import DocumentIntelligenceError, answer_from_document, ingest_document
 from services.document_rag import record_document_answer_failure, record_document_upload_failure
 
@@ -24,12 +25,21 @@ logger = logging.getLogger("scholr.documents")
 async def upload_document(
     request: Request,
     db: Session = Depends(get_db),
+    auth_context: AuthContext = Depends(require_auth_context),
 ):
     started_at = perf_counter()
     request_id = getattr(request.state, "request_id", None)
     rate_limited_response = enforce_document_rate_limit(request, "documents_upload")
     if rate_limited_response is not None:
         return rate_limited_response
+    quota_response = enforce_usage_quota(
+        db,
+        auth_context=auth_context,
+        scope="documents_upload",
+        request_id=request_id,
+    )
+    if quota_response is not None:
+        return quota_response
     try:
         form = await request.form()
     except Exception as exc:
@@ -45,7 +55,13 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="The uploaded file payload is invalid.")
 
     try:
-        payload, warning = await ingest_document(file, db)
+        record_usage_event(db, auth_context=auth_context, scope="documents_upload")
+        payload, warning = await ingest_document(
+            file,
+            db,
+            user_id=auth_context.user_id,
+            session_id=auth_context.session_id,
+        )
         log_event(
             logger,
             "document_upload_completed",
@@ -76,14 +92,25 @@ async def answer_document_question(
     http_request: Request,
     request: DocumentAnswerRequest,
     db: Session = Depends(get_db),
+    auth_context: AuthContext = Depends(require_auth_context),
 ):
     started_at = perf_counter()
     request_id = getattr(http_request.state, "request_id", None)
     rate_limited_response = enforce_document_rate_limit(http_request, "documents_answer")
     if rate_limited_response is not None:
         return rate_limited_response
+    quota_response = enforce_usage_quota(
+        db,
+        auth_context=auth_context,
+        scope="documents_answer",
+        request_id=request_id,
+    )
+    if quota_response is not None:
+        return quota_response
     try:
+        record_usage_event(db, auth_context=auth_context, scope="documents_answer")
         payload = await answer_from_document(
+            user_id=auth_context.user_id,
             document_id=request.document_id,
             question=request.question,
             db=db,

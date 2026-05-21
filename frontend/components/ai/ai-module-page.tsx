@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
 import {
   Copy,
@@ -57,6 +58,7 @@ export default function AiModulePage({
   loadingLabel,
   idleLabel,
 }: AiModulePageProps) {
+  const { getToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
@@ -188,6 +190,7 @@ export default function AiModulePage({
     trackEvent('generation_started', { module: moduleName })
 
     try {
+      const authToken = await getToken()
       const result = await streamModuleResponse(
         endpoint,
         payload,
@@ -215,6 +218,7 @@ export default function AiModulePage({
             setResponseModeLabel(meta.label)
           }
         },
+        authToken ?? undefined,
       )
 
       if (!result.hadChunks) {

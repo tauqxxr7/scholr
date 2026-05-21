@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import ReactMarkdown from 'react-markdown'
 import {
   AlertCircle,
@@ -107,6 +108,7 @@ const retrievalModeLabel: Record<string, string> = {
 }
 
 export default function DocumentWorkspace() {
+  const { getToken } = useAuth()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [documentHealth, setDocumentHealth] = useState<DocumentHealthResult | null>(null)
   const [healthError, setHealthError] = useState('')
@@ -204,7 +206,8 @@ export default function DocumentWorkspace() {
     })
 
     try {
-      const result = await uploadDocument(file, setUploadProgress)
+      const authToken = await getToken()
+      const result = await uploadDocument(file, setUploadProgress, authToken ?? undefined)
       setUploadedDocument(result)
       setUploadProgress(100)
       trackEvent('document_upload_completed', {
@@ -257,11 +260,12 @@ export default function DocumentWorkspace() {
     const startedAt = performance.now()
 
     try {
+      const authToken = await getToken()
       const result = await answerDocumentQuestion({
         document_id: uploadedDocument.document_id,
         question: question.trim(),
         top_k: 4,
-      })
+      }, authToken ?? undefined)
       setAnswerResult(result)
       trackEvent('document_answer_completed', {
         module: 'documents_answer',
