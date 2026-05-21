@@ -1,4 +1,9 @@
-from agents._generation import ScholrGenerationError, build_provider_degraded_text, stream_gemini_response
+from agents._generation import (
+    ScholrGenerationError,
+    build_provider_degraded_text,
+    sanitize_user_input,
+    stream_gemini_response,
+)
 from routers._streaming import stream_text_chunks
 
 NOTES_PROMPT = """
@@ -29,7 +34,11 @@ Bullet points for last-minute revision before exam.
 
 
 async def generate_notes_response(topic: str):
-    prompt = NOTES_PROMPT.format(topic=topic)
+    safe_topic, warning = sanitize_user_input("notes", topic)
+    if warning:
+        yield f"> {warning}\n\n"
+
+    prompt = NOTES_PROMPT.format(topic=safe_topic)
 
     try:
         async for chunk in stream_gemini_response(
@@ -40,6 +49,6 @@ async def generate_notes_response(topic: str):
         ):
             yield chunk
     except ScholrGenerationError:
-        degraded = build_provider_degraded_text("notes", topic)
+        degraded = build_provider_degraded_text("notes", safe_topic)
         async for chunk in stream_text_chunks(degraded):
             yield chunk

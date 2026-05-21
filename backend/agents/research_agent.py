@@ -1,4 +1,9 @@
-from agents._generation import ScholrGenerationError, build_provider_degraded_text, stream_gemini_response
+from agents._generation import (
+    ScholrGenerationError,
+    build_provider_degraded_text,
+    sanitize_user_input,
+    stream_gemini_response,
+)
 from routers._streaming import stream_text_chunks
 
 RESEARCH_PROMPT = """
@@ -31,7 +36,11 @@ Do not use overly academic jargon.
 
 
 async def generate_research_response(topic: str):
-    prompt = RESEARCH_PROMPT.format(topic=topic)
+    safe_topic, warning = sanitize_user_input("research", topic)
+    if warning:
+        yield f"> {warning}\n\n"
+
+    prompt = RESEARCH_PROMPT.format(topic=safe_topic)
 
     try:
         async for chunk in stream_gemini_response(
@@ -42,6 +51,6 @@ async def generate_research_response(topic: str):
         ):
             yield chunk
     except ScholrGenerationError as exc:
-        degraded = build_provider_degraded_text("research", topic)
+        degraded = build_provider_degraded_text("research", safe_topic)
         async for chunk in stream_text_chunks(degraded):
             yield chunk

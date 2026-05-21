@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import json
+import re
 from importlib import metadata
 from time import perf_counter
 from collections.abc import AsyncIterator
@@ -34,6 +35,7 @@ DEFAULT_PROVIDER_RECOVERY_JITTER_SECONDS = 25
 DEFAULT_PROVIDER_VALIDATED_TTL_SECONDS = 900
 DEFAULT_PROVIDER_DISCOVERY_TTL_SECONDS = 900
 DEFAULT_PROVIDER_MIN_RETRY_SECONDS = 30
+DEFAULT_EMBEDDING_VALIDATED_TTL_SECONDS = 900
 STRICT_MODEL_PRIORITY = (
     "gemini-1.5-flash",
     "gemini-1.5-pro",
@@ -47,6 +49,7 @@ CONFIGURED_OPENROUTER_MODEL_NAME = os.getenv("OPENROUTER_MODEL_NAME", "").strip(
 PROVIDER_PROBE_PROMPT = "Reply with exactly OK."
 PROVIDER_PROBE_MAX_OUTPUT_TOKENS = 4
 EMBEDDING_MODEL_NAME = "gemini-embedding-001"
+DEFAULT_OPENROUTER_EMBEDDING_MODEL = ""
 PROVIDER_COOLDOWN_SECONDS = 180
 PROVIDER_QUOTA_COOLDOWN_THRESHOLD = 2
 OPENROUTER_API_BASE = "https://openrouter.ai/api/v1"
@@ -60,6 +63,12 @@ OPENROUTER_MODEL_PRIORITY = (
 )
 OPENROUTER_MODEL_REJECTION_TOKENS = ("preview", "experimental", "robotics", "embedding", "image", "vision", "audio")
 OPENROUTER_DEFAULT_STREAM_CHUNK_SIZE = 180
+INPUT_CHAR_LIMITS = {
+    "research": 1200,
+    "notes": 1200,
+    "doubt": 1600,
+    "documents": 2400,
+}
 
 PROVIDER_STATE: dict[str, Any] = {
     "configured": False,
@@ -90,6 +99,15 @@ PROVIDER_STATE: dict[str, Any] = {
     "openrouter_fallback_configured": bool(os.getenv("OPENROUTER_API_KEY", "").strip()),
     "gemini_provider_ready": False,
     "openrouter_provider_ready": False,
+    "last_validated_timestamp": None,
+}
+
+EMBEDDING_STATE: dict[str, Any] = {
+    "configured": False,
+    "ready": False,
+    "provider": None,
+    "model": None,
+    "error_category": None,
     "last_validated_timestamp": None,
 }
 
@@ -150,6 +168,13 @@ def _parse_timestamp(value: str | None) -> datetime | None:
         return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
     except ValueError:
         return None
+
+
+def _embedding_state_is_fresh() -> bool:
+    validated_at = _parse_timestamp(EMBEDDING_STATE.get("last_validated_timestamp"))
+    if validated_at is None:
+        return False
+    return (_utc_now() - validated_at).total_seconds() < DEFAULT_EMBEDDING_VALIDATED_TTL_SECONDS
 
 
 def _validated_state_is_fresh() -> bool:
@@ -284,6 +309,29 @@ def _build_openrouter_headers() -> dict[str, str]:
     if OPENROUTER_APP_NAME:
         headers["X-Title"] = OPENROUTER_APP_NAME
     return headers
+
+
+def _get_embedding_provider_preference() -> str | None:
+    configured = os.getenv("EMBEDDING_PROVIDER", "").strip().lower()
+    if configured in {"gemini", "openrouter"}:
+        return configured
+
+    if os.getenv("GEMINI_API_KEY", "").strip():
+        return "gemini"
+
+    if _openrouter_configured() and os.getenv("EMBEDDING_MODEL", DEFAULT_OPENROUTER_EMBEDDING_MODEL).strip():
+        return "openrouter"
+
+    return None
+
+
+def _get_embedding_model_name(provider_name: str) -> str:
+    configured = os.getenv("EMBEDDING_MODEL", "").strip()
+    if configured:
+        return configured
+    if provider_name == "gemini":
+        return EMBEDDING_MODEL_NAME
+    return DEFAULT_OPENROUTER_EMBEDDING_MODEL
 
 
 def _normalize_model_name(model_name: str | None) -> str:
@@ -500,6 +548,39 @@ def _classify_openrouter_error(exc: Exception) -> ScholrGenerationError:
         retryable=True,
         category="provider_5xx",
     )
+
+
+def _update_embedding_state(
+    *,
+    configured: bool,
+    ready: bool,
+    provider_name: str | None,
+    model_name: str | None,
+    error_category: str | None,
+) -> None:
+    EMBEDDING_STATE.update(
+        {
+            "configured": configured,
+            "ready": ready,
+            "provider": provider_name,
+            "model": model_name,
+            "error_category": error_category,
+            "last_validated_timestamp": _utc_timestamp() if ready else EMBEDDING_STATE.get("last_validated_timestamp"),
+        }
+    )
+
+
+def get_embedding_provider_status() -> dict[str, Any]:
+    return {
+        "embedding_provider_configured": EMBEDDING_STATE["configured"],
+        "embedding_provider_ready": EMBEDDING_STATE["ready"],
+        "embedding_provider": EMBEDDING_STATE["provider"],
+        "embedding_model": EMBEDDING_STATE["model"],
+        "embedding_error_category": EMBEDDING_STATE["error_category"],
+        "semantic_retrieval_ready": EMBEDDING_STATE["ready"],
+        "lexical_fallback_ready": True,
+        "embedding_last_validated_timestamp": EMBEDDING_STATE["last_validated_timestamp"],
+    }
 
 
 def _should_try_fallback(exc: ScholrGenerationError) -> bool:
@@ -904,6 +985,17 @@ def build_provider_degraded_text(module: str, topic: str, *, subject: str | None
         "The provider orchestration layer is still healthy enough to keep your workflow moving, but live generation is temporarily unavailable.",
         subject=subject,
     )
+
+
+def sanitize_user_input(module: str, value: str) -> tuple[str, str | None]:
+    limit = INPUT_CHAR_LIMITS.get(module, 1200)
+    cleaned = re.sub(r"\s+", " ", value.strip())
+    if len(cleaned) <= limit:
+        return cleaned, None
+
+    shortened = cleaned[:limit].rsplit(" ", 1)[0].strip() or cleaned[:limit].strip()
+    warning = f"Scholr shortened this input to keep generation stable. Only the first {limit} characters were used."
+    return shortened, warning
 
 
 def _update_provider_state(
@@ -1633,6 +1725,129 @@ async def _get_openrouter_runtime_candidate() -> str | None:
     return None
 
 
+def _embed_with_gemini(texts: list[str], *, task_type: str) -> list[list[float]]:
+    client = _build_client()
+    response = client.models.embed_content(
+        model=_get_embedding_model_name("gemini"),
+        contents=texts,
+        config=genai_types.EmbedContentConfig(task_type=task_type),
+    )
+    embeddings = getattr(response, "embeddings", None) or []
+    values = [getattr(item, "values", None) for item in embeddings if getattr(item, "values", None)]
+    if not values:
+        raise ScholrGenerationError(
+            "Embeddings returned in an unexpected format.",
+            retryable=True,
+            category="empty_response",
+        )
+    return values
+
+
+def _embed_with_openrouter(texts: list[str]) -> list[list[float]]:
+    model_name = _get_embedding_model_name("openrouter")
+    if not model_name:
+        raise ScholrGenerationError(
+            "OpenRouter embedding support is not configured yet. Set EMBEDDING_MODEL to an embedding-capable model.",
+            retryable=False,
+            category="invalid_model",
+        )
+
+    payload = {
+        "model": model_name,
+        "input": texts,
+    }
+    with httpx.Client(
+        timeout=httpx.Timeout(DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS, connect=DEFAULT_CONNECT_TIMEOUT_SECONDS),
+        headers=_build_openrouter_headers(),
+    ) as client:
+        response = client.post(f"{OPENROUTER_API_BASE}/embeddings", json=payload)
+        response.raise_for_status()
+        body = response.json()
+
+    data = body.get("data") or []
+    values = [item.get("embedding") for item in data if isinstance(item, dict) and item.get("embedding")]
+    if not values:
+        raise ScholrGenerationError(
+            "OpenRouter embeddings returned in an unexpected format.",
+            retryable=True,
+            category="empty_response",
+        )
+    return values
+
+
+def validate_embedding_provider(*, force: bool = False) -> dict[str, Any]:
+    if not force and _embedding_state_is_fresh():
+        return get_embedding_provider_status()
+
+    provider_name = _get_embedding_provider_preference()
+    if provider_name is None:
+        _update_embedding_state(
+            configured=False,
+            ready=False,
+            provider_name=None,
+            model_name=None,
+            error_category="invalid_api_key",
+        )
+        return get_embedding_provider_status()
+
+    model_name = _get_embedding_model_name(provider_name)
+    try:
+        if provider_name == "gemini":
+            _embed_with_gemini(["embedding health probe"], task_type="RETRIEVAL_DOCUMENT")
+        else:
+            _embed_with_openrouter(["embedding health probe"])
+    except ScholrGenerationError as exc:
+        _update_embedding_state(
+            configured=True,
+            ready=False,
+            provider_name=provider_name,
+            model_name=model_name,
+            error_category=exc.category,
+        )
+        log_event(
+            logger,
+            "embedding_provider_unavailable",
+            embedding_provider=provider_name,
+            embedding_model=model_name,
+            error_category=exc.category,
+        )
+        return get_embedding_provider_status()
+    except Exception as exc:
+        classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
+        _update_embedding_state(
+            configured=True,
+            ready=False,
+            provider_name=provider_name,
+            model_name=model_name,
+            error_category=classified.category,
+        )
+        log_event(
+            logger,
+            "embedding_provider_unavailable",
+            embedding_provider=provider_name,
+            embedding_model=model_name,
+            error_category=classified.category,
+            provider_exception_type=type(exc).__name__,
+            provider_exception_message=str(exc),
+        )
+        return get_embedding_provider_status()
+
+    _update_embedding_state(
+        configured=True,
+        ready=True,
+        provider_name=provider_name,
+        model_name=model_name,
+        error_category=None,
+    )
+    log_event(
+        logger,
+        "embedding_provider_ready",
+        embedding_provider=provider_name,
+        embedding_model=model_name,
+    )
+    return get_embedding_provider_status()
+
+
 async def stream_gemini_response(
     *,
     model_name: str,
@@ -1666,39 +1881,63 @@ async def stream_gemini_response(
 
     for index, (provider_name, candidate, failover_reason) in enumerate(attempts):
         chunks_received = 0
-        try:
-            log_event(
-                logger,
-                "provider_model_selected",
-                active_provider=provider_name,
-                fallback_provider="openrouter" if provider_name == "gemini" and index + 1 < len(attempts) else "academic_fallback_engine",
-                model_name=candidate,
-                provider_failover_reason=failover_reason,
-                stage="generation_open",
-            )
-            generator = (
-                _stream_gemini_model_response(
-                    model_name=candidate,
-                    prompt=prompt,
-                    temperature=temperature,
-                    max_output_tokens=max_output_tokens,
-                )
-                if provider_name == "gemini"
-                else _stream_openrouter_model_response(
-                    model_name=candidate,
-                    prompt=prompt,
-                    temperature=temperature,
-                    max_output_tokens=max_output_tokens,
-                )
-            )
+        last_error = None
 
-            async for chunk in generator:
-                chunks_received += 1
-                yield chunk
-        except ScholrGenerationError as exc:
-            last_error = exc
-        except Exception as exc:
-            last_error = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
+        for retry_index in range(2):
+            try:
+                log_event(
+                    logger,
+                    "provider_model_selected",
+                    active_provider=provider_name,
+                    fallback_provider="openrouter" if provider_name == "gemini" and index + 1 < len(attempts) else "academic_fallback_engine",
+                    model_name=candidate,
+                    provider_failover_reason=failover_reason,
+                    stage="generation_open",
+                    retry_attempt=retry_index,
+                )
+                generator = (
+                    _stream_gemini_model_response(
+                        model_name=candidate,
+                        prompt=prompt,
+                        temperature=temperature,
+                        max_output_tokens=max_output_tokens,
+                    )
+                    if provider_name == "gemini"
+                    else _stream_openrouter_model_response(
+                        model_name=candidate,
+                        prompt=prompt,
+                        temperature=temperature,
+                        max_output_tokens=max_output_tokens,
+                    )
+                )
+
+                async for chunk in generator:
+                    chunks_received += 1
+                    yield chunk
+                last_error = None
+                break
+            except ScholrGenerationError as exc:
+                last_error = exc
+            except Exception as exc:
+                last_error = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
+
+            if (
+                last_error
+                and last_error.category == "provider_timeout"
+                and chunks_received == 0
+                and retry_index == 0
+            ):
+                log_event(
+                    logger,
+                    "provider_generation_retry",
+                    active_provider=provider_name,
+                    model_name=candidate,
+                    provider_failover_reason=failover_reason,
+                    error_category=last_error.category,
+                    retry_attempt=retry_index + 1,
+                )
+                continue
+            break
 
         if last_error:
             _record_provider_failure(last_error.category)
@@ -1780,30 +2019,40 @@ async def stream_gemini_response(
 
 
 def embed_texts(texts: list[str], *, task_type: str) -> list[list[float]]:
-    client = _build_client()
-
-    try:
-        response = client.models.embed_content(
-            model=EMBEDDING_MODEL_NAME,
-            contents=texts,
-            config=genai_types.EmbedContentConfig(task_type=task_type),
-        )
-    except Exception as exc:  # pragma: no cover - depends on provider runtime
+    embedding_status = validate_embedding_provider()
+    if not embedding_status["embedding_provider_ready"]:
         raise ScholrGenerationError(
             "Embeddings could not be generated for this document right now.",
             retryable=True,
-            category="provider_5xx",
-        ) from exc
-
-    embeddings = getattr(response, "embeddings", None) or []
-    values = [getattr(item, "values", None) for item in embeddings if getattr(item, "values", None)]
-    if not values:
-        raise ScholrGenerationError(
-            "Embeddings returned in an unexpected format.",
-            retryable=True,
-            category="empty_response",
+            category=embedding_status["embedding_error_category"] or "provider_5xx",
         )
 
+    provider_name = embedding_status["embedding_provider"]
+    started_at = perf_counter()
+    try:
+        values = (
+            _embed_with_gemini(texts, task_type=task_type)
+            if provider_name == "gemini"
+            else _embed_with_openrouter(texts)
+        )
+    except ScholrGenerationError:
+        raise
+    except Exception as exc:  # pragma: no cover - depends on provider runtime
+        classified = _classify_provider_error(exc) if provider_name == "gemini" else _classify_openrouter_error(exc)
+        raise ScholrGenerationError(
+            "Embeddings could not be generated for this document right now.",
+            retryable=True,
+            category=classified.category,
+        ) from exc
+
+    log_event(
+        logger,
+        "embedding_generation_success",
+        embedding_provider=provider_name,
+        embedding_model=embedding_status["embedding_model"],
+        texts_count=len(texts),
+        duration_ms=round((perf_counter() - started_at) * 1000),
+    )
     return values
 
 

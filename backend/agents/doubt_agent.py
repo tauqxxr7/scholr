@@ -1,4 +1,9 @@
-from agents._generation import ScholrGenerationError, build_provider_degraded_text, stream_gemini_response
+from agents._generation import (
+    ScholrGenerationError,
+    build_provider_degraded_text,
+    sanitize_user_input,
+    stream_gemini_response,
+)
 from routers._streaming import stream_text_chunks
 
 DOUBT_PROMPT = """
@@ -27,7 +32,11 @@ List 3 related topics the student should also understand.
 
 
 async def generate_doubt_response(question: str, subject: str = "General"):
-    prompt = DOUBT_PROMPT.format(question=question, subject=subject)
+    safe_question, warning = sanitize_user_input("doubt", question)
+    if warning:
+        yield f"> {warning}\n\n"
+
+    prompt = DOUBT_PROMPT.format(question=safe_question, subject=subject)
 
     try:
         async for chunk in stream_gemini_response(
@@ -38,6 +47,6 @@ async def generate_doubt_response(question: str, subject: str = "General"):
         ):
             yield chunk
     except ScholrGenerationError:
-        degraded = build_provider_degraded_text("doubt", question, subject=subject)
+        degraded = build_provider_degraded_text("doubt", safe_question, subject=subject)
         async for chunk in stream_text_chunks(degraded):
             yield chunk

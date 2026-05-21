@@ -14,6 +14,8 @@ from db.database import SearchHistory
 logger = logging.getLogger(__name__)
 
 ai_rate_limiter = InMemoryRateLimiter(limit=10, window_seconds=60)
+document_upload_rate_limiter = InMemoryRateLimiter(limit=6, window_seconds=60)
+document_answer_rate_limiter = InMemoryRateLimiter(limit=12, window_seconds=60)
 
 
 @dataclass
@@ -43,6 +45,35 @@ def enforce_rate_limit(request: Request, module: str) -> JSONResponse | None:
         content={
             "detail": "Scholr is handling too many requests from this connection right now. Please wait a moment and try again."
         },
+    )
+
+
+def enforce_document_rate_limit(request: Request, scope: str) -> JSONResponse | None:
+    limiter = document_upload_rate_limiter if scope == "documents_upload" else document_answer_rate_limiter
+    result = limiter.check(request, scope)
+    if result.allowed:
+        return None
+
+    request_id = getattr(request.state, "request_id", None)
+    log_event(
+        logger,
+        "rate_limited",
+        module=scope,
+        request_id=request_id,
+        client_ip=result.client_ip,
+        retry_after_seconds=result.retry_after_seconds,
+    )
+
+    user_message = (
+        "Too many PDF uploads from this connection right now. Please wait a moment and try again."
+        if scope == "documents_upload"
+        else "Too many document questions from this connection right now. Please wait a moment and try again."
+    )
+
+    return JSONResponse(
+        status_code=429,
+        headers={"Retry-After": str(result.retry_after_seconds)},
+        content={"detail": user_message},
     )
 
 
@@ -93,4 +124,6 @@ def trigger_provider_recovery_if_needed() -> bool:
 def get_runtime_diagnostics() -> dict[str, int]:
     return {
         "requests_per_minute": ai_rate_limiter.recent_request_count(),
+        "document_uploads_per_minute": document_upload_rate_limiter.recent_request_count(),
+        "document_answers_per_minute": document_answer_rate_limiter.recent_request_count(),
     }

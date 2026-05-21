@@ -12,6 +12,7 @@ from models.schemas import (
     DocumentAnswerResponse,
     DocumentUploadResponse,
 )
+from routers._runtime import enforce_document_rate_limit
 from services.document_rag import DocumentIntelligenceError, answer_from_document, ingest_document
 
 router = APIRouter()
@@ -25,6 +26,9 @@ async def upload_document(
 ):
     started_at = perf_counter()
     request_id = getattr(request.state, "request_id", None)
+    rate_limited_response = enforce_document_rate_limit(request, "documents_upload")
+    if rate_limited_response is not None:
+        return rate_limited_response
     try:
         form = await request.form()
     except Exception as exc:
@@ -73,6 +77,9 @@ async def answer_document_question(
 ):
     started_at = perf_counter()
     request_id = getattr(http_request.state, "request_id", None)
+    rate_limited_response = enforce_document_rate_limit(http_request, "documents_answer")
+    if rate_limited_response is not None:
+        return rate_limited_response
     try:
         payload = await answer_from_document(
             document_id=request.document_id,
