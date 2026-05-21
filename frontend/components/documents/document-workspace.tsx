@@ -99,7 +99,9 @@ const pyqWorkflows: WorkflowPreset[] = [
 ]
 
 const retrievalModeLabel: Record<string, string> = {
+  lexical: 'Lexical Retrieval',
   lexical_fallback: 'Lexical Retrieval',
+  semantic: 'Semantic Retrieval',
   semantic_vector: 'Semantic Retrieval',
   hybrid: 'Hybrid Retrieval',
 }
@@ -178,10 +180,10 @@ export default function DocumentWorkspace() {
         : null
     }
 
-    return {
-      label: retrievalModeLabel[answerResult.retrieval_mode] || answerResult.retrieval_mode,
-      className:
-        answerResult.retrieval_mode === 'semantic_vector'
+      return {
+        label: retrievalModeLabel[answerResult.retrieval_mode] || answerResult.retrieval_mode,
+        className:
+        answerResult.retrieval_mode === 'semantic' || answerResult.retrieval_mode === 'semantic_vector'
           ? 'bg-sky-50 text-sky-800 border border-sky-200'
           : answerResult.retrieval_mode === 'hybrid'
             ? 'bg-violet-50 text-violet-800 border border-violet-200'
@@ -408,7 +410,7 @@ export default function DocumentWorkspace() {
                       <div>
                         <p className="text-sm font-semibold text-slate-950">{uploadedDocument.title}</p>
                         <p className="mt-1 text-sm text-slate-500">
-                          {uploadedDocument.page_count} page{uploadedDocument.page_count === 1 ? '' : 's'} |{' '}
+                          {uploadedDocument.page_count} page{uploadedDocument.page_count === 1 ? '' : 's'} •{' '}
                           {uploadedDocument.chunk_count} chunk{uploadedDocument.chunk_count === 1 ? '' : 's'}
                         </p>
                       </div>
@@ -680,16 +682,26 @@ export default function DocumentWorkspace() {
                 <p className="mt-2 text-sm font-medium text-slate-900">
                   {documentHealth?.embedding_health || 'Loading'}
                 </p>
-                {documentHealth?.provider_error_category ? (
+                {documentHealth?.embedding_provider ? (
                   <p className="mt-2 text-xs leading-5 text-slate-500">
-                    Provider state: {documentHealth.provider_error_category}
+                    Provider: {documentHealth.embedding_provider}
+                  </p>
+                ) : null}
+                {documentHealth?.embedding_model ? (
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Model: {documentHealth.embedding_model}
+                  </p>
+                ) : null}
+                {documentHealth?.provider_error_category ? (
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    State: {documentHealth.provider_error_category}
                   </p>
                 ) : null}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Vector retrieval</p>
                 <p className="mt-2 text-sm font-medium text-slate-900">
-                  {documentHealth?.retrieval_default_mode === 'semantic'
+                  {documentHealth?.semantic_retrieval_ready
                     ? 'Active'
                     : documentHealth?.vector_store_available
                       ? 'Standing by'
@@ -704,6 +716,11 @@ export default function DocumentWorkspace() {
                 {documentHealth?.retrieval_health ? (
                   <p className="mt-2 text-xs leading-5 text-slate-500">
                     Retrieval health: {documentHealth.retrieval_health}
+                  </p>
+                ) : null}
+                {documentHealth?.lexical_fallback_ready ? (
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Lexical fallback remains available if semantic retrieval is degraded.
                   </p>
                 ) : null}
               </div>

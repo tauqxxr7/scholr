@@ -58,7 +58,8 @@ Each answer should also expose:
 - `pypdf`
 - `python-multipart`
 - `chromadb`
-- Google GenAI embeddings path
+- Gemini embeddings path
+- optional embedding-provider override through environment configuration
 
 ## Current safeguards
 
@@ -78,6 +79,7 @@ The smoke path currently validates:
 - upload route
 - chunk persistence
 - lexical retrieval fallback
+- semantic path skipped honestly when embedding providers are unavailable
 - cited response shape
 - retrieval mode exposure
 
@@ -94,6 +96,7 @@ Verified against the live Render backend and the live Vercel document workspace:
   - `limitations`
   - `retrieval_mode`
 - live retrieval currently defaults to lexical grounding while the provider remains degraded
+- embedding-provider diagnostics now truthfully report configured provider, model, and semantic readiness
 - no empty output panels were observed in the live document flow
 
 ## Known limitations
@@ -102,7 +105,7 @@ Verified against the live Render backend and the live Vercel document workspace:
 - no per-user document ownership
 - local vector storage is not a final production data path
 - semantic retrieval depends on vector dependencies and model/provider availability
-- semantic retrieval health depends on provider-backed embeddings, so live production can truthfully remain in lexical mode during provider degradation
+- semantic retrieval health depends on embedding-provider availability, so live production can truthfully remain in lexical mode during embedding degradation
 
 ## Future pgvector migration
 

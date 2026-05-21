@@ -9,7 +9,14 @@ from pathlib import Path
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
-from agents._generation import ScholrGenerationError, embed_texts, get_provider_status, stream_gemini_response
+from agents._generation import (
+    ScholrGenerationError,
+    embed_texts,
+    get_embedding_provider_status,
+    sanitize_user_input,
+    stream_gemini_response,
+    validate_embedding_provider,
+)
 from db import crud
 
 MAX_DOCUMENT_SIZE_BYTES = 10 * 1024 * 1024
@@ -324,7 +331,7 @@ def retrieve_document_chunks(
             ) from exc
         return RetrievalResult(
             chunks=lexical_chunks,
-            retrieval_mode="lexical_fallback",
+            retrieval_mode="lexical",
             warning="Vector storage is unavailable right now, so Scholr is using retrieval-only lexical grounding.",
         )
     try:
@@ -338,7 +345,7 @@ def retrieve_document_chunks(
             ) from exc
         return RetrievalResult(
             chunks=lexical_chunks,
-            retrieval_mode="lexical_fallback",
+            retrieval_mode="lexical",
             warning="Embedding query path is unavailable, so Scholr is using retrieval-only lexical grounding.",
         )
 
@@ -357,7 +364,7 @@ def retrieve_document_chunks(
             ) from exc
         return RetrievalResult(
             chunks=lexical_chunks,
-            retrieval_mode="lexical_fallback",
+            retrieval_mode="lexical",
             warning="Vector retrieval is unavailable right now, so Scholr is using retrieval-only lexical grounding.",
         )
 
@@ -372,7 +379,7 @@ def retrieve_document_chunks(
             )
         return RetrievalResult(
             chunks=lexical_chunks,
-            retrieval_mode="lexical_fallback",
+            retrieval_mode="lexical",
             warning="Semantic retrieval returned nothing useful, so Scholr fell back to lexical grounding.",
         )
 
@@ -389,7 +396,7 @@ def retrieve_document_chunks(
             )
         )
 
-    return RetrievalResult(chunks=retrieved, retrieval_mode="semantic_vector")
+    return RetrievalResult(chunks=retrieved, retrieval_mode="semantic")
 
 
 def _fallback_citation_answer(question: str, retrieved: list[RetrievedChunk]) -> str:
@@ -411,7 +418,8 @@ async def answer_from_document(
     db: Session,
     top_k: int = DEFAULT_TOP_K,
 ) -> dict[str, object]:
-    retrieval = retrieve_document_chunks(document_id=document_id, query=question, db=db, top_k=top_k)
+    safe_question, warning_prefix = sanitize_user_input("documents", question)
+    retrieval = retrieve_document_chunks(document_id=document_id, query=safe_question, db=db, top_k=top_k)
     retrieved = retrieval.chunks
     context = "\n\n".join(
         f"{chunk.document_name} | {chunk.citation_label} | chunk {chunk.chunk_index}: {chunk.snippet}"
@@ -424,7 +432,7 @@ Use only the cited document context below to answer the student's question.
 If the evidence is incomplete, say that clearly.
 Reference citations inline like "According to {retrieved[0].document_name if retrieved else 'the uploaded document'}, Page 4..." and keep the answer grounded in the uploaded PDF.
 
-Question: {question}
+Question: {safe_question}
 
 Document context:
 {context}
@@ -444,7 +452,7 @@ Document context:
         answer_mode = "grounded_generation"
         warning = retrieval.warning
     except ScholrGenerationError:
-        answer = _fallback_citation_answer(question, retrieved)
+        answer = _fallback_citation_answer(safe_question, retrieved)
         generation_used = False
         answer_mode = "retrieval_only"
         warning = (
@@ -452,13 +460,16 @@ Document context:
             or "Document retrieval succeeded, but provider-backed answer generation is still unavailable."
         )
 
+    if warning_prefix:
+        warning = f"{warning_prefix} {warning}" if warning else warning_prefix
+
     confidence = "high" if generation_used and len(retrieved) >= 2 else "medium" if len(retrieved) >= 2 else "low"
     limitations = [
         "Answers are grounded only in the uploaded document chunks retrieved for this question.",
     ]
     if answer_mode == "retrieval_only":
         limitations.append("Provider-backed synthesis is currently unavailable, so Scholr is returning retrieval-only academic guidance.")
-    if retrieval.retrieval_mode != "semantic_vector":
+    if retrieval.retrieval_mode != "semantic":
         limitations.append("Semantic vector retrieval was unavailable, so a lexical chunk match was used instead.")
 
     return {
@@ -489,7 +500,7 @@ def get_document_intelligence_health() -> dict[str, object]:
 
     pdf_parsing_available = _module_available("pypdf")
     multipart_available = _module_available("multipart")
-    provider_status = get_provider_status()
+    embedding_status = validate_embedding_provider()
 
     try:
         _load_chroma_client()
@@ -497,20 +508,24 @@ def get_document_intelligence_health() -> dict[str, object]:
     except DocumentIntelligenceError:
         vector_store_available = False
 
-    embedding_provider_configured = bool(provider_status["provider_configured"])
-    provider_ready = bool(provider_status.get("gemini_provider_ready"))
-    provider_error_category = provider_status["provider_error_category"]
+    embedding_provider_configured = bool(embedding_status["embedding_provider_configured"])
+    embedding_provider_ready = bool(embedding_status["embedding_provider_ready"])
+    embedding_provider = embedding_status["embedding_provider"]
+    embedding_model = embedding_status["embedding_model"]
+    provider_error_category = embedding_status["embedding_error_category"]
 
     if not embedding_provider_configured:
         embedding_health = "provider_unavailable"
     elif not vector_store_available:
         embedding_health = "vector_unavailable"
-    elif not provider_ready:
+    elif not embedding_provider_ready:
         embedding_health = "provider_degraded"
     else:
         embedding_health = "ready"
 
-    retrieval_default_mode = "semantic" if vector_store_available and provider_ready else "lexical"
+    semantic_retrieval_ready = bool(vector_store_available and embedding_provider_ready)
+    lexical_fallback_ready = True
+    retrieval_default_mode = "semantic" if semantic_retrieval_ready else "lexical"
     retrieval_health = "healthy" if retrieval_default_mode == "semantic" else "degraded_lexical_fallback"
 
     return {
@@ -518,7 +533,12 @@ def get_document_intelligence_health() -> dict[str, object]:
         "multipart_available": multipart_available,
         "vector_store_available": vector_store_available,
         "embedding_provider_configured": embedding_provider_configured,
-        "provider_ready_for_embeddings": provider_ready,
+        "embedding_provider_ready": embedding_provider_ready,
+        "provider_ready_for_embeddings": embedding_provider_ready,
+        "embedding_provider": embedding_provider,
+        "embedding_model": embedding_model,
+        "semantic_retrieval_ready": semantic_retrieval_ready,
+        "lexical_fallback_ready": lexical_fallback_ready,
         "provider_error_category": provider_error_category,
         "embedding_health": embedding_health,
         "retrieval_health": retrieval_health,

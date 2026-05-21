@@ -12,6 +12,7 @@ flowchart LR
     F -->|"HTTPS + SSE"| M["Runtime mode detector"]
     M --> B["FastAPI backend"]
     B --> G["Validated provider abstraction"]
+    B --> E["Embedding provider abstraction"]
     B --> A["Fallback academic engine"]
     B --> C["History + exact cache + warm cache"]
     B --> H["History persistence"]
@@ -21,6 +22,9 @@ flowchart LR
     D --> V["ChromaDB today / pgvector later"]
     G --> GP["Gemini primary"]
     G --> OR["OpenRouter fallback"]
+    E --> GE["Gemini embeddings primary"]
+    E --> EO["Optional embedding override"]
+    E --> LF["Lexical fallback always available"]
     G --> B
     A --> B
     C --> B
@@ -29,6 +33,7 @@ flowchart LR
 ## Live Runtime Modes
 
 - **AI Mode**: a validated provider-model pair is healthy and Scholr streams live generation
+- **OpenRouter AI Mode**: the current live failover path when Gemini generation is quota-blocked but OpenRouter is healthy
 - **Cached Academic Response**: an exact or similar recent answer is replayed to protect quota and lower latency
 - **Fallback Academic Mode**: the provider is degraded, but Scholr still streams deterministic academic guidance
 - **Provider Recovering**: the frontend remains useful while background re-validation tries to restore AI Mode
@@ -49,6 +54,7 @@ flowchart LR
 - protect Gemini quota with rate limiting
 - validate provider capability before promoting a model
 - validate provider failover from Gemini to OpenRouter before dropping into academic fallback
+- validate embedding capability separately from generation capability
 - stream JSON-safe SSE output
 - replay exact and warm-cache responses
 - save history without blocking the response path
@@ -93,6 +99,13 @@ flowchart TD
 - cooldown prevents wasteful repeated probes during quota exhaustion
 - `/health/provider` and `/health/generate-test` expose safe diagnostics without leaking secrets
 
+## Embedding Provider Strategy
+
+- default embedding provider: Gemini embeddings
+- optional override through `EMBEDDING_PROVIDER` and `EMBEDDING_MODEL`
+- semantic retrieval is only marked ready when vector storage and embedding validation are both healthy
+- lexical fallback remains available even when semantic retrieval is degraded
+
 ## Data Layer
 
 - SQLite by default for local development
@@ -100,7 +113,7 @@ flowchart TD
 - history stores completed responses for replay and review
 - document assets and chunks are persisted for backend-first PDF intelligence
 - vector storage is local today and intentionally gitignored
-- document embeddings still depend on the primary embedding path, so generation failover and embedding readiness can differ
+- generation-provider readiness and embedding-provider readiness are intentionally independent
 - `/health/documents` exposes PDF, multipart, vector, and embedding readiness without exposing secrets
 - `/health/documents` truthfully reports whether live document retrieval is currently defaulting to lexical or semantic mode
 
@@ -134,6 +147,12 @@ flowchart TD
 ```
 
 This remains a planning lane, not a live student-facing feature yet.
+
+## Retrieval Modes
+
+- `lexical`: live-safe fallback when semantic retrieval is unavailable
+- `semantic`: embedding-backed retrieval when the embedding provider and vector path are both healthy
+- `hybrid`: future combination of lexical and semantic scoring
 
 ## Deployment
 

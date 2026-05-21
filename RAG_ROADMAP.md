@@ -8,7 +8,7 @@ This document explains the next careful steps from backend scaffold to productio
 - PDF parsing works
 - chunking with overlap works
 - document metadata and chunk metadata are stored
-- embeddings path exists when dependencies and provider access are available
+- embedding-provider abstraction exists when dependencies and provider access are available
 - citation-aware answer format exists
 - retrieval-only lexical fallback exists
 - frontend document upload and question UI exists
@@ -30,10 +30,12 @@ This document explains the next careful steps from backend scaffold to productio
 - test citation usefulness with real student documents
 - capture proof screenshots for upload, retrieval mode, citations, and mobile document UX
 - validate whether question-paper and PYQ workflows should become a dedicated mode instead of generic document Q and A
+- validate semantic retrieval separately from generation-provider health
 
 ### Phase 3
 
 - move local vector storage toward `pgvector` or another production-safe store
+- stabilize the embedding provider path across Gemini and optional fallback providers
 - add document ownership and auth
 - add semantic search over history and uploaded content
 - add PYQ intelligence later:
