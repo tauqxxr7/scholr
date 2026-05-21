@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scholr Provider Proof</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --border: #cbd5e1;
+        --accent: #0f766e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 28%);
+        color: var(--ink);
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 32px 56px;
+      }
+      h1 { margin: 0 0 12px; font-size: 34px; }
+      p, li { color: var(--muted); line-height: 1.6; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin: 24px 0;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 18px 20px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+      .label {
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+      .value {
+        margin-top: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Consolas, "SFMono-Regular", monospace;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .panel {
+        margin-top: 24px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #ccfbf1;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      
+      <h1>Scholr Provider Recovery Proof</h1>
+      <p>Live provider state captured from the production backend.</p>
+      <div class="grid">
+        <div class="card"><div class="label">Active provider</div><div class="value">openrouter</div></div>
+        <div class="card"><div class="label">Selected model</div><div class="value">google/gemini-2.0-flash-lite-001</div></div>
+        <div class="card"><div class="label">Provider ready</div><div class="value">True</div></div>
+        <div class="card"><div class="label">Recovery state</div><div class="value">active</div></div>
+      </div>
+      <section class="panel">
+        <h2>Provider health JSON</h2>
+        <pre>{
+  &quot;status&quot;: &quot;provider_health&quot;,
+  &quot;requests_per_minute&quot;: 0,
+  &quot;document_uploads_per_minute&quot;: 0,
+  &quot;document_answers_per_minute&quot;: 0,
+  &quot;provider_configured&quot;: true,
+  &quot;provider_ready&quot;: true,
+  &quot;active_provider&quot;: &quot;openrouter&quot;,
+  &quot;fallback_provider&quot;: &quot;academic_fallback_engine&quot;,
+  &quot;provider_failover_reason&quot;: &quot;no_validated_generation_model&quot;,
+  &quot;selected_model&quot;: &quot;google/gemini-2.0-flash-lite-001&quot;,
+  &quot;model_name&quot;: &quot;google/gemini-2.0-flash-lite-001&quot;,
+  &quot;provider_status&quot;: &quot;ready&quot;,
+  &quot;provider_error_category&quot;: null,
+  &quot;available_models_count&quot;: 358,
+  &quot;available_models_sample&quot;: [
+    &quot;x-ai/grok-build-0.1&quot;,
+    &quot;google/gemini-3.5-flash&quot;,
+    &quot;anthropic/claude-opus-4.7-fast&quot;,
+    &quot;perceptron/perceptron-mk1&quot;,
+    &quot;inclusionai/ring-2.6-1t&quot;,
+    &quot;google/gemini-3.1-flash-lite&quot;,
+    &quot;baidu/cobuddy:free&quot;,
+    &quot;openai/gpt-chat-latest&quot;
+  ],
+  &quot;candidate_models_count&quot;: 2,
+  &quot;rejected_models_count&quot;: 356,
+  &quot;validated_models_count&quot;: 1,
+  &quot;failed_validation_models_count&quot;: 0,
+  &quot;selected_model_validation_status&quot;: &quot;validated&quot;,
+  &quot;failed_model_reasons&quot;: [],
+  &quot;quota_failure_count&quot;: 1,
+  &quot;quota_cooldown_remaining_seconds&quot;: 0,
+  &quot;last_successful_generation_timestamp&quot;: &quot;2026-05-21T08:32:43Z&quot;,
+  &quot;provider_recovery_state&quot;: &quot;active&quot;,
+  &quot;provider_recovery_attempts&quot;: 1,
+  &quot;provider_tier_strategy&quot;: [
+    &quot;gemini&quot;,
+    &quot;openrouter&quot;,
+    &quot;academic_fallback_engine&quot;
+  ],
+  &quot;model_selection_strategy&quot;: &quot;openrouter-priority-validated-fallback&quot;,
+  &quot;provider_sdk_version&quot;: &quot;1.75.0&quot;,
+  &quot;startup_validation_time_ms&quot;: 4686,
+  &quot;openrouter_fallback_configured&quot;: true,
+  &quot;gemini_provider_ready&quot;: false,
+  &quot;openrouter_provider_ready&quot;: true,
+  &quot;last_validated_timestamp&quot;: &quot;2026-05-21T08:32:43Z&quot;
+}</pre>
+      </section>
+    
+    </main>
+  </body>
+</html>

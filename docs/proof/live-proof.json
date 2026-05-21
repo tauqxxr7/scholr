@@ -1,0 +1,259 @@
+{
+  "captured_at": "2026-05-21T08:31:47Z",
+  "frontend": "https://scholr-coral.vercel.app",
+  "backend": "https://scholr-k9sj.onrender.com",
+  "health": {
+    "/health": {
+      "status": "Scholr API is running",
+      "version": "1.0.0",
+      "requests_per_minute": 0,
+      "document_uploads_per_minute": 0,
+      "document_answers_per_minute": 0,
+      "provider_configured": true,
+      "provider_ready": true,
+      "active_provider": "openrouter",
+      "fallback_provider": "academic_fallback_engine",
+      "provider_failover_reason": "no_validated_generation_model",
+      "selected_model": "google/gemini-2.0-flash-lite-001",
+      "model_name": "google/gemini-2.0-flash-lite-001",
+      "provider_status": "ready",
+      "provider_error_category": null,
+      "available_models_count": 358,
+      "available_models_sample": [
+        "x-ai/grok-build-0.1",
+        "google/gemini-3.5-flash",
+        "anthropic/claude-opus-4.7-fast",
+        "perceptron/perceptron-mk1",
+        "inclusionai/ring-2.6-1t",
+        "google/gemini-3.1-flash-lite",
+        "baidu/cobuddy:free",
+        "openai/gpt-chat-latest"
+      ],
+      "candidate_models_count": 2,
+      "rejected_models_count": 356,
+      "validated_models_count": 1,
+      "failed_validation_models_count": 0,
+      "selected_model_validation_status": "validated",
+      "failed_model_reasons": [],
+      "quota_failure_count": 1,
+      "quota_cooldown_remaining_seconds": 0,
+      "last_successful_generation_timestamp": "2026-05-21T08:32:43Z",
+      "provider_recovery_state": "active",
+      "provider_recovery_attempts": 1,
+      "provider_tier_strategy": [
+        "gemini",
+        "openrouter",
+        "academic_fallback_engine"
+      ],
+      "model_selection_strategy": "openrouter-priority-validated-fallback",
+      "provider_sdk_version": "1.75.0",
+      "startup_validation_time_ms": 4686,
+      "openrouter_fallback_configured": true,
+      "gemini_provider_ready": false,
+      "openrouter_provider_ready": true,
+      "last_validated_timestamp": "2026-05-21T08:32:43Z"
+    },
+    "/health/provider": {
+      "status": "provider_health",
+      "requests_per_minute": 0,
+      "document_uploads_per_minute": 0,
+      "document_answers_per_minute": 0,
+      "provider_configured": true,
+      "provider_ready": true,
+      "active_provider": "openrouter",
+      "fallback_provider": "academic_fallback_engine",
+      "provider_failover_reason": "no_validated_generation_model",
+      "selected_model": "google/gemini-2.0-flash-lite-001",
+      "model_name": "google/gemini-2.0-flash-lite-001",
+      "provider_status": "ready",
+      "provider_error_category": null,
+      "available_models_count": 358,
+      "available_models_sample": [
+        "x-ai/grok-build-0.1",
+        "google/gemini-3.5-flash",
+        "anthropic/claude-opus-4.7-fast",
+        "perceptron/perceptron-mk1",
+        "inclusionai/ring-2.6-1t",
+        "google/gemini-3.1-flash-lite",
+        "baidu/cobuddy:free",
+        "openai/gpt-chat-latest"
+      ],
+      "candidate_models_count": 2,
+      "rejected_models_count": 356,
+      "validated_models_count": 1,
+      "failed_validation_models_count": 0,
+      "selected_model_validation_status": "validated",
+      "failed_model_reasons": [],
+      "quota_failure_count": 1,
+      "quota_cooldown_remaining_seconds": 0,
+      "last_successful_generation_timestamp": "2026-05-21T08:32:43Z",
+      "provider_recovery_state": "active",
+      "provider_recovery_attempts": 1,
+      "provider_tier_strategy": [
+        "gemini",
+        "openrouter",
+        "academic_fallback_engine"
+      ],
+      "model_selection_strategy": "openrouter-priority-validated-fallback",
+      "provider_sdk_version": "1.75.0",
+      "startup_validation_time_ms": 4686,
+      "openrouter_fallback_configured": true,
+      "gemini_provider_ready": false,
+      "openrouter_provider_ready": true,
+      "last_validated_timestamp": "2026-05-21T08:32:43Z"
+    },
+    "/health/generate-test": {
+      "status": "provider_generate_test",
+      "requests_per_minute": 0,
+      "document_uploads_per_minute": 0,
+      "document_answers_per_minute": 0,
+      "provider_configured": true,
+      "provider_ready": true,
+      "active_provider": "openrouter",
+      "fallback_provider": "academic_fallback_engine",
+      "provider_failover_reason": "no_validated_generation_model",
+      "provider_status": "ready",
+      "selected_model": "google/gemini-2.0-flash-lite-001",
+      "model_name": "google/gemini-2.0-flash-lite-001",
+      "provider_error_category": null,
+      "provider_sdk_version": "1.75.0",
+      "available_models_count": 358,
+      "available_models_sample": [
+        "x-ai/grok-build-0.1",
+        "google/gemini-3.5-flash",
+        "anthropic/claude-opus-4.7-fast",
+        "perceptron/perceptron-mk1",
+        "inclusionai/ring-2.6-1t",
+        "google/gemini-3.1-flash-lite",
+        "baidu/cobuddy:free",
+        "openai/gpt-chat-latest"
+      ],
+      "candidate_models_count": 2,
+      "rejected_models_count": 356,
+      "validated_models_count": 1,
+      "failed_validation_models_count": 0,
+      "selected_model_validation_status": "validated",
+      "failed_model_reasons": [],
+      "quota_failure_count": 1,
+      "last_successful_generation_timestamp": "2026-05-21T08:32:43Z",
+      "provider_recovery_state": "active",
+      "provider_recovery_attempts": 1,
+      "quota_cooldown_remaining_seconds": 0,
+      "model_selection_strategy": "openrouter-priority-validated-fallback",
+      "startup_validation_time_ms": 0,
+      "provider_tier_strategy": [
+        "gemini",
+        "openrouter",
+        "academic_fallback_engine"
+      ],
+      "gemini_provider_ready": false,
+      "openrouter_provider_ready": true,
+      "prompt": "Reply with exactly OK.",
+      "last_validated_timestamp": "2026-05-21T08:32:43Z",
+      "success": true,
+      "response_preview": "OK",
+      "response_length": 2,
+      "latency_ms": 579
+    },
+    "/health/documents": {
+      "status": "document_intelligence_health",
+      "pdf_parsing_available": true,
+      "multipart_available": true,
+      "vector_store_available": true,
+      "embedding_provider_configured": true,
+      "embedding_provider_ready": false,
+      "provider_ready_for_embeddings": false,
+      "embedding_provider": "gemini",
+      "embedding_model": "gemini-embedding-001",
+      "semantic_retrieval_ready": false,
+      "lexical_fallback_ready": true,
+      "provider_error_category": "invalid_api_key",
+      "embedding_health": "provider_degraded",
+      "retrieval_health": "degraded_lexical_fallback",
+      "retrieval_default_mode": "lexical",
+      "documents_storage_path": "data/documents",
+      "vector_storage_path": "data/chromadb"
+    }
+  },
+  "streams": {
+    "research": {
+      "first_token_latency_ms": 7752,
+      "completion_latency_ms": 7970,
+      "response_length": 5557,
+      "done_received": true,
+      "meta_events": [
+        {
+          "type": "meta",
+          "mode": "ai",
+          "label": "AI Mode"
+        }
+      ],
+      "fallback_marker": false,
+      "text": "## 5 Key Research Papers\n\n**1. Database Design and Normalization: A Practical Approach**\n*   **Authors:** (Likely various database textbook authors)\n*   **Year:** (Varies, but look for recent editions of standard textbooks)\n*   **Summary:** This is a foundational resource, covering the core principles of database design and normalization forms (1NF, 2NF, 3NF, BCNF). It provides practical examples and case studies, often including scenarios relevant to common Indian business applications.\n\n**2.  A Comprehensive Study of Normalization Techniques for Relational Databases**\n*   **Authors:** (Search for authors specializing in database systems)\n*   **Year:** (Look for papers from the last 5-10 years)\n*   **Summary:** This paper likely delves into advanced normalization concepts and their application, possibly including decomposition algorithms and the trade-offs involved in achieving higher normal forms. It may offer insights into optimization for query performance in normalized databases.\n\n**3.  Performance Analysis of Normalized vs. Denormalized Database Designs**\n*   **Authors:** (Search for researchers focusing on database performance)\n*   **Year:** (Look for papers from the last 5-10 years)\n*   **Summary:** This paper examines the practical implications of normalization on query performance, comparing normalized and denormalized database designs. It might explore factors like query complexity, data retrieval speed, and the impact of indexing strategies on performance.\n\n**4.  Database Normalization and Data Integrity in E-commerce Systems**\n*   **Authors:** (Search for authors focusing on e-commerce and database systems)\n*   **Year:** (Look for papers from the last 5-10 years)\n*   **Summary:** This paper focuses on the application of normalization in e-commerce environments, addressing data integrity issues and scalability challenges. It will likely include examples related to product catalogs, order processing, and customer relationship management.\n\n**5.  A Case Study on Applying Normalization to a University Database System**\n*   **Authors:** (Search for authors focusing on database design for educational institutions)\n*   **Year:** (Look for papers from the last 5-10 years)\n*   **Summary:** This paper presents a practical application of normalization principles to a real-world scenario, such as a student information system or a course management database. It provides insights into the design process, data modeling, and the benefits of a well-normalized database within an educational context.\n\n## Must-Know Concepts Before You Start\n\n1.  **Relational Database Model:** Understand the fundamental concepts of relational databases, including tables, rows (tuples), columns (attributes), primary keys, foreign keys, and relationships. This model is the foundation for normalization. You should be familiar with SQL (Structured Query Language) for interacting with the database.\n\n2.  **Functional Dependencies:** Grasp the concept of functional dependencies (FDs), which describe how one attribute or set of attributes determines another. Understanding FDs is crucial for identifying data redundancy and anomalies, which normalization aims to eliminate.\n\n3.  **Data Anomalies:** Learn about the different types of data anomalies that can occur in poorly designed databases, such as insertion, deletion, and update anomalies. These anomalies lead to data inconsistencies and make it difficult to maintain data integrity. Normalization helps to avoid these problems.\n\n## Recommended Reading Order\n\n1.  **\"Database Design and Normalization: A Practical Approach\"**: Start here to build a solid foundation in the core concepts. This will ensure you understand the terms and principles before moving on to more complex topics.\n\n2.  **\"A Comprehensive Study of Normalization Techniques for Relational Databases\"**: Once you understand the basics, this paper will help you deepen your understanding of different normal forms and their applications.\n\n3.  **\"Database Normalization and Data Integrity in E-commerce Systems\"**: This paper will give you a practical understanding of how to apply normalization principles to real-world scenarios.\n\n4.  **\"Performance Analysis of Normalized vs. Denormalized Database Designs\"**: After understanding the theory and practical application, this paper will help you understand the tradeoffs of normalization.\n\n5.  **\"A Case Study on Applying Normalization to a University Database System\"**: This paper will give you a good example of how normalization principles are applied in a specific context.\n\n## Research Gap to Explore\n\n**Research Gap:** The lack of detailed, publicly available, performance comparisons of normalization strategies tailored to the specific data access patterns common in Indian educational institutions.\n\n**Specific Issues:** While general performance analyses exist, there's a need for a study that examines how indexing strategies, query optimization techniques, and the choice of normalization level (e.g., 3NF vs. BCNF) affect query response times and overall database performance within the context of Indian university databases. This could involve creating a simulated or real-world dataset representative of student enrollment, course registration, and grading data. The study should compare the performance of different database designs (normalized and denormalized) under various query loads and data access patterns, common to the Indian education system. The project should also analyze the impact of database size and complexity on performance."
+    },
+    "notes": {
+      "first_token_latency_ms": 8666,
+      "completion_latency_ms": 8890,
+      "response_length": 5980,
+      "done_received": true,
+      "meta_events": [
+        {
+          "type": "meta",
+          "mode": "ai",
+          "label": "AI Mode"
+        }
+      ],
+      "fallback_marker": false,
+      "text": "## Overview\n\nDeadlock is a critical problem in operating systems where two or more processes are blocked indefinitely, waiting for each other to release resources. This leads to a standstill in the system, preventing any of the involved processes from making progress. Understanding deadlock is crucial for BTech students as it directly impacts system performance and stability.\n\n## Key Concepts\n\n1.  **Resource:** Anything a process needs to complete its task, like CPU time, memory, files, printers, or I/O devices. Think of it as a tool a process requires.\n\n2.  **Process:** A program in execution. It's an active entity that needs resources to perform its functions.\n\n3.  **Hold and Wait:** A process holds at least one resource and is waiting to acquire additional resources held by other processes. This is one of the necessary conditions for deadlock.\n\n4.  **Mutual Exclusion:** Only one process can use a resource at a time. This is a fundamental characteristic of many resources, like a printer.\n\n5.  **No Preemption:** A resource can only be released voluntarily by the process holding it, after the process has finished its task. The OS cannot forcibly take the resource away.\n\n6.  **Circular Wait:** A set of processes are waiting for each other in a circular fashion. Process A is waiting for B, B is waiting for C, and C is waiting for A. This completes the cycle of dependencies.\n\n7.  **Deadlock Prevention/Avoidance/Detection and Recovery:** These are the strategies used to handle deadlocks. Prevention aims to avoid the conditions that lead to deadlock, avoidance dynamically analyzes resource requests, detection finds deadlocks when they occur, and recovery resolves them.\n\n## Important Definitions\n\n*   **Deadlock:** A situation where two or more processes are blocked indefinitely, waiting for each other to release resources.\n*   **Resource Allocation Graph (RAG):** A directed graph used to visualize resource allocation and detect potential deadlocks.\n    *   **Process Node:** Represents a process.\n    *   **Resource Node:** Represents a resource.\n    *   **Request Edge (Pi -> Rj):** Indicates that process Pi is requesting resource Rj.\n    *   **Assignment Edge (Rj -> Pi):** Indicates that resource Rj is allocated to process Pi.\n*   **Starvation:** A situation where a process is repeatedly denied access to resources and is unable to make progress, even though the resources are available. Starvation is different from deadlock.\n*   **Safe State:** A state where the system can allocate resources to each process (up to its maximum) in some order and still avoid deadlock.\n*   **Unsafe State:** A state where the system might lead to a deadlock.\n*   **Deadlock Detection Algorithm:** An algorithm used to identify deadlocks in the system. The algorithm checks for cycles in the resource allocation graph.\n*   **Deadlock Recovery:** The process of resolving a deadlock, typically involving process termination or resource preemption.\n*   **Preemption:** The act of forcibly taking a resource away from a process.\n\n## Formulas & Equations (if applicable)\n\n*   **Banker's Algorithm (for Deadlock Avoidance):**  This algorithm uses several data structures to determine if a resource allocation request can be granted without leading to a deadlock. It involves checking if the system remains in a \"safe state\" after granting the request. The algorithm's complexity depends on the number of processes and resources. No specific formulas are used, but rather the algorithm involves calculations and comparisons using the following matrices:\n    *   **Available:** Represents the number of available instances of each resource.\n    *   **Max:** Represents the maximum resource needs of each process.\n    *   **Allocation:** Represents the number of instances of each resource currently allocated to each process.\n    *   **Need:** Represents the remaining resource needs of each process (Need = Max - Allocation).\n\n## Exam Tips\n\n1.  **Explain the Four Necessary Conditions:** Be prepared to clearly define and explain the four conditions for deadlock: Mutual Exclusion, Hold and Wait, No Preemption, and Circular Wait. This is a common exam question.\n2.  **Resource Allocation Graph (RAG):** Practice drawing and interpreting RAGs. Understand how to identify deadlocks (cycles) and potential deadlocks (unsafe states) from the graph.\n3.  **Deadlock Prevention Techniques:** Know the strategies for preventing deadlock, such as breaking the Hold and Wait condition (e.g., requesting all resources at once), breaking the No Preemption condition (preempting resources), and breaking the Circular Wait condition (imposing a total ordering of resource types).\n4.  **Banker's Algorithm:** Understand the Banker's Algorithm (for deadlock avoidance) and how it works. Be able to explain the concept of a safe state and how the algorithm determines if a resource request can be granted safely. You might be asked to trace the algorithm with a given example.\n5.  **Deadlock Detection and Recovery:** Know the basic approaches to deadlock detection (e.g., using RAGs or other algorithms) and recovery (e.g., process termination, resource preemption). Be prepared to discuss the trade-offs of different recovery methods.\n\n## Quick Revision Summary\n\n*   **Deadlock:** Processes blocked indefinitely, waiting for each other.\n*   **Four Conditions:** Mutual Exclusion, Hold and Wait, No Preemption, Circular Wait.\n*   **RAG:** Visualizes resource allocation; cycles indicate deadlock.\n*   **Prevention:** Avoids deadlock by breaking one or more of the four conditions.\n*   **Avoidance:** Banker's Algorithm; ensures a safe state.\n*   **Detection:** Identifies deadlocks when they occur.\n*   **Recovery:** Resolves deadlock (process termination, resource preemption).\n*   **Starvation vs. Deadlock:** Understand the difference.\n*   **Key Concepts:** Resource, Process, Hold and Wait, Mutual Exclusion, No Preemption, Circular Wait, Prevention/Avoidance/Detection/Recovery."
+    },
+    "doubt": {
+      "first_token_latency_ms": 4729,
+      "completion_latency_ms": 4746,
+      "response_length": 3040,
+      "done_received": true,
+      "meta_events": [
+        {
+          "type": "meta",
+          "mode": "ai",
+          "label": "AI Mode"
+        }
+      ],
+      "fallback_marker": false,
+      "text": "## Simple Answer\nNormalization in DBMS is a process of organizing data in a database to reduce redundancy and improve data integrity. It involves dividing a database into two or more tables and defining relationships between the tables. This helps to eliminate data anomalies and make the database more efficient.\n\n## Step-by-Step Explanation\n\n1.  **The Problem: Data Redundancy and Anomalies:** Imagine a database where the same information is repeated multiple times (redundancy). This can lead to inconsistencies if the data is updated in one place but not another. This can also lead to update, insertion and deletion anomalies.\n\n2.  **The Goal: Data Integrity and Efficiency:** Normalization aims to eliminate redundancy and dependencies by dividing large tables into smaller, more manageable ones. This ensures that data is consistent, accurate, and easier to maintain.\n\n3.  **Normal Forms: The Rules:** Normalization follows a set of rules called \"Normal Forms\" (1NF, 2NF, 3NF, BCNF, etc.). Each normal form builds upon the previous one, progressively reducing redundancy and improving data integrity.\n\n4.  **Relationships: Linking the Tables:** After splitting tables, relationships (e.g., one-to-many, many-to-many) are established between them using primary and foreign keys. This allows you to retrieve related data from different tables efficiently.\n\n## Example\n\nLet's say you're designing a database for a university. Initially, you might have a single \"Students\" table with columns like `StudentID`, `StudentName`, `CourseName`, `ProfessorName`.  If a student takes multiple courses, the `StudentName` would be repeated for each course, leading to redundancy.\n\nAfter normalization, you'd create separate tables:\n\n*   **Students:** `StudentID`, `StudentName`\n*   **Courses:** `CourseID`, `CourseName`, `ProfessorID`\n*   **Enrollment:** `StudentID`, `CourseID` (This table links students to courses)\n*   **Professors:** `ProfessorID`, `ProfessorName`\n\nNow, a student's name is stored only once, and the `Enrollment` table links students to the courses they are taking.  If a professor's name changes, you only need to update it in the `Professors` table.\n\n## Common Mistake to Avoid\n\nA common mistake is thinking that higher normal forms (e.g., 3NF, BCNF) are always *better* in all situations. While they reduce redundancy, they can sometimes lead to more complex queries and potentially slower retrieval times. The best level of normalization depends on the specific needs of the database and the trade-offs between data integrity and performance.\n\n## Related Concepts\n\n1.  **Primary Keys and Foreign Keys:** Understanding how these keys are used to establish relationships between tables is crucial for normalization.\n2.  **Data Anomalies (Update, Insertion, Deletion):** Knowing what these anomalies are and how normalization helps to prevent them is key.\n3.  **Database Design Principles:** Normalization is a core principle in database design, alongside concepts like data modeling and entity-relationship diagrams (ERDs)."
+    }
+  },
+  "document": {
+    "upload": {
+      "document_id": "5ff5839d-1a42-470b-b410-c23c172fb065",
+      "title": "academic-sample",
+      "status": "ready_with_lexical_fallback",
+      "page_count": 1,
+      "chunk_count": 1,
+      "retrieval_ready": true,
+      "warning": "Embeddings could not be generated for this document right now. Scholr will use retrieval-only lexical grounding for this document until embeddings recover."
+    },
+    "answer": {
+      "document_id": "5ff5839d-1a42-470b-b410-c23c172fb065",
+      "answer": "DBMS normalization reduces redundancy and improves data integrity \"academic-sample, Page 1\".",
+      "citations": [
+        {
+          "document_name": "academic-sample",
+          "page_number": 1,
+          "chunk_index": 0,
+          "citation_label": "Page 1",
+          "snippet": "Operating systems avoid deadlock with prevention, avoidance, and detection.\nDBMS normalization reduces redundancy and improves data integrity.\nComputer networks use layered protocols to make communication manageable."
+        }
+      ],
+      "retrieval_ready": true,
+      "generation_used": true,
+      "answer_mode": "grounded_generation",
+      "retrieval_mode": "lexical",
+      "confidence": "low",
+      "limitations": [
+        "Answers are grounded only in the uploaded document chunks retrieved for this question.",
+        "Semantic vector retrieval was unavailable, so a lexical chunk match was used instead."
+      ],
+      "warning": "Embedding query path is unavailable, so Scholr is using retrieval-only lexical grounding."
+    }
+  }
+}

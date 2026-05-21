@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scholr Live Stream Proof</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --ink: #0f172a;
+        --muted: #475569;
+        --border: #cbd5e1;
+        --accent: #0f766e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(180deg, #eff6ff 0%, var(--bg) 28%);
+        color: var(--ink);
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 32px 56px;
+      }
+      h1 { margin: 0 0 12px; font-size: 34px; }
+      p, li { color: var(--muted); line-height: 1.6; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin: 24px 0;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 18px 20px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+      .label {
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+      .value {
+        margin-top: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--ink);
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Consolas, "SFMono-Regular", monospace;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .panel {
+        margin-top: 24px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #ccfbf1;
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      
+      <h1>Scholr Live Stream Proof</h1>
+      <p>Captured from the live production backend. This panel uses real streamed output, not placeholder text.</p>
+      <div class="grid">
+            <div class="card">
+              <div class="label">Research</div>
+              <div class="value">7752 ms first token</div>
+              <p>7970 ms completion · 5557 chars · [DONE]=true</p>
+            </div>
+            
+            <div class="card">
+              <div class="label">Notes</div>
+              <div class="value">8666 ms first token</div>
+              <p>8890 ms completion · 5980 chars · [DONE]=true</p>
+            </div>
+            
+            <div class="card">
+              <div class="label">Doubt</div>
+              <div class="value">4729 ms first token</div>
+              <p>4746 ms completion · 3040 chars · [DONE]=true</p>
+            </div>
+            </div>
+      
+            <section class="panel">
+              <span class="badge">AI Mode · openrouter · google/gemini-2.0-flash-lite-001</span>
+              <h2>Research live output</h2>
+              <pre>## 5 Key Research Papers
+
+**1. Database Design and Normalization: A Practical Approach**
+*   **Authors:** (Likely various database textbook authors)
+*   **Year:** (Varies, but look for recent editions of standard textbooks)
+*   **Summary:** This is a foundational resource, covering the core principles of database design and normalization forms (1NF, 2NF, 3NF, BCNF). It provides practical examples and case studies, often including scenarios relevant to common Indian business applications.
+
+**2.  A Comprehensive Study of Normalization Techniques for Relational Databases**
+*   **Authors:** (Search for authors specializing in database systems)
+*   **Year:** (Look for papers from the last 5-10 years)
+*   **Summary:** This paper likely delves into advanced normalization concepts and their application, possibly including decomposition algorithms and the trade-offs involved in achieving higher normal forms. It may offer insights into optimization for query performance in normalized databases.
+
+**3.  Performance Analysis of Normalized vs. Denormalized Database Designs**
+*   **Authors:** (Search for researchers focusing on database performance)
+*   **Year:** (Look for papers from the last 5-10 years)
+*   **Summary:** This paper examines the practical implications of normalization on query performance, comparing normalized and denormalized database designs. It might explore factors like query complexity, data retrieval speed, and the impact of indexing strategies on performance.
+
+**4.  Database Normalization and Data Integrity in E-commerce Systems**
+*   **Authors:** (Search for autho</pre>
+            </section>
+            
+            <section class="panel">
+              <span class="badge">AI Mode · openrouter · google/gemini-2.0-flash-lite-001</span>
+              <h2>Notes live output</h2>
+              <pre>## Overview
+
+Deadlock is a critical problem in operating systems where two or more processes are blocked indefinitely, waiting for each other to release resources. This leads to a standstill in the system, preventing any of the involved processes from making progress. Understanding deadlock is crucial for BTech students as it directly impacts system performance and stability.
+
+## Key Concepts
+
+1.  **Resource:** Anything a process needs to complete its task, like CPU time, memory, files, printers, or I/O devices. Think of it as a tool a process requires.
+
+2.  **Process:** A program in execution. It&#x27;s an active entity that needs resources to perform its functions.
+
+3.  **Hold and Wait:** A process holds at least one resource and is waiting to acquire additional resources held by other processes. This is one of the necessary conditions for deadlock.
+
+4.  **Mutual Exclusion:** Only one process can use a resource at a time. This is a fundamental characteristic of many resources, like a printer.
+
+5.  **No Preemption:** A resource can only be released voluntarily by the process holding it, after the process has finished its task. The OS cannot forcibly take the resource away.
+
+6.  **Circular Wait:** A set of processes are waiting for each other in a circular fashion. Process A is waiting for B, B is waiting for C, and C is waiting for A. This completes the cycle of dependencies.
+
+7.  **Deadlock Prevention/Avoidance/Detection and Recovery:** These are the strategies used to handle deadlocks. Prevention aims to avoid the conditions that lead to deadlock, avoidance dynamically analyz</pre>
+            </section>
+            
+            <section class="panel">
+              <span class="badge">AI Mode · openrouter · google/gemini-2.0-flash-lite-001</span>
+              <h2>Doubt live output</h2>
+              <pre>## Simple Answer
+Normalization in DBMS is a process of organizing data in a database to reduce redundancy and improve data integrity. It involves dividing a database into two or more tables and defining relationships between the tables. This helps to eliminate data anomalies and make the database more efficient.
+
+## Step-by-Step Explanation
+
+1.  **The Problem: Data Redundancy and Anomalies:** Imagine a database where the same information is repeated multiple times (redundancy). This can lead to inconsistencies if the data is updated in one place but not another. This can also lead to update, insertion and deletion anomalies.
+
+2.  **The Goal: Data Integrity and Efficiency:** Normalization aims to eliminate redundancy and dependencies by dividing large tables into smaller, more manageable ones. This ensures that data is consistent, accurate, and easier to maintain.
+
+3.  **Normal Forms: The Rules:** Normalization follows a set of rules called &quot;Normal Forms&quot; (1NF, 2NF, 3NF, BCNF, etc.). Each normal form builds upon the previous one, progressively reducing redundancy and improving data integrity.
+
+4.  **Relationships: Linking the Tables:** After splitting tables, relationships (e.g., one-to-many, many-to-many) are established between them using primary and foreign keys. This allows you to retrieve related data from different tables efficiently.
+
+## Example
+
+Let&#x27;s say you&#x27;re designing a database for a university. Initially, you might have a single &quot;Students&quot; table with columns like `StudentID`, `StudentName`, `CourseName`, `ProfessorName`.  If a student takes multiple courses, th</pre>
+            </section>
+            
+    
+    </main>
+  </body>
+</html>
