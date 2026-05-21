@@ -14,7 +14,7 @@ This document tracks measurable production proof without inventing data.
 
 | Metric | Source | Current status | Notes |
 | --- | --- | --- | --- |
-| First token latency | frontend analytics + SSE logs | Measured live | Research `7752 ms`, Notes `8666 ms`, Doubt `4729 ms` from live production proof capture on 2026-05-21 |
+| First token latency | frontend analytics + SSE logs | Measured live | Research `6967 ms`, Notes `7995 ms`, Doubt `5965 ms` from the refreshed live production proof capture on 2026-05-21 |
 | Fallback activation rate | frontend analytics + backend logs | Instrumented | Useful for quota degradation analysis |
 | Cache hit rate | backend cache logs | Instrumented | Includes exact cache and warm-cache behavior |
 | Provider recovery attempts | `/health/provider` | Instrumented | Background recovery loop exposes attempts |
@@ -41,16 +41,16 @@ This document tracks measurable production proof without inventing data.
 
 | Route | Topic / Question | Active Provider | First Token Latency | Full Completion Latency | `[DONE]` Integrity | Fallback Used |
 | --- | --- | --- | --- | --- | --- | --- |
-| Research | `DBMS normalization` | `openrouter` | `7752 ms` | `7970 ms` | Yes | No |
-| Notes | `Operating system deadlock` | `openrouter` | `8666 ms` | `8890 ms` | Yes | No |
-| Doubt | `What is normalization in DBMS?` | `openrouter` | `4729 ms` | `4746 ms` | Yes | No |
+| Research | `DBMS normalization` | `openrouter` | `6967 ms` | `7198 ms` | Yes | No |
+| Notes | `Operating system deadlock` | `openrouter` | `7995 ms` | `8015 ms` | Yes | No |
+| Doubt | `What is normalization in DBMS?` | `openrouter` | `5965 ms` | `6225 ms` | Yes | No |
 
 ### Live response lengths
 
-- Research response length: `5557`
-- Notes response length: `5980`
-- Doubt response length: `3040`
-- Generate-test latency: `579 ms`
+- Research response length: `4437`
+- Notes response length: `5187`
+- Doubt response length: `3291`
+- Generate-test latency: `543 ms`
 
 ### Live provider health snapshot
 
@@ -63,13 +63,15 @@ This document tracks measurable production proof without inventing data.
 
 ### Live document workflow snapshot
 
-- Upload status: `ready_with_lexical_fallback`
+- Upload status: `ready`
 - Answer mode: `grounded_generation`
-- Retrieval mode: `lexical`
+- Retrieval mode: `semantic`
 - Citations: present
-- Semantic retrieval ready: not yet live
-- Embedding provider ready: false in the latest honest live document-health check
-- Vector store health: reported separately from provider health through `/health/documents`
+- Semantic retrieval ready: live
+- Embedding provider: `openrouter`
+- Embedding model: `openai/text-embedding-3-small`
+- Embedding latency: `1035 ms`
+- Vector store health: `ready`
 
 ## Visual production proof
 

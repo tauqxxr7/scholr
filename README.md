@@ -197,14 +197,13 @@ This is intentionally honest:
 
 - live upload is working with the bundled academic sample PDF
 - live document answers return grounded citations and snippets
-- current provider degradation keeps the default live retrieval path in `Lexical Retrieval`
-- semantic retrieval remains available in architecture, but only activates when embedding-provider validation recovers
+- live document retrieval is currently running in `Semantic Retrieval` mode
 - `/health/documents` now exposes embedding provider, embedding model, embedding latency, vector-store health, and retrieval counters honestly
 
 ### Retrieval modes
 
 - `Lexical Retrieval`: chunk matching from stored document text when vector search is unavailable
-- `Semantic Retrieval`: embedding-backed chunk retrieval when vector search and embedding-provider health are available
+- `Semantic Retrieval`: embedding-backed chunk retrieval when vector search and embedding-provider health are available. This is the current live default.
 - `Hybrid Retrieval`: planned next stage once the vector path is stabilized
 
 ### Citation example
@@ -226,7 +225,7 @@ This is intentionally honest:
 - exact and warm-cache replay paths
 - no-empty-output guarantee for Research, Notes, and Doubt
 - mobile-safe fallback rendering and optimistic skeleton states
-- retrieval-first document answers when semantic generation is unavailable
+- retrieval-first document answers when semantic generation is unavailable, with lexical fallback preserved if the embedding path degrades later
 
 ## Engineering Tradeoffs
 
@@ -274,7 +273,7 @@ Core docs:
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python, SQLAlchemy
 - AI provider layer: Google GenAI SDK for Gemini primary routing plus OpenRouter fallback support with validated model selection, provider recovery, and diagnostics
-- Embedding provider layer: Gemini embeddings primary, optional embedding-provider override, lexical fallback when semantic retrieval is unavailable
+- Embedding provider layer: Gemini embeddings primary, OpenRouter-compatible embedding fallback, lexical fallback when semantic retrieval is unavailable
 - Retrieval observability: `/health/documents` reports vector-store health, semantic readiness, lexical fallback readiness, retrieval counters, and latency snapshots
 - Local DB: SQLite
 - Production DB path: PostgreSQL through `DATABASE_URL`

@@ -109,16 +109,16 @@ The smoke path currently validates:
 Verified against the live Render backend and the live Vercel document workspace:
 
 - PDF upload works with the bundled academic sample fixture
-- upload returns `ready_with_lexical_fallback` when embeddings are unavailable
+- upload now returns `ready` when the live embedding path is healthy
 - document answers return:
   - `answer`
   - `citations`
   - `confidence`
   - `limitations`
   - `retrieval_mode`
-- live retrieval currently defaults to lexical grounding while the provider remains degraded
-- grounded document answer generation can still succeed through the active generation provider even while semantic embeddings are degraded
-- embedding-provider diagnostics now truthfully report configured provider, model, and semantic readiness
+- live retrieval currently defaults to semantic grounding
+- grounded document answer generation succeeds through the active OpenRouter generation provider
+- embedding-provider diagnostics now truthfully report configured provider, model, semantic readiness, and latency
 - embedding diagnostics now also report latency snapshots and vector-store health
 - no empty output panels were observed in the live document flow
 
@@ -144,8 +144,8 @@ Still pending with real subject PDFs:
 - real subject PDFs are not bundled in the repo yet, so DBMS, OS, DSA, CN, Maths, PYQ, and research-paper validation is still pending
 - no per-user document ownership
 - local vector storage is not a final production data path
-- semantic retrieval depends on vector dependencies and model/provider availability
-- semantic retrieval health depends on embedding-provider availability, so live production can truthfully remain in lexical mode during embedding degradation
+- semantic retrieval still depends on vector dependencies and live embedding-provider availability
+- lexical retrieval remains the honest fallback path if semantic retrieval degrades again
 
 ## Future pgvector migration
 

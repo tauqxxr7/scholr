@@ -54,21 +54,23 @@ Visual proof assets:
 
 Verified live against the deployed frontend and backend using the bundled fixture:
 - upload fixture: `backend/tests/fixtures/academic-sample.pdf`
-- upload result: `ready_with_lexical_fallback`
+- upload result: `ready`
 - answer result: `grounded_generation`
-- retrieval mode: `lexical`
+- retrieval mode: `semantic`
 - citations: present
 - no empty output observed
-- current live retrieval default: lexical while provider-backed embeddings remain degraded
-- provider-backed answer synthesis is still possible through OpenRouter when generation is healthy
+- current live retrieval default: semantic
+- embedding provider: `openrouter`
+- embedding model: `openai/text-embedding-3-small`
+- provider-backed answer synthesis is currently healthy through OpenRouter
 
 ## Honest semantic retrieval status
 
 - generation provider failover is healthy
-- embedding provider path is still degraded
-- semantic retrieval is not yet restored in live production
-- lexical retrieval remains the active grounded backup
-- `/health/documents` now reports embedding provider, embedding model, embedding latency, vector-store health, retrieval counters, and upload/answer telemetry separately from generation-provider health
+- embedding provider path is healthy through OpenRouter in the latest live check
+- semantic retrieval is restored in live production
+- lexical retrieval remains the preserved grounded backup if embeddings or vector queries degrade again
+- `/health/documents` reports embedding provider, embedding model, embedding latency, vector-store health, retrieval counters, and upload/answer telemetry separately from generation-provider health
 
 ## Current runtime truth
 
