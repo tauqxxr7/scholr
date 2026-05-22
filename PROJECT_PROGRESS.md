@@ -2,12 +2,14 @@
 
 ## Current Stage
 
-Scholr is in the live MVP stage:
-- public-access academic workspace
-- one focused student workflow
-- deployed monorepo
-- local SQLite support with user-scoped persistence
-- production-ready PostgreSQL path through `DATABASE_URL`
+Scholr is in the stable public-access MVP stage:
+- public landing page, dashboard, AI modules, and document workspace are open without sign-in
+- OpenRouter AI generation is active as the validated production generation path
+- semantic retrieval is supported when embedding/vector diagnostics are healthy
+- lexical retrieval fallback is preserved for grounded document answers
+- auth is postponed until a custom domain and a clean auth rollout are ready
+- PostgreSQL plus pgvector is the next infrastructure phase
+- student validation is pending and must use real student data only
 
 ## What Is Completed
 
@@ -92,18 +94,18 @@ Scholr is in the live MVP stage:
 
 ## What Is Pending
 
-- add the real iOS demo video asset into `docs/demo/ios-response.mp4`
+- run the final public MVP verification checklist after each production deploy
 - verify long-term production history persistence with PostgreSQL
 - replace placeholder demo GIF and placeholder mobile proof assets with real captures
-- validate GitHub Actions on first live run
 - keep tenant-safe persistence groundwork inactive until a future auth rollout is intentionally reintroduced
+- complete real student validation without fabricated scores or quotes
 
 ## Next Milestones
 
-1. Run user validation with 10 BTech students
+1. Run user validation with 10 to 15 BTech students
 2. Review analytics signal after the first student validation sprint
-3. Add demo video and a polished repo GIF or walkthrough asset
-4. Add CI checks for lint, typecheck, backend validation, and build
+3. Capture polished proof screenshots and a real walkthrough GIF only from actual product state
+4. Keep CI checks green for lint, typecheck, backend validation, and build
 5. Validate provider fallback behavior under real student usage
 6. Reintroduce multi-user auth only after PostgreSQL and persistent user storage are ready
 7. Move production history to PostgreSQL if usage justifies it
@@ -172,13 +174,31 @@ Scholr is in the live MVP stage:
   - frontend loads
   - backend `/health` works
   - Live MVP is stable
-  - Gemini provider is degraded due to quota/model access
-  - Research / Notes / Doubt remain functional through Fallback Academic Mode
-  - desktop and iOS usage are both functional
+  - OpenRouter AI generation is active in the latest production proof loop
+  - Gemini provider can still be degraded due to quota/model access
+  - Research / Notes / Doubt remain functional through AI Mode, cache, or Fallback Academic Mode
+  - desktop and mobile viewport usage are functional
   - proof package, legal docs, CI workflows, and production evidence docs are now part of the repo surface
-  - real AI Mode restoration still depends on external Gemini quota and project/model access recovery
+  - latest mobile responsiveness fix was verified through viewport emulation; physical-device iPhone retesting should be recorded separately
 - Production persistence: requires PostgreSQL via `DATABASE_URL`
 - Local-only persistence: SQLite
+
+## Final Public MVP Verification Checklist
+
+| Surface / System | Required Check | Status |
+| --- | --- | --- |
+| Landing page | live route, responsive mobile layout, no auth requirement | ready for recurring verification |
+| Dashboard | public route opens and cards render | ready for recurring verification |
+| Research | route opens, SSE stream completes, retry UX intact | ready for recurring verification |
+| Notes | route opens, SSE stream completes, formatting intact | ready for recurring verification |
+| Doubt | route opens, SSE stream completes, explanation quality acceptable | ready for recurring verification |
+| Documents | upload works, answer returns citations, retrieval mode shown | ready for recurring verification |
+| Mobile | iPhone SE/13/14, Android, tablet viewport checks | ready for recurring verification |
+| Desktop | landing and dashboard do not regress | ready for recurring verification |
+| Provider health | `/health/provider` reports active provider honestly | ready for recurring verification |
+| Semantic retrieval | `/health/documents` reports semantic readiness honestly | ready for recurring verification |
+| Lexical retrieval | fallback remains available when semantic path degrades | ready for recurring verification |
+| SSE streaming | `[DONE]` arrives and malformed stream handling remains tolerant | ready for recurring verification |
 
 ## Azure Future Scaling Idea
 

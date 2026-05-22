@@ -80,18 +80,16 @@ Architecture GIF:
 
 ### Mobile proof
 
-Live product has been manually verified on iOS Safari and responsive Android-style breakpoints.
+Live product has been verified through responsive mobile viewport checks and the committed iOS demo clip. Do not treat the latest production pass as a new physical-device iPhone test unless a tester records that separately.
 
 ![Mobile notes](docs/screenshots/mobile/mobile-notes.png)
 ![Mobile doubt](docs/screenshots/mobile/mobile-doubt.png)
 
 ### iOS verification
 
-- landing page verified on iPhone Safari
-- Notes and Doubt flows verified on iOS/mobile
-- Fallback Academic Mode verified on mobile
-- Provider Recovering UX verified on mobile
 - optimized proof clip is committed at [docs/demo/ios-response.mp4](docs/demo/ios-response.mp4)
+- latest production pass used iPhone-size viewport emulation for landing, dashboard, Research, Notes, Doubt, and Documents
+- physical-device iPhone retesting should be recorded in [docs/research/validation-checklist.md](docs/research/validation-checklist.md)
 
 ## Current Production Behavior
 
@@ -103,12 +101,22 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 - OpenRouter failover is live and currently restores true AI generation
 - user-facing output remains functional through AI mode, cached replay, or fallback academic mode
 
+## Current MVP Status
+
+- Public-access MVP: stable across landing, dashboard, AI modules, and document workspace
+- OpenRouter AI generation: active as the validated production generation provider
+- Semantic retrieval: supported when the embedding provider/vector store are healthy
+- Lexical fallback: preserved for grounded document answers if semantic retrieval degrades
+- Auth: postponed until a custom-domain-ready auth plan is reintroduced safely
+- Persistence roadmap: PostgreSQL plus pgvector is the next infrastructure step
+- Student validation: pending; no student feedback or validation scores are fabricated
+
 ### Current live status
 
 | Area | Status | Evidence |
 | --- | --- | --- |
 | Deployment | Live | Vercel + Render |
-| Mobile responsiveness | Verified | iOS and responsive breakpoints checked |
+| Mobile responsiveness | Verified by viewport pass | iPhone/Android/tablet viewport checks; physical-device retest pending |
 | SSE streaming | Working | Research / Notes / Doubt stream output |
 | Provider recovery | Active | `/health/provider` diagnostics |
 | Provider failover | Working | OpenRouter currently serves validated AI generation |
@@ -117,6 +125,22 @@ Live product has been manually verified on iOS Safari and responsive Android-sty
 | Document intelligence | Working in retrieval-first mode | upload, citations, and retrieval-only answers live |
 | Public access | Stable | Landing, dashboard, AI modules, and documents open without sign-in |
 | User testing status | Ready | templates and validation plan included |
+
+### Final public MVP verification checklist
+
+| Surface | Current verification status | Evidence / next proof action |
+| --- | --- | --- |
+| Landing page | Verified after mobile responsiveness fix | Live Vercel route and viewport checks |
+| Dashboard | Verified public route | `/dashboard` opens without auth |
+| Research | Verified live route and SSE stream | AI Mode stream completed with `[DONE]` |
+| Notes | Verified live route and SSE stream | AI Mode stream completed with `[DONE]` |
+| Doubt | Verified live route and SSE stream | AI Mode stream completed with `[DONE]` |
+| Documents | Verified live route and fixture workflow | upload, answer, citation payload |
+| Mobile | Verified by responsive viewport emulation | physical-device retest pending |
+| Desktop | Verified by live route checks | no desktop layout regression observed |
+| Provider health | Verified | `/health/provider` |
+| Semantic / lexical retrieval | Supported with fallback | `/health/documents` plus document answer payload |
+| SSE streaming | Verified | Research, Notes, Doubt stream integrity |
 
 ### Provider failover proof
 
@@ -351,6 +375,8 @@ Validation assets:
 - [METRICS.md](METRICS.md)
 - [docs/research/student-validation-report.md](docs/research/student-validation-report.md)
 - [docs/research/student-validation-report-v2.md](docs/research/student-validation-report-v2.md)
+- [docs/research/validation-checklist.md](docs/research/validation-checklist.md)
+- [docs/research/feedback-template.md](docs/research/feedback-template.md)
 
 ## Document Intelligence Foundation
 

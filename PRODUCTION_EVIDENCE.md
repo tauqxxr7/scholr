@@ -13,7 +13,7 @@
 | Capability | Status | Proof |
 | --- | --- | --- |
 | Deployment | Live | Vercel frontend + Render backend |
-| Mobile responsiveness | Verified | iOS/manual verification and responsive workspace shell |
+| Mobile responsiveness | Verified by viewport pass | Latest production pass used iPhone/Android/tablet viewport checks; physical-device retest should be recorded separately |
 | SSE streaming | Working | Shared FastAPI SSE routes and client stream parser |
 | Provider recovery | Active | Provider diagnostics and background validation loop |
 | Provider failover | Working | OpenRouter is currently serving validated AI generation when Gemini is quota-blocked |
@@ -22,6 +22,33 @@
 | Document intelligence | Live in retrieval-first mode | Upload UI, cited answers, lexical fallback, PYQ and study workflows |
 | User validation | Ready | Templates and research pack present, no fabricated data |
 | CI status | Live | Backend CI, Frontend CI, Repo Hygiene passing |
+
+## Current MVP Status
+
+- Public-access MVP: stable and intentionally available without sign-in
+- OpenRouter AI generation: active production path while Gemini remains quota/model-access sensitive
+- Semantic retrieval: supported when embedding and vector-store health are ready
+- Lexical fallback: preserved for grounded document answers if semantic retrieval degrades
+- Auth: postponed until a custom domain and auth plan are ready
+- PostgreSQL/pgvector: next infrastructure step for persistent multi-user storage and durable vector retrieval
+- Student validation: pending; this repository contains templates only, not fabricated feedback
+
+## Final public MVP verification checklist
+
+| Area | Pass Criteria | Latest Status | Notes |
+| --- | --- | --- | --- |
+| Landing page | Loads on live Vercel with no mobile horizontal overflow | Passed | Latest pass used responsive viewport checks |
+| Dashboard | Opens publicly without auth regression | Passed | `/dashboard` route is public |
+| Research | Route loads and SSE stream completes | Passed | Live stream proof recorded through backend probe |
+| Notes | Route loads and SSE stream completes | Passed | Live stream proof recorded through backend probe |
+| Doubt | Route loads and SSE stream completes | Passed | Live stream proof recorded through backend probe |
+| Documents | Route loads, upload works, answers include citations | Passed | Fixture workflow verified |
+| Mobile | iPhone/Android/tablet viewport behavior is balanced | Passed by emulation | Physical iPhone retest remains a manual checklist item |
+| Desktop | Landing/dashboard remain visually stable | Passed | No desktop route regression observed |
+| Provider health | `/health/provider` returns structured status | Passed | OpenRouter active in latest production proof |
+| Semantic retrieval | `/health/documents` reports retrieval health honestly | Supported | Semantic depends on embedding/vector health |
+| Lexical retrieval | Grounded fallback remains available | Preserved | Required if semantic retrieval degrades |
+| SSE streaming | `[DONE]` arrives for AI modules | Passed | Research, Notes, Doubt checked |
 
 ## Provider failover proof
 
@@ -79,6 +106,7 @@ Verified live against the deployed frontend and backend using the bundled fixtur
 - OpenRouter provider: currently validated and serving true AI generation
 - User-facing experience: functional through AI Mode, cache-backed replay, or fallback academic mode
 - Document intelligence: frontend PDF workflow exists and stays honest about retrieval-only vs grounded AI behavior
+- Auth status: Clerk/auth is removed from the active app; public access is preserved until custom-domain auth is intentionally reintroduced
 
 ## Honest limitation
 

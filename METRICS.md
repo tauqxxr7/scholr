@@ -35,6 +35,33 @@ This document tracks measurable production proof without inventing data.
 | Live document workflow verification | manual live probe + smoke script | Verified with fixture | `academic-sample.pdf` upload and grounded lexical answer succeeded live |
 | Failure recovery rate | provider diagnostics + live proof capture | Not enough real history yet | Do not calculate a rate until longer-lived production telemetry exists |
 
+## Current MVP Status
+
+- Public-access MVP is stable after the mobile landing responsiveness fix.
+- OpenRouter is the active production generation provider in the latest proof loop.
+- Semantic retrieval is supported when embedding/vector diagnostics report ready.
+- Lexical fallback remains preserved for document answers.
+- Auth is postponed until a custom-domain-ready rollout is planned.
+- PostgreSQL plus pgvector is the next persistence and retrieval infrastructure milestone.
+- Student validation is pending; no student scores, quotes, or retention numbers are reported yet.
+
+## Public MVP verification checklist
+
+| Surface / System | Measurement Type | Latest Evidence | Status |
+| --- | --- | --- | --- |
+| Landing page | Route + responsive viewport check | Vercel live route, iPhone/Android/tablet emulation | Passed |
+| Dashboard | Route check | Public `/dashboard` route | Passed |
+| Research | SSE stream integrity | first token, completion, `[DONE]`, mode metadata | Passed |
+| Notes | SSE stream integrity | first token, completion, `[DONE]`, mode metadata | Passed |
+| Doubt | SSE stream integrity | first token, completion, `[DONE]`, mode metadata | Passed |
+| Documents | Upload + answer smoke | fixture PDF, citation payload | Passed |
+| Mobile | Viewport behavior | no horizontal overflow in emulated mobile widths | Passed by emulation |
+| Desktop | Route/layout sanity | live desktop route check | Passed |
+| Provider health | Diagnostics endpoint | `/health/provider` | Passed |
+| Semantic retrieval | Document diagnostics | `/health/documents` semantic flags and retrieval mode | Supported |
+| Lexical retrieval | Fallback capability | document answer fallback path | Preserved |
+| SSE streaming | Stream parser behavior | `[DONE]` received for AI modules | Passed |
+
 ## Real production measurements
 
 ### Live AI generation proof
@@ -106,3 +133,4 @@ This document tracks measurable production proof without inventing data.
 - Gemini quota and project-level model access can still move Scholr into resilience-backed fallback mode.
 - Semantic document retrieval still depends on a validated embedding provider, so live `/health/documents` may continue to report lexical default mode even while generation is healthy through OpenRouter.
 - No production dashboard exists yet for aggregated metrics; current proof comes from endpoints, logs, and manual validation records.
+- Physical-device iPhone retesting for the latest landing-page fix has not been newly recorded in this pass; use the validation checklist before claiming it.
