@@ -1,7 +1,11 @@
 node_modules
 .next
+dist
+build
+coverage
 .vercel
 venv
+.venv
 backend/venv
 __pycache__
 **/__pycache__/
@@ -9,10 +13,9 @@ __pycache__
 *.db
 .env
 .env.local
+.DS_Store
 frontend/.env.local
 backend/.env
 backend/scholr.db
 data/documents/
 data/chromadb/
-
-backend/.env
