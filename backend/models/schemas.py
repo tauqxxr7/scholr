@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class ResearchRequest(BaseModel):
     topic: str
+    mode: str | None = None
     response_mode: str = "fast"
 
 

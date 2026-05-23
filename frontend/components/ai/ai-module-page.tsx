@@ -164,6 +164,7 @@ function AiModulePageContent({
     const requestSequence = hasGeneratedOnce ? 'second_or_later' : 'first'
     const payload: Record<string, string> = {
       [payloadKey]: primaryValue,
+      mode: answerDepth,
       response_mode: answerDepth,
     }
 

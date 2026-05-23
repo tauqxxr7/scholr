@@ -54,20 +54,33 @@ def _is_deep_mode(response_mode: str) -> bool:
     return response_mode.strip().lower() == "deep"
 
 
+def build_research_prompt(topic: str, response_mode: str = "fast") -> str:
+    prompt_template = DEEP_RESEARCH_PROMPT if _is_deep_mode(response_mode) else FAST_RESEARCH_PROMPT
+    return prompt_template.format(topic=topic)
+
+
+def get_research_generation_config(response_mode: str = "fast") -> dict[str, int | float]:
+    is_deep = _is_deep_mode(response_mode)
+    return {
+        "temperature": 0.4 if is_deep else 0.25,
+        "max_output_tokens": 1600 if is_deep else 800,
+    }
+
+
 async def generate_research_response(topic: str, response_mode: str = "fast"):
     safe_topic, warning = sanitize_user_input("research", topic)
     if warning:
         yield f"> {warning}\n\n"
 
-    prompt_template = DEEP_RESEARCH_PROMPT if _is_deep_mode(response_mode) else FAST_RESEARCH_PROMPT
-    prompt = prompt_template.format(topic=safe_topic)
+    prompt = build_research_prompt(safe_topic, response_mode)
+    generation_config = get_research_generation_config(response_mode)
 
     try:
         async for chunk in stream_gemini_response(
             model_name="gemini-1.5-flash",
             prompt=prompt,
-            temperature=0.4 if _is_deep_mode(response_mode) else 0.25,
-            max_output_tokens=900 if _is_deep_mode(response_mode) else 520,
+            temperature=float(generation_config["temperature"]),
+            max_output_tokens=int(generation_config["max_output_tokens"]),
         ):
             yield chunk
     except ScholrGenerationError as exc:

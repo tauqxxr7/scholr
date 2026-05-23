@@ -42,8 +42,9 @@ async def research_endpoint(
     if quota_response:
         return quota_response
     record_usage_event(db, auth_context=auth_context, scope="research")
+    response_mode = (request.mode or request.response_mode or "fast").strip().lower()
     cached = None
-    if request.response_mode.strip().lower() != "deep":
+    if response_mode != "deep":
         cached = find_cached_response(
             db,
             module="research",
@@ -61,7 +62,7 @@ async def research_endpoint(
         if cached
         else stream_text_chunks(fallback_text)
         if use_fallback
-        else generate_research_response(request.topic, request.response_mode),
+        else generate_research_response(request.topic, response_mode),
         save_history=lambda response: crud.save_search(
             db=db,
             module="research",
