@@ -69,6 +69,7 @@ function AiModulePageContent({
   const [answerDepth, setAnswerDepth] = useState<'fast' | 'deep'>('fast')
   const [progressStage, setProgressStage] = useState<'connecting' | 'thinking' | 'writing' | 'finalizing'>('connecting')
   const [slowStreamHint, setSlowStreamHint] = useState(false)
+  const [retrying, setRetrying] = useState(false)
 
   const getCacheKey = () =>
     [
@@ -155,7 +156,7 @@ function AiModulePageContent({
     })
   }, [moduleName])
 
-  const runRequest = async () => {
+  const runRequest = async (options: { isRetry?: boolean } = {}) => {
     const startedAt = performance.now()
     let responseLength = 0
     let firstTokenTracked = false
@@ -337,7 +338,9 @@ function AiModulePageContent({
         module: moduleName,
         error: friendlyError,
       })
-      if (finalResponse.trim()) {
+      if (options.isRetry) {
+        setError('Still having trouble. Try again later.')
+      } else if (finalResponse.trim()) {
         setError('Answer completed partially. Tap retry for deeper version.')
       } else {
         setError(friendlyError)
@@ -389,7 +392,12 @@ function AiModulePageContent({
       module: moduleName,
       response_length: output.length,
     })
-    await runRequest()
+    setRetrying(true)
+    try {
+      await runRequest({ isRetry: true })
+    } finally {
+      setRetrying(false)
+    }
   }
 
   const hasContent = output || error
@@ -629,11 +637,11 @@ function AiModulePageContent({
                 <Button
                   variant="outline"
                   onClick={handleRetry}
-                  disabled={loading || !primaryValue.trim()}
+                  disabled={loading || retrying || !primaryValue.trim()}
                   className="mt-4 min-h-11 w-full rounded-2xl border-red-200 bg-white text-red-700 hover:bg-red-100 hover:text-red-800 sm:w-auto"
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
-                  Retry request
+                  {retrying ? 'Retrying...' : 'Retry request'}
                 </Button>
               ) : null}
             </div>
