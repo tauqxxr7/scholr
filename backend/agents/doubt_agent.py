@@ -51,20 +51,33 @@ def _is_deep_mode(response_mode: str) -> bool:
     return response_mode.strip().lower() == "deep"
 
 
+def build_doubt_prompt(question: str, subject: str = "General", response_mode: str = "fast") -> str:
+    prompt_template = DEEP_DOUBT_PROMPT if _is_deep_mode(response_mode) else FAST_DOUBT_PROMPT
+    return prompt_template.format(question=question, subject=subject)
+
+
+def get_doubt_generation_config(response_mode: str = "fast") -> dict[str, int | float]:
+    is_deep = _is_deep_mode(response_mode)
+    return {
+        "temperature": 0.3 if is_deep else 0.15,
+        "max_output_tokens": 760 if is_deep else 460,
+    }
+
+
 async def generate_doubt_response(question: str, subject: str = "General", response_mode: str = "fast"):
     safe_question, warning = sanitize_user_input("doubt", question)
     if warning:
         yield f"> {warning}\n\n"
 
-    prompt_template = DEEP_DOUBT_PROMPT if _is_deep_mode(response_mode) else FAST_DOUBT_PROMPT
-    prompt = prompt_template.format(question=safe_question, subject=subject)
+    prompt = build_doubt_prompt(safe_question, subject, response_mode)
+    generation_config = get_doubt_generation_config(response_mode)
 
     try:
         async for chunk in stream_gemini_response(
             model_name="gemini-1.5-flash",
             prompt=prompt,
-            temperature=0.3 if _is_deep_mode(response_mode) else 0.15,
-            max_output_tokens=760 if _is_deep_mode(response_mode) else 460,
+            temperature=float(generation_config["temperature"]),
+            max_output_tokens=int(generation_config["max_output_tokens"]),
         ):
             yield chunk
     except ScholrGenerationError:

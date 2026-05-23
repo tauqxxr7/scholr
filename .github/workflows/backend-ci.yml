@@ -15,6 +15,8 @@ on:
 jobs:
   backend-ci:
     runs-on: ubuntu-latest
+    env:
+      SQLITE_PATH: /tmp/scholr-ci.db
     defaults:
       run:
         working-directory: backend
@@ -30,6 +32,9 @@ jobs:
 
       - name: Compile backend
         run: python -m compileall .
+
+      - name: Run backend tests
+        run: python -m pytest tests/ -v
 
       - name: Backend import check
         run: python -c "import sys; sys.path.insert(0, '.'); from main import app; print('backend import ok')"
