@@ -45,6 +45,20 @@ This document tracks measurable production proof without inventing data.
 - PostgreSQL plus pgvector is the next persistence and retrieval infrastructure milestone.
 - Student validation is pending; no student scores, quotes, or retention numbers are reported yet.
 
+## Mobile Speed Targets
+
+Scholr now follows a fast-first response contract for mobile reliability.
+
+| Metric | Target | Behavior |
+| --- | --- | --- |
+| First token latency | <= 5 seconds | If no token starts in time, backend falls back or returns a specific timeout category. |
+| Total completion latency | 8 to 12 seconds target, 20 seconds hard cutoff | Fast mode keeps answers compact and avoids long provider completions. |
+| Second-request latency | Same class as first request | Provider validation is cached; OpenRouter streams tokens instead of waiting for full completion. |
+| Output length | Fast: about 350 to 550 words max depending on module | Deep mode is optional and explicitly selected by the user. |
+| Partial-output recovery | Always preserve partial tokens | If a stream fails after tokens arrive, UI shows `Answer completed partially. Tap retry for deeper version.` |
+| Frontend stream parse latency | Instrumented per generation | Client records stream parsing latency without blocking rendering. |
+| Provider latency | Exposed through provider diagnostics/logs | Provider runtime cutoff is tuned for mobile responsiveness. |
+
 ## Public MVP verification checklist
 
 | Surface / System | Measurement Type | Latest Evidence | Status |

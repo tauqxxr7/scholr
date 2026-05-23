@@ -65,6 +65,9 @@ function AiModulePageContent({
   const [lastAttemptFailed, setLastAttemptFailed] = useState(false)
   const [responseMode, setResponseMode] = useState<'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'>('ai')
   const [responseModeLabel, setResponseModeLabel] = useState('AI Mode')
+  const [answerDepth, setAnswerDepth] = useState<'fast' | 'deep'>('fast')
+  const [progressStage, setProgressStage] = useState<'connecting' | 'thinking' | 'writing' | 'finalizing'>('connecting')
+  const [slowStreamHint, setSlowStreamHint] = useState(false)
 
   const getCacheKey = () =>
     [
@@ -82,7 +85,7 @@ function AiModulePageContent({
     const looksLikeExam = normalizedTopic.includes('exam') || normalizedTopic.includes('long answer')
 
     if (moduleName === 'research') {
-      return `## Academic Direction Loading\nScholr is preparing your research response for **${topic}**.\n\n### Likely Key Concepts\n- core definition and background\n- practical engineering use cases\n- comparison with adjacent techniques\n\n### Suggested Paper Search Queries\n- "${topic} survey"\n- "${topic} applications"\n- "${topic} limitations"\n\n### While AI Generation Starts\n- keep the topic specific\n- think about one use case or project context\n- compare at least one survey paper with one implementation paper`
+      return `## Generating short answer...\n\n### Connecting\n- Preparing fast research direction for **${topic}**.\n- Scholr will keep this compact first; use Deep only if you need more detail.`
     }
 
     if (moduleName === 'notes') {
@@ -92,7 +95,7 @@ function AiModulePageContent({
           ? '### Summary Frame\n- one-line meaning\n- top 3 to 5 ideas\n- one quick example\n- one mnemonic or memory hook'
           : '### Revision Frame\n- definition\n- key concepts\n- formulas or conditions\n- common viva questions'
 
-      return `## Revision Notes Loading\nScholr is organizing exam-ready notes for **${topic}**.\n\n${notesFocus}\n\n### Quick Revision Scaffold\n- write the one-line meaning first\n- list the top 3 to 5 subtopics\n- add one example you can explain in an exam`
+      return `## Generating short answer...\n\n${notesFocus}\n\n### Connecting\n- Preparing compact revision notes for **${topic}**.`
     }
 
     const doubtFocus = looksLikeDefinition
@@ -103,7 +106,7 @@ function AiModulePageContent({
           ? '### Exam Answer Scaffold\n- intro definition\n- stepwise explanation\n- one worked example\n- conclusion point'
           : '### Explanation Flow\n- textbook definition\n- step-by-step reasoning\n- one simple example\n- one common mistake to avoid'
 
-    return `## Concept Breakdown Loading\nScholr is preparing a clearer explanation for **${topic}** in **${subject}**.\n\n${doubtFocus}\n\n### While AI Generation Starts\n- focus on the exact confusing part\n- compare it with one related concept\n- think of one example from class or lab`
+    return `## Generating short answer...\n\n${doubtFocus}\n\n### Connecting\n- Preparing a direct answer for **${topic}** in **${subject}**.`
   }
 
   const readLocalCache = () => {
@@ -157,8 +160,11 @@ function AiModulePageContent({
     let firstTokenTracked = false
     let finalResponse = ''
     let streamHydrated = false
+    let frontendStreamParseLatencyMs = 0
+    const requestSequence = hasGeneratedOnce ? 'second_or_later' : 'first'
     const payload: Record<string, string> = {
       [payloadKey]: primaryValue,
+      response_mode: answerDepth,
     }
 
     if (secondaryField) {
@@ -170,6 +176,12 @@ function AiModulePageContent({
     setError('')
     setEmptyStateMessage('')
     setLastAttemptFailed(false)
+    setProgressStage('connecting')
+    setSlowStreamHint(false)
+    const slowHintTimer = window.setTimeout(() => {
+      setSlowStreamHint(true)
+      setProgressStage((current) => (current === 'connecting' || current === 'thinking' ? 'writing' : current))
+    }, 8000)
     const cachedHydration = readLocalCache()
     if (cachedHydration) {
       setOutput(cachedHydration.response)
@@ -185,7 +197,11 @@ function AiModulePageContent({
       setResponseMode('recovering')
       setResponseModeLabel('Provider Recovering')
     }
-    trackEvent('generation_started', { module: moduleName })
+    trackEvent('generation_started', {
+      module: moduleName,
+      request_sequence: requestSequence,
+      response_mode: answerDepth,
+    })
 
     try {
       const result = await streamModuleResponse(
@@ -201,11 +217,18 @@ function AiModulePageContent({
             trackEvent('first_token_received', {
               module: moduleName,
               first_token_latency_ms: Math.round(performance.now() - startedAt),
+              request_sequence: requestSequence,
+              response_mode: answerDepth,
             })
           }
           responseLength += chunk.length
           finalResponse += chunk
+          const parseStartedAt = performance.now()
           setOutput((current) => current + chunk)
+          frontendStreamParseLatencyMs = Math.max(
+            frontendStreamParseLatencyMs,
+            Math.round(performance.now() - parseStartedAt),
+          )
         },
         (meta) => {
           if (meta.mode) {
@@ -214,6 +237,9 @@ function AiModulePageContent({
           if (meta.label) {
             setResponseModeLabel(meta.label)
           }
+        },
+        (progress) => {
+          setProgressStage(progress.stage)
         },
       )
 
@@ -242,12 +268,28 @@ function AiModulePageContent({
           response_length: responseLength,
         })
       }
+      if (result.partialMessage) {
+        setError(result.partialMessage)
+        setLastAttemptFailed(true)
+        trackEvent('partial_output_recovered', {
+          module: moduleName,
+          response_length: responseLength,
+          duration_ms: Math.round(performance.now() - startedAt),
+          error_category: result.partialCategory,
+          request_sequence: requestSequence,
+          response_mode: answerDepth,
+        })
+      }
 
       trackEvent('generation_completed', {
         module: moduleName,
         success: result.hadChunks,
         response_length: responseLength,
         duration_ms: Math.round(performance.now() - startedAt),
+        output_token_estimate: Math.ceil(responseLength / 4),
+        frontend_stream_parse_latency_ms: frontendStreamParseLatencyMs,
+        request_sequence: requestSequence,
+        response_mode: answerDepth,
       })
       if (finalResponse.trim()) {
         writeLocalCache(finalResponse)
@@ -272,11 +314,18 @@ function AiModulePageContent({
         response_length: responseLength,
         duration_ms: Math.round(performance.now() - startedAt),
         error_category: errorCategory,
+        request_sequence: requestSequence,
+        response_mode: answerDepth,
       })
-      setError(friendlyError)
+      if (finalResponse.trim()) {
+        setError('Answer completed partially. Tap retry for deeper version.')
+      } else {
+        setError(friendlyError)
+      }
       setHasGeneratedOnce(true)
       setLastAttemptFailed(true)
     } finally {
+      window.clearTimeout(slowHintTimer)
       setLoading(false)
     }
   }
@@ -325,9 +374,7 @@ function AiModulePageContent({
 
   const hasContent = output || error
   const isOptimisticOutput =
-    output.startsWith('## Academic Direction Loading') ||
-    output.startsWith('## Revision Notes Loading') ||
-    output.startsWith('## Concept Breakdown Loading')
+    output.startsWith('## Generating short answer')
   const inferredFallbackMode = output.startsWith('## Provider Temporarily Unavailable')
   const activeMode = inferredFallbackMode ? 'fallback' : isOptimisticOutput ? 'recovering' : responseMode
   const activeModeLabel = inferredFallbackMode
@@ -336,11 +383,13 @@ function AiModulePageContent({
       ? 'Provider Recovering'
       : responseModeLabel
   const outputStatus = loading
-    ? activeMode === 'recovering'
-      ? 'Recovering provider'
-      : activeMode === 'cache' || activeMode === 'warm_cache'
-        ? 'Refreshing cached answer'
-        : 'Streaming answer'
+    ? progressStage === 'connecting'
+      ? 'Connecting'
+      : progressStage === 'thinking'
+        ? 'Thinking'
+        : progressStage === 'finalizing'
+          ? 'Finalizing'
+          : 'Writing'
     : error
       ? 'Needs retry'
       : output
@@ -403,8 +452,27 @@ function AiModulePageContent({
                   Describe what you need
                 </h2>
               </div>
-              <div className="hidden rounded-2xl bg-slate-100 px-3 py-2 text-xs text-slate-500 sm:block">
-                Streamed answer
+              <div className="flex rounded-2xl bg-slate-100 p-1 text-xs font-medium text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => setAnswerDepth('fast')}
+                  disabled={loading}
+                  className={`rounded-xl px-3 py-2 transition ${
+                    answerDepth === 'fast' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-900'
+                  }`}
+                >
+                  Fast
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAnswerDepth('deep')}
+                  disabled={loading}
+                  className={`rounded-xl px-3 py-2 transition ${
+                    answerDepth === 'deep' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-900'
+                  }`}
+                >
+                  Deep
+                </button>
               </div>
             </div>
 
@@ -525,7 +593,9 @@ function AiModulePageContent({
                 </div>
               </div>
               <p className="text-sm text-slate-500">
-                {responseMode === 'recovering'
+                {slowStreamHint
+                  ? 'Still working - shortening answer so mobile does not stall...'
+                  : responseMode === 'recovering'
                   ? 'Preparing a useful academic scaffold while the provider recovers...'
                   : 'Generating a polished answer for you...'}
               </p>

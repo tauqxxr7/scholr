@@ -42,13 +42,15 @@ async def notes_endpoint(
     if quota_response:
         return quota_response
     record_usage_event(db, auth_context=auth_context, scope="notes")
-    cached = find_cached_response(
-        db,
-        module="notes",
-        user_id=auth_context.user_id,
-        query=request.topic,
-        request_id=request_id,
-    )
+    cached = None
+    if request.response_mode.strip().lower() != "deep":
+        cached = find_cached_response(
+            db,
+            module="notes",
+            user_id=auth_context.user_id,
+            query=request.topic,
+            request_id=request_id,
+        )
     use_fallback = should_use_emergency_fallback() and not cached
     fallback_text = build_provider_degraded_text("notes", request.topic)
     if use_fallback:
@@ -59,7 +61,7 @@ async def notes_endpoint(
         if cached
         else stream_text_chunks(fallback_text)
         if use_fallback
-        else generate_notes_response(request.topic),
+        else generate_notes_response(request.topic, request.response_mode),
         save_history=lambda response: crud.save_search(
             db=db,
             module="notes",

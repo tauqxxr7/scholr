@@ -13,6 +13,7 @@ type ScholrEventName =
   | 'fallback_activated'
   | 'cache_hydrated'
   | 'provider_recovery_success'
+  | 'partial_output_recovered'
   | 'copy_clicked'
   | 'clear_clicked'
   | 'retry_clicked'
@@ -28,6 +29,10 @@ type ScholrEventPayload = {
   retrieval_mode?: string
   cache_source?: string
   first_token_latency_ms?: number
+  frontend_stream_parse_latency_ms?: number
+  request_sequence?: 'first' | 'second_or_later'
+  response_mode?: 'fast' | 'deep'
+  output_token_estimate?: number
   citations_count?: number
   upload_pages?: number
   chunk_count?: number

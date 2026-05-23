@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator, Callable
@@ -13,7 +14,13 @@ from core.logging_utils import log_event
 logger = logging.getLogger(__name__)
 STREAM_OBSERVABILITY: dict[str, int] = {
     "stream_interruption_count": 0,
+    "partial_stream_recovery_count": 0,
+    "first_token_timeout_count": 0,
+    "stream_hard_cutoff_count": 0,
 }
+FIRST_TOKEN_TIMEOUT_SECONDS = 5
+STREAM_HARD_CUTOFF_SECONDS = 20
+NEXT_CHUNK_TIMEOUT_SECONDS = 8
 
 SSE_HEADERS = {
     "Cache-Control": "no-cache",
@@ -67,6 +74,7 @@ def build_sse_response(
         request_id = getattr(getattr(request, "state", None), "request_id", None)
         started_at = perf_counter()
         first_token_logged = False
+        partial_completion = False
 
         log_event(
             logger,
@@ -86,7 +94,52 @@ def build_sse_response(
         yield _sse_event({"type": "meta", **_response_mode_payload(source)})
 
         try:
-            async for chunk in generator:
+            iterator = generator.__aiter__()
+            while True:
+                elapsed = perf_counter() - started_at
+                remaining_total = STREAM_HARD_CUTOFF_SECONDS - elapsed
+                if remaining_total <= 0:
+                    STREAM_OBSERVABILITY["stream_hard_cutoff_count"] += 1
+                    if full_response:
+                        partial_completion = True
+                        yield _sse_event(
+                            {
+                                "type": "partial",
+                                "message": "Answer completed partially. Tap retry for deeper version.",
+                                "category": "stream_hard_cutoff",
+                            }
+                        )
+                        break
+                    raise ScholrGenerationError(
+                        "Scholr took too long to start this answer. Please retry.",
+                        retryable=True,
+                        category="provider_timeout",
+                    )
+
+                next_timeout = min(remaining_total, FIRST_TOKEN_TIMEOUT_SECONDS if not full_response else NEXT_CHUNK_TIMEOUT_SECONDS)
+                try:
+                    chunk = await asyncio.wait_for(iterator.__anext__(), timeout=next_timeout)
+                except StopAsyncIteration:
+                    break
+                except asyncio.TimeoutError as exc:
+                    if full_response:
+                        partial_completion = True
+                        STREAM_OBSERVABILITY["partial_stream_recovery_count"] += 1
+                        yield _sse_event(
+                            {
+                                "type": "partial",
+                                "message": "Answer completed partially. Tap retry for deeper version.",
+                                "category": "stream_chunk_timeout",
+                            }
+                        )
+                        break
+                    STREAM_OBSERVABILITY["first_token_timeout_count"] += 1
+                    raise ScholrGenerationError(
+                        "Scholr took too long to start this answer. Please retry.",
+                        retryable=True,
+                        category="first_token_timeout",
+                    ) from exc
+
                 if not chunk:
                     continue
 
@@ -104,7 +157,27 @@ def build_sse_response(
                 yield _sse_event({"type": "chunk", "chunk": chunk})
         except ScholrGenerationError as exc:
             STREAM_OBSERVABILITY["stream_interruption_count"] += 1
-            if recovery_text:
+            if full_response:
+                partial_completion = True
+                STREAM_OBSERVABILITY["partial_stream_recovery_count"] += 1
+                log_event(
+                    logger,
+                    "generation_partial_completed",
+                    module=module,
+                    request_id=request_id,
+                    source=source,
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    response_length=len("".join(full_response)),
+                    error_category=exc.category,
+                )
+                yield _sse_event(
+                    {
+                        "type": "partial",
+                        "message": "Answer completed partially. Tap retry for deeper version.",
+                        "category": exc.category,
+                    }
+                )
+            elif recovery_text:
                 full_response.clear()
                 yield _sse_event({"type": "meta", **_response_mode_payload("fallback")})
                 async for fallback_chunk in stream_text_chunks(recovery_text):
@@ -122,28 +195,49 @@ def build_sse_response(
                     error_category=exc.category,
                 )
                 return
-            log_event(
-                logger,
-                "generation_failed",
-                module=module,
-                request_id=request_id,
-                source=source,
-                duration_ms=round((perf_counter() - started_at) * 1000),
-                success=False,
-                error_category=exc.category,
-                retryable=exc.retryable,
-            )
-            yield _sse_event(
-                {
-                    "type": "error",
-                    "message": exc.user_message,
-                    "retryable": exc.retryable,
-                    "category": exc.category,
-                }
-            )
+            else:
+                log_event(
+                    logger,
+                    "generation_failed",
+                    module=module,
+                    request_id=request_id,
+                    source=source,
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    success=False,
+                    error_category=exc.category,
+                    retryable=exc.retryable,
+                )
+                yield _sse_event(
+                    {
+                        "type": "error",
+                        "message": exc.user_message,
+                        "retryable": exc.retryable,
+                        "category": exc.category,
+                    }
+                )
         except Exception:
             STREAM_OBSERVABILITY["stream_interruption_count"] += 1
-            if recovery_text:
+            if full_response:
+                partial_completion = True
+                STREAM_OBSERVABILITY["partial_stream_recovery_count"] += 1
+                log_event(
+                    logger,
+                    "generation_partial_completed",
+                    module=module,
+                    request_id=request_id,
+                    source=source,
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    response_length=len("".join(full_response)),
+                    error_category="unexpected",
+                )
+                yield _sse_event(
+                    {
+                        "type": "partial",
+                        "message": "Answer completed partially. Tap retry for deeper version.",
+                        "category": "unexpected",
+                    }
+                )
+            elif recovery_text:
                 full_response.clear()
                 yield _sse_event({"type": "meta", **_response_mode_payload("fallback")})
                 async for fallback_chunk in stream_text_chunks(recovery_text):
@@ -161,25 +255,26 @@ def build_sse_response(
                     error_category="unexpected",
                 )
                 return
-            log_event(
-                logger,
-                "generation_failed",
-                module=module,
-                request_id=request_id,
-                source=source,
-                duration_ms=round((perf_counter() - started_at) * 1000),
-                success=False,
-                error_category="unexpected",
-            )
-            logger.exception("Unexpected error while streaming module response")
-            yield _sse_event(
-                {
-                    "type": "error",
-                    "message": "Scholr hit an unexpected issue while generating this answer. Please try again.",
-                    "retryable": True,
-                    "category": "unexpected",
-                }
-            )
+            else:
+                log_event(
+                    logger,
+                    "generation_failed",
+                    module=module,
+                    request_id=request_id,
+                    source=source,
+                    duration_ms=round((perf_counter() - started_at) * 1000),
+                    success=False,
+                    error_category="unexpected",
+                )
+                logger.exception("Unexpected error while streaming module response")
+                yield _sse_event(
+                    {
+                        "type": "error",
+                        "message": "Scholr hit an unexpected issue while generating this answer. Please try again.",
+                        "retryable": True,
+                        "category": "unexpected",
+                    }
+                )
         else:
             if not full_response:
                 log_event(
@@ -209,6 +304,7 @@ def build_sse_response(
                     duration_ms=round((perf_counter() - started_at) * 1000),
                     success=True,
                     response_length=len(response_text),
+                    partial=partial_completion,
                 )
         finally:
             if full_response and save_history:

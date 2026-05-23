@@ -43,13 +43,15 @@ async def doubt_endpoint(
     if quota_response:
         return quota_response
     record_usage_event(db, auth_context=auth_context, scope="doubt")
-    cached = find_cached_response(
-        db,
-        module="doubt",
-        user_id=auth_context.user_id,
-        query=query,
-        request_id=request_id,
-    )
+    cached = None
+    if request.response_mode.strip().lower() != "deep":
+        cached = find_cached_response(
+            db,
+            module="doubt",
+            user_id=auth_context.user_id,
+            query=query,
+            request_id=request_id,
+        )
     use_fallback = should_use_emergency_fallback() and not cached
     fallback_text = build_provider_degraded_text("doubt", request.question, subject=request.subject or "General")
     if use_fallback:
@@ -60,7 +62,7 @@ async def doubt_endpoint(
         if cached
         else stream_text_chunks(fallback_text)
         if use_fallback
-        else generate_doubt_response(request.question, request.subject or "General"),
+        else generate_doubt_response(request.question, request.subject or "General", request.response_mode),
         save_history=lambda response: crud.save_search(
             db=db,
             module="doubt",

@@ -6,48 +6,68 @@ from agents._generation import (
 )
 from routers._streaming import stream_text_chunks
 
-RESEARCH_PROMPT = """
+FAST_RESEARCH_PROMPT = """
 You are an expert research assistant for Indian BTech engineering students.
 
-A student needs help with this research topic: {topic}
+A student needs fast research direction for: {topic}
 
-Provide your response in this EXACT format with these headers:
+Default mode is FAST. Be concise. No intro or outro.
+Use maximum 4 sections and 5-7 bullets total.
 
-## 5 Key Research Papers
-For each paper provide: Title, Authors (if known), Year, and a 2-line summary.
-Focus on papers relevant to Indian engineering curriculum.
+## Key Concepts
+- 3-4 must-know concepts, each with a 1-line meaning.
 
-## Must-Know Concepts Before You Start
-List exactly 3 foundational concepts the student must understand first.
-Keep each explanation to 2-3 sentences.
+## Papers / Search Queries
+- 3 paper search queries or paper types, each with a 2-line summary.
 
-## Recommended Reading Order
-Provide a beginner-to-advanced reading sequence.
-Explain WHY you recommend this order.
+## Reading Order
+- 3 short steps from beginner to project-ready.
 
-## Research Gap to Explore
-Identify ONE specific research gap in this area that a BTech student
-could realistically investigate for a final year project.
-Be specific about what is missing in current research.
+## BTech Project Gap
+- 1 realistic gap a student can explore.
 
-Keep language clear and accessible for a BTech student.
-Do not use overly academic jargon.
+Keep the whole answer under 450 words.
+"""
+
+DEEP_RESEARCH_PROMPT = """
+You are an expert research assistant for Indian BTech engineering students.
+
+A student needs research direction for: {topic}
+
+Provide 5 sections max:
+## Key Papers
+List 5 relevant paper directions with 2-line summaries.
+## Must-Know Concepts
+List 5 concepts.
+## Reading Order
+Give a beginner-to-advanced order.
+## Research Gap
+Give one realistic BTech project gap.
+## Next Search Queries
+List 4 useful queries.
+
+No intro/outro. Keep under 900 words.
 """
 
 
-async def generate_research_response(topic: str):
+def _is_deep_mode(response_mode: str) -> bool:
+    return response_mode.strip().lower() == "deep"
+
+
+async def generate_research_response(topic: str, response_mode: str = "fast"):
     safe_topic, warning = sanitize_user_input("research", topic)
     if warning:
         yield f"> {warning}\n\n"
 
-    prompt = RESEARCH_PROMPT.format(topic=safe_topic)
+    prompt_template = DEEP_RESEARCH_PROMPT if _is_deep_mode(response_mode) else FAST_RESEARCH_PROMPT
+    prompt = prompt_template.format(topic=safe_topic)
 
     try:
         async for chunk in stream_gemini_response(
             model_name="gemini-1.5-flash",
             prompt=prompt,
-            temperature=0.6,
-            max_output_tokens=1600,
+            temperature=0.4 if _is_deep_mode(response_mode) else 0.25,
+            max_output_tokens=900 if _is_deep_mode(response_mode) else 520,
         ):
             yield chunk
     except ScholrGenerationError as exc:

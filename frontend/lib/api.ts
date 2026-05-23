@@ -66,6 +66,7 @@ type StreamEvent =
   | { type: 'chunk'; chunk: string }
   | { type: 'error'; message: string; retryable?: boolean; category?: string }
   | { type: 'empty'; message?: string }
+  | { type: 'partial'; message?: string; category?: string }
   | { type: 'meta'; mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'; label?: string }
 
 export class StreamModuleError extends Error {
@@ -85,6 +86,8 @@ export type StreamModuleResult = {
   emptyMessage?: string
   mode?: 'ai' | 'cache' | 'warm_cache' | 'fallback' | 'recovering'
   modeLabel?: string
+  partialMessage?: string
+  partialCategory?: string
 }
 
 function describeHttpFailure(status: number) {
@@ -176,10 +179,13 @@ export async function streamModuleResponse(
   payload: Record<string, string>,
   onChunk: (chunk: string) => void,
   onMeta?: (meta: { mode?: StreamModuleResult['mode']; label?: string }) => void,
+  onProgress?: (progress: { stage: 'connecting' | 'thinking' | 'writing' | 'finalizing'; elapsedMs: number }) => void,
 ): Promise<StreamModuleResult> {
   let response: Response
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), 65000)
+  const startedAt = performance.now()
+  const timeout = window.setTimeout(() => controller.abort(), 22000)
+  onProgress?.({ stage: 'connecting', elapsedMs: 0 })
 
   try {
     response = await fetch(`${getApiUrl()}${path}`, {
@@ -193,6 +199,7 @@ export async function streamModuleResponse(
   } finally {
     window.clearTimeout(timeout)
   }
+  onProgress?.({ stage: 'thinking', elapsedMs: Math.round(performance.now() - startedAt) })
 
   if (!response.ok) {
     const failure = describeHttpFailure(response.status)
@@ -214,6 +221,8 @@ export async function streamModuleResponse(
   let emptyMessage = ''
   let mode: StreamModuleResult['mode']
   let modeLabel = ''
+  let partialMessage = ''
+  let partialCategory = ''
 
   const processEventBlock = (eventBlock: string) => {
     const normalizedBlock = eventBlock.replace(/\r/g, '')
@@ -236,11 +245,17 @@ export async function streamModuleResponse(
 
       if (parsed.type === 'chunk' && typeof parsed.chunk === 'string') {
         hadChunks = true
+        onProgress?.({ stage: 'writing', elapsedMs: Math.round(performance.now() - startedAt) })
         onChunk(parsed.chunk)
         return
       }
 
       if (parsed.type === 'error') {
+        if (hadChunks) {
+          partialMessage = parsed.message || 'Answer completed partially. Tap retry for deeper version.'
+          partialCategory = parsed.category || 'stream_error_after_tokens'
+          return
+        }
         throw new StreamModuleError(
           parsed.message || 'Scholr could not complete this request.',
           parsed.retryable ?? true,
@@ -252,6 +267,13 @@ export async function streamModuleResponse(
         emptyMessage =
           parsed.message ||
           'Scholr did not return any output for this prompt. Try rephrasing it and run again.'
+        return
+      }
+
+      if (parsed.type === 'partial') {
+        partialMessage = parsed.message || 'Answer completed partially. Tap retry for deeper version.'
+        partialCategory = parsed.category || 'partial_stream'
+        onProgress?.({ stage: 'finalizing', elapsedMs: Math.round(performance.now() - startedAt) })
         return
       }
 
@@ -277,34 +299,69 @@ export async function streamModuleResponse(
     }
   }
 
-  while (true) {
-    const { done, value } = await reader.read()
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
 
-    if (done) {
-      break
-    }
+      if (done) {
+        break
+      }
 
-    buffer += decoder.decode(value, { stream: true })
-    buffer = buffer.replace(/\r\n/g, '\n')
-    const events = buffer.split('\n\n')
-    buffer = events.pop() ?? ''
+      buffer += decoder.decode(value, { stream: true })
+      buffer = buffer.replace(/\r\n/g, '\n')
+      const events = buffer.split('\n\n')
+      buffer = events.pop() ?? ''
 
-    for (const event of events) {
-      const result = processEventBlock(event)
-      if (result === 'done') {
-        return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
+      for (const event of events) {
+        const result = processEventBlock(event)
+        if (result === 'done') {
+          return {
+            hadChunks,
+            emptyMessage: emptyMessage || undefined,
+            mode,
+            modeLabel: modeLabel || undefined,
+            partialMessage: partialMessage || undefined,
+            partialCategory: partialCategory || undefined,
+          }
+        }
       }
     }
+  } catch (error) {
+    if (hadChunks) {
+      return {
+        hadChunks,
+        emptyMessage: emptyMessage || undefined,
+        mode,
+        modeLabel: modeLabel || undefined,
+        partialMessage: 'Answer completed partially. Tap retry for deeper version.',
+        partialCategory: error instanceof DOMException && error.name === 'AbortError' ? 'frontend_timeout' : 'stream_interrupted',
+      }
+    }
+    throw describeNetworkFailure(error)
   }
 
   if (buffer.trim()) {
     const result = processEventBlock(buffer)
     if (result === 'done') {
-      return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
+      return {
+        hadChunks,
+        emptyMessage: emptyMessage || undefined,
+        mode,
+        modeLabel: modeLabel || undefined,
+        partialMessage: partialMessage || undefined,
+        partialCategory: partialCategory || undefined,
+      }
     }
   }
 
-  return { hadChunks, emptyMessage: emptyMessage || undefined, mode, modeLabel: modeLabel || undefined }
+  return {
+    hadChunks,
+    emptyMessage: emptyMessage || undefined,
+    mode,
+    modeLabel: modeLabel || undefined,
+    partialMessage: partialMessage || undefined,
+    partialCategory: partialCategory || undefined,
+  }
 }
 
 export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {

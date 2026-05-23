@@ -26,10 +26,10 @@ except ImportError:  # pragma: no cover - depends on local environment setup
     genai_errors = None
     genai_types = None
 
-DEFAULT_CONNECT_TIMEOUT_SECONDS = 25
-DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 45
+DEFAULT_CONNECT_TIMEOUT_SECONDS = 8
+DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS = 8
 DEFAULT_PROVIDER_PROBE_TIMEOUT_SECONDS = 5
-DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 40
+DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS = 20
 DEFAULT_PROVIDER_RECOVERY_INTERVAL_SECONDS = 180
 DEFAULT_PROVIDER_RECOVERY_JITTER_SECONDS = 25
 DEFAULT_PROVIDER_VALIDATED_TTL_SECONDS = 900
@@ -67,7 +67,7 @@ OPENROUTER_MODEL_PRIORITY = (
     "google/gemini-2.0-flash",
 )
 OPENROUTER_MODEL_REJECTION_TOKENS = ("preview", "experimental", "robotics", "embedding", "image", "vision", "audio")
-OPENROUTER_DEFAULT_STREAM_CHUNK_SIZE = 180
+OPENROUTER_DEFAULT_STREAM_CHUNK_SIZE = 120
 INPUT_CHAR_LIMITS = {
     "research": 1200,
     "notes": 1200,
@@ -1017,6 +1017,61 @@ async def _openrouter_generate_text(
     return cleaned
 
 
+def _extract_openrouter_delta_text(delta: dict[str, Any]) -> str:
+    content = delta.get("content")
+    if isinstance(content, list):
+        return "".join(str(part.get("text") or "") for part in content if isinstance(part, dict))
+    return str(content or "")
+
+
+async def _stream_openrouter_text(
+    *,
+    model_name: str,
+    prompt: str,
+    temperature: float,
+    max_output_tokens: int,
+) -> AsyncIterator[str]:
+    payload = {
+        "model": model_name,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature,
+        "max_tokens": max_output_tokens,
+        "stream": True,
+    }
+
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(
+            DEFAULT_PROVIDER_RUNTIME_MAX_SECONDS,
+            connect=DEFAULT_CONNECT_TIMEOUT_SECONDS,
+            read=DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS,
+        ),
+        headers=_build_openrouter_headers(),
+    ) as client:
+        async with client.stream("POST", f"{OPENROUTER_API_BASE}/chat/completions", json=payload) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if not line or not line.startswith("data:"):
+                    continue
+
+                data = line.removeprefix("data:").strip()
+                if data == "[DONE]":
+                    break
+
+                try:
+                    event = json.loads(data)
+                except json.JSONDecodeError:
+                    continue
+
+                choices = event.get("choices") or []
+                if not choices:
+                    continue
+
+                delta = choices[0].get("delta") or {}
+                text = _extract_openrouter_delta_text(delta)
+                if text:
+                    yield text
+
+
 async def _probe_model_generation(model_name: str) -> None:
     client = _build_client()
     response = await asyncio.wait_for(
@@ -1873,13 +1928,12 @@ async def _stream_openrouter_model_response(
     temperature: float,
     max_output_tokens: int,
 ) -> AsyncIterator[str]:
-    text = await _openrouter_generate_text(
+    async for chunk in _stream_openrouter_text(
         model_name=model_name,
         prompt=prompt,
         temperature=temperature,
         max_output_tokens=max_output_tokens,
-    )
-    async for chunk in _yield_text_chunks(text):
+    ):
         yield chunk
 
 

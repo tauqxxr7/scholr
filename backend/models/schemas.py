@@ -5,15 +5,18 @@ from pydantic import BaseModel, ConfigDict
 
 class ResearchRequest(BaseModel):
     topic: str
+    response_mode: str = "fast"
 
 
 class NotesRequest(BaseModel):
     topic: str
+    response_mode: str = "fast"
 
 
 class DoubtRequest(BaseModel):
     question: str
     subject: str | None = None
+    response_mode: str = "fast"
 
 
 class SearchHistoryItem(BaseModel):
