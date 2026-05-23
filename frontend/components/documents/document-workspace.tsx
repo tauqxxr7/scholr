@@ -109,6 +109,7 @@ const retrievalModeLabel: Record<string, string> = {
 function DocumentWorkspaceContent() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [documentHealth, setDocumentHealth] = useState<DocumentHealthResult | null>(null)
+  const [healthChecking, setHealthChecking] = useState(true)
   const [healthError, setHealthError] = useState('')
   const [selectedFileName, setSelectedFileName] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -127,9 +128,14 @@ function DocumentWorkspaceContent() {
       entrypoint: 'module_page',
     })
 
-    getDocumentHealth()
+    const timeout = new Promise<never>((_, reject) => {
+      window.setTimeout(() => reject(new Error('Document health timed out')), 5000)
+    })
+
+    Promise.race([getDocumentHealth(), timeout])
       .then(setDocumentHealth)
       .catch(() => setHealthError('Document health could not be loaded right now. Upload still may work.'))
+      .finally(() => setHealthChecking(false))
   }, [])
 
   const uploadModeLabel = useMemo(() => {
@@ -190,6 +196,16 @@ function DocumentWorkspaceContent() {
             : 'bg-slate-100 text-slate-700 border border-slate-200',
     }
   }, [answerResult, documentHealth])
+
+  const renderHealthValue = (value: string) =>
+    healthChecking ? (
+      <div className="mt-3 space-y-2" aria-label="Checking system status">
+        <div className="h-3 w-28 animate-pulse rounded-full bg-slate-200" />
+        <div className="h-3 w-20 animate-pulse rounded-full bg-slate-200" />
+      </div>
+    ) : (
+      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+    )
 
   const uploadDocumentFile = async (file: File) => {
     setUploading(true)
@@ -668,31 +684,27 @@ function DocumentWorkspaceContent() {
           <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm sm:rounded-[2rem] sm:p-6">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
               <TimerReset className="h-4 w-4 text-slate-700" />
-              Retrieval and embedding health
+              {healthChecking ? 'Checking system status...' : 'Retrieval and embedding health'}
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">PDF parsing</p>
-                <p className="mt-2 text-sm font-medium text-slate-900">
-                  {documentHealth?.pdf_parsing_available ? 'Available' : 'Unavailable'}
-                </p>
+                {renderHealthValue(documentHealth?.pdf_parsing_available ? 'Available' : 'Unavailable')}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Embeddings</p>
-                <p className="mt-2 text-sm font-medium text-slate-900">
-                  {documentHealth?.embedding_health || 'Loading'}
-                </p>
-                {documentHealth?.embedding_provider ? (
+                {renderHealthValue(documentHealth?.embedding_health || 'Unavailable')}
+                {!healthChecking && documentHealth?.embedding_provider ? (
                   <p className="mt-2 text-xs leading-5 text-slate-500">
                     Provider: {documentHealth.embedding_provider}
                   </p>
                 ) : null}
-                {documentHealth?.embedding_model ? (
+                {!healthChecking && documentHealth?.embedding_model ? (
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     Model: {documentHealth.embedding_model}
                   </p>
                 ) : null}
-                {documentHealth?.provider_error_category ? (
+                {!healthChecking && documentHealth?.provider_error_category ? (
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     State: {documentHealth.provider_error_category}
                   </p>
@@ -700,25 +712,23 @@ function DocumentWorkspaceContent() {
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Vector retrieval</p>
-                <p className="mt-2 text-sm font-medium text-slate-900">
-                  {documentHealth?.semantic_retrieval_ready
+                {renderHealthValue(
+                  documentHealth?.semantic_retrieval_ready
                     ? 'Active'
                     : documentHealth?.vector_store_available
                       ? 'Standing by'
-                      : 'Lexical fallback active'}
-                </p>
+                      : 'Lexical fallback active',
+                )}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Default mode</p>
-                <p className="mt-2 text-sm font-medium text-slate-900">
-                  {documentHealth?.retrieval_default_mode || 'Loading'}
-                </p>
-                {documentHealth?.retrieval_health ? (
+                {renderHealthValue(documentHealth?.retrieval_default_mode || 'Unavailable')}
+                {!healthChecking && documentHealth?.retrieval_health ? (
                   <p className="mt-2 text-xs leading-5 text-slate-500">
                     Retrieval health: {documentHealth.retrieval_health}
                   </p>
                 ) : null}
-                {documentHealth?.lexical_fallback_ready ? (
+                {!healthChecking && documentHealth?.lexical_fallback_ready ? (
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     Lexical fallback remains available if semantic retrieval is degraded.
                   </p>
