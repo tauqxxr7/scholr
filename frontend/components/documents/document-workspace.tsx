@@ -269,6 +269,10 @@ function DocumentWorkspaceContent() {
     trackEvent('document_answer_started', {
       module: 'documents_answer',
     })
+    trackEvent('search_started', {
+      module: 'documents',
+      query: question,
+    })
 
     const startedAt = performance.now()
 
@@ -287,6 +291,12 @@ function DocumentWorkspaceContent() {
         retrieval_mode: result.retrieval_mode,
         citations_count: result.citations.length,
       })
+      trackEvent('search_completed', {
+        module: 'documents',
+        mode: result.answer_mode,
+        completion_ms: Math.round(performance.now() - startedAt),
+        output_length: result.answer.length,
+      })
     } catch (error) {
       const message =
         error instanceof StreamModuleError
@@ -298,6 +308,10 @@ function DocumentWorkspaceContent() {
         success: false,
         duration_ms: Math.round(performance.now() - startedAt),
         error_category: error instanceof StreamModuleError ? error.category : 'document_answer_failed',
+      })
+      trackEvent('search_failed', {
+        module: 'documents',
+        error: message,
       })
     } finally {
       setAnswering(false)

@@ -158,6 +158,7 @@ function AiModulePageContent({
     const startedAt = performance.now()
     let responseLength = 0
     let firstTokenTracked = false
+    let firstTokenLatencyMs = 0
     let finalResponse = ''
     let streamHydrated = false
     let frontendStreamParseLatencyMs = 0
@@ -203,6 +204,11 @@ function AiModulePageContent({
       request_sequence: requestSequence,
       response_mode: answerDepth,
     })
+    trackEvent('search_started', {
+      module: moduleName,
+      query: primaryValue,
+      response_mode: answerDepth,
+    })
 
     try {
       const result = await streamModuleResponse(
@@ -215,9 +221,10 @@ function AiModulePageContent({
           }
           if (!firstTokenTracked) {
             firstTokenTracked = true
+            firstTokenLatencyMs = Math.round(performance.now() - startedAt)
             trackEvent('first_token_received', {
               module: moduleName,
-              first_token_latency_ms: Math.round(performance.now() - startedAt),
+              first_token_latency_ms: firstTokenLatencyMs,
               request_sequence: requestSequence,
               response_mode: answerDepth,
             })
@@ -292,6 +299,13 @@ function AiModulePageContent({
         request_sequence: requestSequence,
         response_mode: answerDepth,
       })
+      trackEvent('search_completed', {
+        module: moduleName,
+        mode: answerDepth,
+        first_token_ms: firstTokenLatencyMs,
+        completion_ms: Math.round(performance.now() - startedAt),
+        output_length: responseLength,
+      })
       if (finalResponse.trim()) {
         writeLocalCache(finalResponse)
       }
@@ -317,6 +331,10 @@ function AiModulePageContent({
         error_category: errorCategory,
         request_sequence: requestSequence,
         response_mode: answerDepth,
+      })
+      trackEvent('search_failed', {
+        module: moduleName,
+        error: friendlyError,
       })
       if (finalResponse.trim()) {
         setError('Answer completed partially. Tap retry for deeper version.')

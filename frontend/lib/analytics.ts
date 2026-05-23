@@ -1,5 +1,8 @@
 type ScholrEventName =
   | 'module_opened'
+  | 'search_started'
+  | 'search_completed'
+  | 'search_failed'
   | 'generation_started'
   | 'generation_completed'
   | 'generation_failed'
@@ -17,13 +20,19 @@ type ScholrEventName =
   | 'copy_clicked'
   | 'clear_clicked'
   | 'retry_clicked'
+  | 'feedback_submitted'
 
 type ScholrEventPayload = {
   module?: string
+  query?: string
   success?: boolean
   response_length?: number
+  output_length?: number
   duration_ms?: number
+  completion_ms?: number
+  first_token_ms?: number
   error_category?: string
+  error?: string
   entrypoint?: string
   mode?: string
   retrieval_mode?: string
