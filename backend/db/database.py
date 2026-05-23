@@ -8,7 +8,10 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./scholr.db")
+configured_database_url = os.getenv("DATABASE_URL", "").strip()
+sqlite_path = os.getenv("SQLITE_PATH", "/data/scholr.db").strip()
+# Render's persistent disk should be mounted at /data so SQLite survives deploys.
+DATABASE_URL = configured_database_url if configured_database_url.startswith("postgresql") else f"sqlite:///{sqlite_path}"
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 

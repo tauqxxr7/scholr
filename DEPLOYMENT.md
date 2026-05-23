@@ -74,8 +74,24 @@ If the live app shows `AI provider error. Please retry.`:
 ## Known Production Realities
 
 - Render free tier can cold start after inactivity
-- SQLite is local-only and not durable for production
-- production history should use PostgreSQL through `DATABASE_URL`
+- Render's normal filesystem is ephemeral, so a relative SQLite file such as `./scholr.db` will be wiped on deploy
+- if SQLite is used in production, mount a Render Persistent Disk at `/data` and set `SQLITE_PATH=/data/scholr.db`
+- for durable production history without disk management, set `DATABASE_URL` to a PostgreSQL connection string
+
+## Persistence On Render
+
+Scholr supports two production-safe persistence paths:
+
+1. Render Persistent Disk with SQLite:
+   - mount the disk at `/data`
+   - set `SQLITE_PATH=/data/scholr.db`
+   - leave `DATABASE_URL` blank unless using PostgreSQL
+
+2. PostgreSQL:
+   - set `DATABASE_URL` to a `postgresql://...` connection string
+   - Scholr will use PostgreSQL instead of SQLite when this environment variable starts with `postgresql`
+
+Do not rely on `./scholr.db` for production history on Render.
 
 ## Redeploy Checklist
 
