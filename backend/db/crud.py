@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
-from db.database import DocumentAsset, DocumentChunk, SearchHistory, UsageLedger, UserSession
+from db.database import DocumentAsset, DocumentChunk, Feedback, SearchHistory, UsageLedger, UserSession
 
 
 def save_search(
@@ -21,6 +21,26 @@ def save_search(
         module=module,
         query=query,
         response=response,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+def save_feedback(
+    db: Session,
+    *,
+    module: str,
+    query: str,
+    rating: str,
+    response_length: int,
+) -> Feedback:
+    record = Feedback(
+        module=module,
+        query=query,
+        rating=rating,
+        response_length=response_length,
     )
     db.add(record)
     db.commit()

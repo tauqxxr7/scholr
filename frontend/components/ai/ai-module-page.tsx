@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import ResponseFeedback from '@/components/ai/ResponseFeedback'
 import { trackEvent } from '@/lib/analytics'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
 
@@ -642,6 +643,14 @@ function AiModulePageContent({
             <div className="scholr-markdown">
               <ReactMarkdown>{output}</ReactMarkdown>
               {loading ? <span className="scholr-streaming-cursor" aria-hidden="true" /> : null}
+              {!loading && !isOptimisticOutput ? (
+                <ResponseFeedback
+                  key={`${moduleName}-${primaryValue}-${output.length}`}
+                  module={moduleName}
+                  query={primaryValue}
+                  responseLength={output.length}
+                />
+              ) : null}
             </div>
           ) : null}
 

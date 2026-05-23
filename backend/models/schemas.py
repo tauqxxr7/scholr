@@ -20,6 +20,13 @@ class DoubtRequest(BaseModel):
     response_mode: str = "fast"
 
 
+class FeedbackRequest(BaseModel):
+    module: str
+    query: str
+    rating: str
+    response_length: int
+
+
 class SearchHistoryItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

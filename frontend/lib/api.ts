@@ -458,6 +458,25 @@ export async function answerDocumentQuestion(payload: {
   return json as DocumentAnswerResult
 }
 
+export async function submitFeedback(payload: {
+  module: string
+  query: string
+  rating: 'helpful' | 'not_helpful'
+  response_length: number
+}): Promise<{ received: boolean }> {
+  const response = await fetch(`${getApiUrl()}/api/feedback`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    throw new StreamModuleError('Feedback could not be saved right now.', true, 'feedback_failed')
+  }
+
+  return response.json()
+}
+
 export async function getDocumentHealth(): Promise<DocumentHealthResult> {
   const response = await fetch(`${getApiUrl()}/health/documents`, {
     cache: 'no-store',

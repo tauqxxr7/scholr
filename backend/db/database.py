@@ -80,6 +80,17 @@ class UsageLedger(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    module = Column(String, nullable=False)
+    query = Column(Text, nullable=False)
+    rating = Column(String, nullable=False)
+    response_length = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class UserSession(Base):
     __tablename__ = "user_sessions"
 

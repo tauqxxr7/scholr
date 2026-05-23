@@ -33,6 +33,7 @@ type ScholrEventPayload = {
   first_token_ms?: number
   error_category?: string
   error?: string
+  rating?: string
   entrypoint?: string
   mode?: string
   retrieval_mode?: string
