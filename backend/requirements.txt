@@ -9,3 +9,4 @@ pypdf==5.1.0
 chromadb==0.5.23
 python-multipart==0.0.12
 httpx==0.28.1
+sentry-sdk[fastapi]==2.8.0

@@ -2,8 +2,11 @@ import logging
 import os
 import uuid
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from starlette.requests import Request
 
 from agents._generation import (
@@ -20,6 +23,15 @@ from db.database import SessionLocal, init_db
 from routers import documents, doubt, history, notes, research
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
+
+sentry_dsn = os.getenv("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
+        traces_sample_rate=0.1,
+        environment=os.getenv("ENVIRONMENT", "production"),
+    )
 
 configure_logging()
 init_db()
