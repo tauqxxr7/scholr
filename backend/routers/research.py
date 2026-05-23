@@ -74,6 +74,7 @@ async def research_endpoint(
         empty_message="Scholr could not find a usable research response for that topic. Try making the topic more specific.",
         request=http_request,
         module="research",
+        mode=response_mode,
         source="warm_cache"
         if cached and cached.mode == "similar"
         else "cache"
@@ -81,5 +82,6 @@ async def research_endpoint(
         else get_fallback_stream_source()
         if use_fallback
         else "live",
+        cache_hit=bool(cached),
         recovery_text=fallback_text,
     )

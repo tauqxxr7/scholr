@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import StreamingResponse
 
-from agents._generation import ScholrGenerationError
+from agents._generation import ScholrGenerationError, get_provider_status
 from core.logging_utils import log_event
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,9 @@ def build_sse_response(
     empty_message: str = "Scholr did not generate any output for this prompt. Please try rephrasing it.",
     request: Request | None = None,
     module: str,
+    mode: str = "fast",
     source: str = "live",
+    cache_hit: bool = False,
     recovery_text: str | None = None,
 ) -> StreamingResponse:
     async def event_stream():
@@ -74,12 +76,27 @@ def build_sse_response(
         request_id = getattr(getattr(request, "state", None), "request_id", None)
         started_at = perf_counter()
         first_token_logged = False
+        first_token_ms: int | None = None
         partial_completion = False
+        provider_status = get_provider_status()
+        provider = str(provider_status.get("active_provider") or provider_status.get("provider_status") or "unknown")
+        error_category: str | None = None
 
+        log_event(
+            logger,
+            "stream_started",
+            module=module,
+            mode=mode,
+            request_id=request_id,
+            source=source,
+            provider=provider,
+            cache_hit=cache_hit,
+        )
         log_event(
             logger,
             "generation_started",
             module=module,
+            mode=mode,
             request_id=request_id,
             source=source,
         )
@@ -145,17 +162,20 @@ def build_sse_response(
 
                 if not first_token_logged:
                     first_token_logged = True
+                    first_token_ms = round((perf_counter() - started_at) * 1000)
                     log_event(
                         logger,
                         "first_token_emitted",
                         module=module,
+                        mode=mode,
                         request_id=request_id,
                         source=source,
-                        first_token_latency_ms=round((perf_counter() - started_at) * 1000),
+                        first_token_latency_ms=first_token_ms,
                     )
                 full_response.append(chunk)
                 yield _sse_event({"type": "chunk", "chunk": chunk})
         except ScholrGenerationError as exc:
+            error_category = exc.category
             STREAM_OBSERVABILITY["stream_interruption_count"] += 1
             if full_response:
                 partial_completion = True
@@ -216,6 +236,7 @@ def build_sse_response(
                     }
                 )
         except Exception:
+            error_category = "unexpected"
             STREAM_OBSERVABILITY["stream_interruption_count"] += 1
             if full_response:
                 partial_completion = True
@@ -307,8 +328,23 @@ def build_sse_response(
                     partial=partial_completion,
                 )
         finally:
+            response_text_for_metrics = "".join(full_response)
+            log_event(
+                logger,
+                "stream_completed",
+                module=module,
+                mode=mode,
+                first_token_ms=first_token_ms,
+                completion_ms=round((perf_counter() - started_at) * 1000),
+                output_length=len(response_text_for_metrics),
+                provider=provider,
+                cache_hit=cache_hit,
+                source=source,
+                partial=partial_completion,
+                error_category=error_category,
+            )
             if full_response and save_history:
-                response_text = "".join(full_response)
+                response_text = response_text_for_metrics
                 try:
                     save_history(response_text)
                     log_event(

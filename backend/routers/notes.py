@@ -42,8 +42,9 @@ async def notes_endpoint(
     if quota_response:
         return quota_response
     record_usage_event(db, auth_context=auth_context, scope="notes")
+    response_mode = request.response_mode.strip().lower()
     cached = None
-    if request.response_mode.strip().lower() != "deep":
+    if response_mode != "deep":
         cached = find_cached_response(
             db,
             module="notes",
@@ -61,7 +62,7 @@ async def notes_endpoint(
         if cached
         else stream_text_chunks(fallback_text)
         if use_fallback
-        else generate_notes_response(request.topic, request.response_mode),
+        else generate_notes_response(request.topic, response_mode),
         save_history=lambda response: crud.save_search(
             db=db,
             module="notes",
@@ -73,6 +74,7 @@ async def notes_endpoint(
         empty_message="Scholr could not turn that topic into notes this time. Try a clearer exam topic or concept name.",
         request=http_request,
         module="notes",
+        mode=response_mode,
         source="warm_cache"
         if cached and cached.mode == "similar"
         else "cache"
@@ -80,5 +82,6 @@ async def notes_endpoint(
         else get_fallback_stream_source()
         if use_fallback
         else "live",
+        cache_hit=bool(cached),
         recovery_text=fallback_text,
     )
