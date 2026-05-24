@@ -99,8 +99,7 @@ export default function LandingPage() {
               Turn any BTech topic into exam-ready notes, research direction, and doubt solving.
             </h1>
             <p className="mt-4 max-w-[34rem] text-pretty text-[clamp(0.95rem,3.6vw,1.05rem)] leading-6 text-slate-600 sm:mt-5 sm:text-[1.08rem] sm:leading-7">
-              Scholr focuses on the wedge that matters first: one fast, polished academic platform
-              with streaming AI, document grounding, and resilient fallback behavior.
+              Free for every BTech student. Get research papers, exam notes, and doubt solving in 60 seconds.
             </p>
             <div className="mt-5 grid gap-2.5 sm:mt-6 sm:max-w-xl sm:grid-cols-2 sm:gap-3">
               <div className="min-w-0 rounded-2xl border border-white/70 bg-white/80 p-3.5 shadow-sm sm:p-4">
@@ -119,7 +118,7 @@ export default function LandingPage() {
             <div className="mt-6 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-3">
               <Link href="/research">
                 <Button className="min-h-11 w-full rounded-xl bg-slate-950 px-4 text-sm text-white hover:bg-slate-800 sm:min-h-12 sm:w-auto sm:text-base">
-                  Try the live research flow
+                  Try Scholr free — no signup needed
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -162,6 +161,34 @@ export default function LandingPage() {
               })}
             </div>
           </div>
+        </section>
+
+        <section className="grid gap-3 pb-8 sm:grid-cols-3 sm:gap-4 sm:pb-12">
+          {[
+            {
+              step: '1',
+              title: 'Type your topic',
+              description: 'Enter any BTech subject, concept, or question.',
+            },
+            {
+              step: '2',
+              title: 'AI generates instantly',
+              description: 'Scholr streams a structured academic answer in seconds.',
+            },
+            {
+              step: '3',
+              title: 'Copy, save, or export',
+              description: 'Use the output in your notes, report, or revision.',
+            },
+          ].map((item) => (
+            <div key={item.step} className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-950 text-sm font-semibold text-white">
+                {item.step}
+              </div>
+              <h2 className="mt-4 text-lg font-semibold text-slate-950">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+            </div>
+          ))}
         </section>
 
         <section className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm sm:rounded-[2rem] sm:p-7">
