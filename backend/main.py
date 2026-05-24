@@ -20,7 +20,7 @@ from core.auth import get_auth_context
 from core.logging_utils import configure_logging, log_event
 from db import crud
 from db.database import SessionLocal, init_db
-from routers import documents, doubt, feedback, history, metrics, notes, research
+from routers import documents, doubt, feedback, history, metrics, notes, research, waitlist
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
 
@@ -91,6 +91,7 @@ app.include_router(history.router, prefix="/api", tags=["history"])
 app.include_router(documents.router, prefix="/api", tags=["documents"])
 app.include_router(feedback.router, prefix="/api", tags=["feedback"])
 app.include_router(metrics.router, tags=["metrics"])
+app.include_router(waitlist.router, tags=["waitlist"])
 
 logger = logging.getLogger("scholr.api")
 

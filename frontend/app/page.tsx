@@ -1,3 +1,6 @@
+'use client'
+
+import { FormEvent, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, BookOpen, BrainCircuit, NotebookPen, CheckCircle2, Sparkles } from 'lucide-react'
 
@@ -23,6 +26,38 @@ const modules = [
 ]
 
 export default function LandingPage() {
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+
+  const handleWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!waitlistEmail.trim()) {
+      return
+    }
+
+    setWaitlistStatus('loading')
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '')
+      if (!apiUrl) {
+        throw new Error('Missing API URL')
+      }
+
+      const response = await fetch(`${apiUrl}/api/waitlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: waitlistEmail.trim() }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Waitlist request failed')
+      }
+
+      setWaitlistStatus('success')
+    } catch {
+      setWaitlistStatus('error')
+    }
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.22),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(125,211,252,0.18),_transparent_26%),linear-gradient(180deg,#fffdf7_0%,#ffffff_55%,#f8fafc_100%)]">
       <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
@@ -126,6 +161,50 @@ export default function LandingPage() {
                 )
               })}
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm sm:rounded-[2rem] sm:p-7">
+          <div className="grid gap-5 lg:grid-cols-[1fr_0.95fr] lg:items-center">
+            <div>
+              <Badge className="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-800">
+                Product updates
+              </Badge>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+                Get notified when we launch new features
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                Join the early Scholr list for document intelligence, export workflows, and better exam-prep tools.
+              </p>
+            </div>
+            {waitlistStatus === 'success' ? (
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-medium leading-6 text-emerald-800">
+                You&apos;re on the list! We&apos;ll keep you updated.
+              </div>
+            ) : (
+              <form onSubmit={handleWaitlistSubmit} className="space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="email"
+                    value={waitlistEmail}
+                    onChange={(event) => setWaitlistEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+                    required
+                  />
+                  <Button
+                    type="submit"
+                    disabled={waitlistStatus === 'loading'}
+                    className="min-h-11 rounded-xl bg-slate-950 px-5 text-sm text-white hover:bg-slate-800"
+                  >
+                    {waitlistStatus === 'loading' ? 'Joining...' : 'Notify me'}
+                  </Button>
+                </div>
+                {waitlistStatus === 'error' ? (
+                  <p className="text-sm text-red-600">Something went wrong. Please try again.</p>
+                ) : null}
+              </form>
+            )}
           </div>
         </section>
 

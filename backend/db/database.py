@@ -91,6 +91,15 @@ class Feedback(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class Waitlist(Base):
+    __tablename__ = "waitlist"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String, unique=True, nullable=False)
+    source = Column(String, default="landing_page")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class UserSession(Base):
     __tablename__ = "user_sessions"
 

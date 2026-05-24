@@ -99,3 +99,33 @@ def test_metrics_route_returns_aggregate_keys():
     assert "searches" in body
     assert "feedback" in body
     assert {"total", "last_24h", "last_7d", "by_module"}.issubset(body["searches"].keys())
+
+
+def test_waitlist_route_accepts_new_email():
+    client = TestClient(main.app)
+    email = "student-new@example.com"
+
+    response = client.post("/api/waitlist", json={"email": email})
+
+    assert response.status_code == 200
+    assert response.json()["added"] is True
+
+
+def test_waitlist_route_reports_duplicate_email():
+    client = TestClient(main.app)
+    email = "student-duplicate@example.com"
+
+    first = client.post("/api/waitlist", json={"email": email})
+    second = client.post("/api/waitlist", json={"email": email})
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json()["already_registered"] is True
+
+
+def test_waitlist_route_rejects_invalid_email():
+    client = TestClient(main.app)
+
+    response = client.post("/api/waitlist", json={"email": "not-an-email"})
+
+    assert response.status_code == 422
