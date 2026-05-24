@@ -311,6 +311,9 @@ function AiModulePageContent({
       if (finalResponse.trim()) {
         writeLocalCache(finalResponse)
       }
+      if (result.hadChunks && typeof window !== 'undefined') {
+        window.localStorage.setItem('scholr_has_used', 'true')
+      }
       setHasGeneratedOnce(true)
     } catch (submissionError) {
       const friendlyError =

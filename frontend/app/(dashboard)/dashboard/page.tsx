@@ -49,6 +49,11 @@ function DashboardPageContent() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(true)
+  const [hasUsedBefore] = useState(
+    typeof window !== 'undefined'
+      ? localStorage.getItem('scholr_has_used') === 'true'
+      : false,
+  )
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -183,31 +188,74 @@ function DashboardPageContent() {
               </div>
             ))}
           </div>
-        ) : history.length ? (
+        ) : history.length > 0 || hasUsedBefore ? (
           <div className="mt-6 space-y-3">
-            {history.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-[1.5rem] border border-slate-200 bg-slate-50/45 p-4 transition hover:border-slate-300 hover:bg-white"
-              >
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline" className="capitalize">
-                    {item.module}
-                  </Badge>
-                  <span className="text-xs text-slate-400">
-                    {new Date(item.created_at).toLocaleString()}
-                  </span>
+            {history.length ? (
+              history.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[1.5rem] border border-slate-200 bg-slate-50/45 p-4 transition hover:border-slate-300 hover:bg-white"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge variant="outline" className="capitalize">
+                      {item.module}
+                    </Badge>
+                    <span className="text-xs text-slate-400">
+                      {new Date(item.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-3 font-medium text-slate-900">{item.query}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {item.response.length > 220 ? `${item.response.slice(0, 220)}...` : item.response}
+                  </p>
                 </div>
-                <p className="mt-3 font-medium text-slate-900">{item.query}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {item.response.length > 220 ? `${item.response.slice(0, 220)}...` : item.response}
-                </p>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                Generate your next research, notes, or doubt answer and it will appear here.
               </div>
-            ))}
+            )}
           </div>
         ) : (
-          <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
-            Generate your first research, notes, or doubt answer and it will appear here.
+          <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-5 sm:p-7">
+            <div className="text-center">
+              <h3 className="text-2xl font-semibold tracking-tight text-slate-950">Welcome to Scholr</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Here is how to get started in 60 seconds
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  href: '/research',
+                  title: 'Find research papers',
+                  description: 'Discover key papers, reading order, and research gaps for your project',
+                  label: 'Research',
+                },
+                {
+                  href: '/notes',
+                  title: 'Generate study notes',
+                  description: 'Create structured revision notes for any BTech topic in seconds',
+                  label: 'Notes',
+                },
+                {
+                  href: '/doubt',
+                  title: 'Solve a doubt',
+                  description: 'Get step-by-step explanations for any engineering concept',
+                  label: 'Doubt',
+                },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-[1.5rem] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+                >
+                  <Badge variant="outline">{item.label}</Badge>
+                  <h4 className="mt-4 text-lg font-semibold text-slate-950">{item.title}</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </section>
