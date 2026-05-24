@@ -87,3 +87,15 @@ def test_health_route_returns_status_key():
 
     assert response.status_code == 200
     assert "status" in response.json()
+
+
+def test_metrics_route_returns_aggregate_keys():
+    client = TestClient(main.app)
+
+    response = client.get("/api/metrics")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "searches" in body
+    assert "feedback" in body
+    assert {"total", "last_24h", "last_7d", "by_module"}.issubset(body["searches"].keys())
