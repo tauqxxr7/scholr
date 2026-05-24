@@ -325,3 +325,132 @@ Date: 2026-05-24
 - `GET /api/metrics`: passed, returned `searches` and `feedback`.
 - `POST /api/waitlist`: passed with valid email.
 - `git log --oneline -10`: shows all 8 Sprint 2 retry implementation commits.
+
+# Sprint 3
+
+Date: 2026-05-24
+
+## Task Results
+
+### Bug Fix A - Landing page CTA
+
+- Status: completed.
+- Commit: `cdf831f`
+- Message: `fix: update landing page CTA and subheading text to student-facing copy`
+- Files changed:
+  - `frontend/app/page.tsx`
+
+### Bug Fix B - Dashboard onboarding
+
+- Status: completed.
+- Commit: `094fe2e`
+- Message: `fix: repair dashboard onboarding hydration - show cards for new users with empty history`
+- Files changed:
+  - `frontend/app/(dashboard)/dashboard/page.tsx`
+
+### Task 1 - Clerk auth scaffold
+
+- Status: completed.
+- Commit: `a5f0002`
+- Message: `feat: add Clerk auth scaffold with optional JWT user tagging on history`
+- Files changed:
+  - `frontend/package.json`
+  - `frontend/package-lock.json`
+  - `frontend/middleware.ts`
+  - `frontend/app/layout.tsx`
+  - `frontend/app/(dashboard)/layout.tsx`
+  - `frontend/app/sign-in/[[...sign-in]]/page.tsx`
+  - `frontend/app/sign-up/[[...sign-up]]/page.tsx`
+  - `frontend/.env.example`
+  - `backend/auth/__init__.py`
+  - `backend/auth/clerk.py`
+  - `backend/requirements.txt`
+  - `backend/db/database.py`
+  - `backend/db/crud.py`
+  - `backend/routers/research.py`
+  - `backend/routers/notes.py`
+  - `backend/routers/doubt.py`
+  - `backend/routers/history.py`
+
+### Task 2 - AI output quality
+
+- Status: completed.
+- Commit: `9763255`
+- Message: `feat: strengthen AI prompt structure enforcement and add output section validation logging`
+- Files changed:
+  - `backend/agents/_validation.py`
+  - `backend/agents/research_agent.py`
+  - `backend/agents/notes_agent.py`
+  - `backend/agents/doubt_agent.py`
+  - `backend/routers/_streaming.py`
+  - `backend/routers/research.py`
+  - `backend/routers/notes.py`
+  - `backend/routers/doubt.py`
+
+### Task 3 - Response caching
+
+- Status: completed.
+- Commit: `638a80e`
+- Message: `feat: add in-memory response cache with TTL and LRU eviction for repeated queries`
+- Files changed:
+  - `backend/cache/__init__.py`
+  - `backend/cache/response_cache.py`
+  - `backend/routers/_streaming.py`
+  - `backend/routers/research.py`
+  - `backend/routers/notes.py`
+  - `backend/routers/doubt.py`
+  - `backend/routers/metrics.py`
+  - `backend/tests/test_routers.py`
+
+### Task 4 - Rate limiting upgrade
+
+- Status: completed.
+- Commit: `dd64a3e`
+- Message: `feat: upgrade rate limiting with slowapi per-IP tracking on all endpoints`
+- Files changed:
+  - `backend/core/slowapi_limiter.py`
+  - `backend/requirements.txt`
+  - `backend/main.py`
+  - `backend/routers/research.py`
+  - `backend/routers/notes.py`
+  - `backend/routers/doubt.py`
+  - `backend/routers/waitlist.py`
+  - `backend/routers/metrics.py`
+
+### Task 5 - GitHub social proof
+
+- Status: completed.
+- Commit: `23d7eef`
+- Message: `docs: improve README header with live link and star CTA, update og metadata`
+- Files changed:
+  - `README.md`
+  - `frontend/app/layout.tsx`
+
+### Task 6 - Pre-launch safety
+
+- Status: completed.
+- Commit: `65d2068`
+- Message: `feat: add privacy page, disclaimer banner, pre-launch user safety improvements`
+- Files changed:
+  - `frontend/components/DisclaimerBanner.tsx`
+  - `frontend/app/(dashboard)/layout.tsx`
+  - `frontend/app/privacy/page.tsx`
+
+### Final verification
+
+- Status: completed.
+- Commit: this commit.
+- Message: `chore: sprint 3 final verification and summary`
+- Files changed:
+  - `COMMIT_SUMMARY.md`
+
+## Sprint 3 Verification
+
+- `python -m pytest backend/tests/ -v`: passed, 19 tests.
+- `python -m compileall backend`: passed.
+- `npm run lint`: passed.
+- `npx tsc --noEmit`: passed.
+- `npm run build`: passed with Next.js middleware deprecation warning only.
+- Built frontend routes include `/`, `/research`, `/notes`, `/doubt`, `/documents`, `/dashboard`, `/sign-in`, `/sign-up`, `/sitemap.xml`, and `/robots.txt`.
+- `/api/metrics` now includes `cache` and `rate_limits`.
+- Rate limiting remains layered with existing Scholr runtime quota checks.
