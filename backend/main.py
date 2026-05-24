@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from starlette.requests import Request
 
 from agents._generation import (
@@ -18,6 +20,7 @@ from agents._generation import (
 )
 from core.auth import get_auth_context
 from core.logging_utils import configure_logging, log_event
+from core.slowapi_limiter import limiter
 from db import crud
 from db.database import SessionLocal, init_db
 from routers import documents, doubt, feedback, history, metrics, notes, research, waitlist
@@ -83,6 +86,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(research.router, prefix="/api", tags=["research"])
 app.include_router(notes.router, prefix="/api", tags=["notes"])

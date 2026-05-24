@@ -1,17 +1,21 @@
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from cache.response_cache import response_cache
+from core.slowapi_limiter import limiter
 from db.database import Feedback, SearchHistory, get_db
 
 router = APIRouter()
 
 
 @router.get("/api/metrics")
-def get_metrics(db: Session = Depends(get_db)):
+@limiter.limit("30/minute")
+def get_metrics(request: Request, response: Response, db: Session = Depends(get_db)):
+    del request
+    del response
     now = datetime.utcnow()
     day_ago = now - timedelta(hours=24)
     week_ago = now - timedelta(days=7)
@@ -51,5 +55,10 @@ def get_metrics(db: Session = Depends(get_db)):
             "helpful_rate": round(helpful / total_feedback * 100, 1) if total_feedback > 0 else None,
         },
         "cache": response_cache.stats(),
+        "rate_limits": {
+            "ai_endpoints": "20 per minute per IP",
+            "waitlist": "5 per minute per IP",
+            "metrics": "30 per minute per IP",
+        },
         "generated_at": now.isoformat(),
     }
