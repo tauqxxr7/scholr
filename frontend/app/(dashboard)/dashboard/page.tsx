@@ -49,11 +49,11 @@ function DashboardPageContent() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(true)
-  const [hasUsedBefore] = useState(
-    typeof window !== 'undefined'
-      ? localStorage.getItem('scholr_has_used') === 'true'
-      : false,
-  )
+  const [hasUsedBefore, setHasUsedBefore] = useState(false)
+
+  useEffect(() => {
+    setHasUsedBefore(localStorage.getItem('scholr_has_used') === 'true')
+  }, [])
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -69,6 +69,52 @@ function DashboardPageContent() {
 
     void loadHistory()
   }, [])
+
+  const showOnboarding = !historyLoading && history.length === 0 && hasUsedBefore === false
+  const showHistoryList = !historyLoading && !showOnboarding
+
+  const onboardingCards = (
+    <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-5 sm:p-7">
+      <div className="text-center">
+        <h3 className="text-2xl font-semibold tracking-tight text-slate-950">Welcome to Scholr</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          Here is how to get started in 60 seconds
+        </p>
+      </div>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {[
+          {
+            href: '/research',
+            title: 'Find research papers',
+            description: 'Discover key papers, reading order, and research gaps for your project',
+            label: 'Research',
+          },
+          {
+            href: '/notes',
+            title: 'Generate study notes',
+            description: 'Create structured revision notes for any BTech topic in seconds',
+            label: 'Notes',
+          },
+          {
+            href: '/doubt',
+            title: 'Solve a doubt',
+            description: 'Get step-by-step explanations for any engineering concept',
+            label: 'Doubt',
+          },
+        ].map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="rounded-[1.5rem] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
+          >
+            <Badge variant="outline">{item.label}</Badge>
+            <h4 className="mt-4 text-lg font-semibold text-slate-950">{item.title}</h4>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-8 lg:space-y-10">
@@ -163,7 +209,7 @@ function DashboardPageContent() {
               Every finished response is stored in the active backend database for quick review.
             </p>
           </div>
-          <Badge variant="outline">{history.length} items</Badge>
+          {showHistoryList && history.length > 0 ? <Badge variant="outline">{history.length} items</Badge> : null}
         </div>
 
         {historyError ? (
@@ -188,7 +234,7 @@ function DashboardPageContent() {
               </div>
             ))}
           </div>
-        ) : history.length > 0 || hasUsedBefore ? (
+        ) : showHistoryList ? (
           <div className="mt-6 space-y-3">
             {history.length ? (
               history.map((item) => (
@@ -216,48 +262,7 @@ function DashboardPageContent() {
               </div>
             )}
           </div>
-        ) : (
-          <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-5 sm:p-7">
-            <div className="text-center">
-              <h3 className="text-2xl font-semibold tracking-tight text-slate-950">Welcome to Scholr</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Here is how to get started in 60 seconds
-              </p>
-            </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              {[
-                {
-                  href: '/research',
-                  title: 'Find research papers',
-                  description: 'Discover key papers, reading order, and research gaps for your project',
-                  label: 'Research',
-                },
-                {
-                  href: '/notes',
-                  title: 'Generate study notes',
-                  description: 'Create structured revision notes for any BTech topic in seconds',
-                  label: 'Notes',
-                },
-                {
-                  href: '/doubt',
-                  title: 'Solve a doubt',
-                  description: 'Get step-by-step explanations for any engineering concept',
-                  label: 'Doubt',
-                },
-              ].map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-[1.5rem] border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
-                >
-                  <Badge variant="outline">{item.label}</Badge>
-                  <h4 className="mt-4 text-lg font-semibold text-slate-950">{item.title}</h4>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        ) : onboardingCards}
       </section>
     </div>
   )
