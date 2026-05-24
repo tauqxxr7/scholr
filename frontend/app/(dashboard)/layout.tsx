@@ -1,5 +1,6 @@
 import { UserButton } from '@clerk/nextjs'
 
+import DisclaimerBanner from '@/components/DisclaimerBanner'
 import Sidebar from '@/components/Sidebar'
 
 export default function DashboardLayout({
@@ -19,6 +20,7 @@ export default function DashboardLayout({
               <UserButton />
             </div>
           ) : null}
+          <DisclaimerBanner />
           {children}
         </div>
       </main>

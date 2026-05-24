@@ -8,7 +8,11 @@ export const metadata = {
 const sections = [
   {
     title: 'What Scholr stores',
-    body: 'Scholr stores the prompts you send and the completed AI responses so the dashboard history can work. For the MVP, that history lives in the configured project database.',
+    body: 'Scholr stores the search queries you send, completed AI responses, and response feedback so dashboard history and quality improvements can work. For the MVP, that history lives in the configured project database.',
+  },
+  {
+    title: 'Analytics and feedback',
+    body: 'Scholr may collect anonymous usage analytics and helpful/not-helpful feedback to understand which academic workflows are useful. We do not sell your personal data.',
   },
   {
     title: 'How the AI works',
@@ -20,7 +24,7 @@ const sections = [
   },
   {
     title: 'Contact',
-    body: 'For the MVP, replace this placeholder with a real contact such as founder@scholr.app before public launch.',
+    body: 'Questions or privacy requests? Email tauqeerplayer@gmail.com.',
   },
 ]
 
@@ -38,8 +42,8 @@ export default function PrivacyPage() {
               Privacy notice for the Scholr MVP
             </h1>
             <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
-              This is a simple, product-stage privacy page for the current MVP. Keep it honest and
-              update it before large-scale launch.
+              This is a simple, product-stage privacy page for the current MVP. Scholr does not
+              sell personal data, and this notice should be reviewed before large-scale launch.
             </p>
           </div>
         </div>
