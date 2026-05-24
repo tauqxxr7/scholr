@@ -72,6 +72,7 @@ def build_sse_response(
     recovery_text: str | None = None,
     required_sections: list[str] | None = None,
     validation_query: str = "",
+    on_complete: Callable[[str], Any] | None = None,
 ) -> StreamingResponse:
     async def event_stream():
         full_response: list[str] = []
@@ -354,6 +355,18 @@ def build_sse_response(
                         module,
                         validation_query[:50],
                     )
+            if response_text_for_metrics and on_complete:
+                try:
+                    on_complete(response_text_for_metrics)
+                except Exception:
+                    log_event(
+                        logger,
+                        "stream_completion_callback_failed",
+                        module=module,
+                        request_id=request_id,
+                        source=source,
+                    )
+                    logger.exception("Stream completion callback failed for module %s", module)
             if full_response and save_history:
                 response_text = response_text_for_metrics
                 try:

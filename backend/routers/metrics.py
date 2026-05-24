@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from cache.response_cache import response_cache
 from db.database import Feedback, SearchHistory, get_db
 
 router = APIRouter()
@@ -49,5 +50,6 @@ def get_metrics(db: Session = Depends(get_db)):
             "not_helpful": not_helpful,
             "helpful_rate": round(helpful / total_feedback * 100, 1) if total_feedback > 0 else None,
         },
+        "cache": response_cache.stats(),
         "generated_at": now.isoformat(),
     }

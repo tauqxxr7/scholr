@@ -7,6 +7,7 @@ os.environ["SQLITE_PATH"] = os.path.join(tempfile.gettempdir(), "scholr-router-t
 from fastapi.testclient import TestClient
 
 import main
+from cache.response_cache import ResponseCache
 from routers import doubt as doubt_router
 from routers import notes as notes_router
 from routers import research as research_router
@@ -99,7 +100,30 @@ def test_metrics_route_returns_aggregate_keys():
     body = response.json()
     assert "searches" in body
     assert "feedback" in body
+    assert "cache" in body
     assert {"total", "last_24h", "last_7d", "by_module"}.issubset(body["searches"].keys())
+
+
+def test_response_cache_returns_none_for_unknown_key():
+    cache = ResponseCache()
+
+    assert cache.get("notes", "operating systems", "fast") is None
+
+
+def test_response_cache_returns_cached_value():
+    cache = ResponseCache()
+
+    cache.set("notes", "operating systems", "fast", "cached notes")
+
+    assert cache.get("notes", "operating systems", "fast") == "cached notes"
+
+
+def test_response_cache_respects_ttl():
+    cache = ResponseCache(ttl_seconds=0)
+
+    cache.set("notes", "operating systems", "fast", "cached notes")
+
+    assert cache.get("notes", "operating systems", "fast") is None
 
 
 def test_waitlist_route_accepts_new_email():

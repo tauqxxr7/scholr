@@ -5,6 +5,7 @@ from agents._generation import build_provider_degraded_text
 from agents._validation import NOTES_REQUIRED
 from agents.notes_agent import generate_notes_response
 from auth.clerk import get_optional_user_id
+from cache.response_cache import response_cache
 from core.auth import AuthContext, require_auth_context
 from db import crud
 from db.database import get_db
@@ -47,6 +48,28 @@ async def notes_endpoint(
     record_usage_event(db, auth_context=auth_context, scope="notes")
     effective_user_id = clerk_user_id or "anonymous"
     response_mode = request.response_mode.strip().lower()
+    memory_cached = response_cache.get("notes", request.topic, response_mode)
+    if memory_cached:
+        return build_sse_response(
+            generator=stream_text_chunks(memory_cached),
+            save_history=lambda response: crud.save_search(
+                db=db,
+                module="notes",
+                query=request.topic,
+                response=response,
+                user_id=effective_user_id,
+                session_id=auth_context.session_id,
+            ),
+            empty_message="Scholr could not turn that topic into notes this time. Try a clearer exam topic or concept name.",
+            request=http_request,
+            module="notes",
+            mode=response_mode,
+            source="cache",
+            cache_hit=True,
+            required_sections=NOTES_REQUIRED,
+            validation_query=request.topic,
+        )
+
     cached = None
     if response_mode != "deep":
         cached = find_cached_response(
@@ -90,4 +113,5 @@ async def notes_endpoint(
         recovery_text=fallback_text,
         required_sections=NOTES_REQUIRED,
         validation_query=request.topic,
+        on_complete=lambda response: response_cache.set("notes", request.topic, response_mode, response),
     )
