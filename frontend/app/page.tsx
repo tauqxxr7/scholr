@@ -71,7 +71,7 @@ export default function LandingPage() {
           <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <Link href="/research" className="min-w-0">
               <Button variant="outline" className="min-h-10 w-full rounded-xl px-3 text-sm sm:min-h-11 sm:w-auto">
-                Try research
+                Try Scholr free — no signup needed
               </Button>
             </Link>
             <Link href="/privacy" className="min-w-0">
@@ -90,9 +90,9 @@ export default function LandingPage() {
         <section className="grid gap-6 py-8 sm:gap-8 sm:py-12 md:py-14 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-10 lg:py-20">
           <div className="min-w-0">
             <Badge className="inline-flex max-w-full rounded-full bg-white px-3 py-1 text-left text-[0.72rem] leading-5 text-slate-700 shadow-sm sm:text-xs">
-              <span className="min-w-0 whitespace-normal break-words sm:hidden">Multi-provider academic workspace</span>
+              <span className="min-w-0 whitespace-normal break-words sm:hidden">Free for every BTech student</span>
               <span className="hidden whitespace-nowrap sm:inline">
-                Multi-provider academic workspace, built for real student workflows
+                Free for every BTech student. Get research papers, exam notes, and doubt solving in 60 seconds.
               </span>
             </Badge>
             <h1 className="mt-4 max-w-[18ch] text-balance text-[clamp(2rem,8vw,2.45rem)] font-semibold leading-[1.05] text-slate-950 sm:mt-5 sm:max-w-4xl sm:text-[clamp(3rem,6vw,4.35rem)] sm:leading-[1.02] lg:text-[clamp(3.55rem,5vw,4.75rem)]">
@@ -124,7 +124,7 @@ export default function LandingPage() {
               </Link>
               <Link href="/dashboard">
                 <Button variant="outline" className="min-h-11 w-full rounded-xl px-4 text-sm sm:min-h-12 sm:w-auto sm:text-base">
-                  See the product workspace
+                  Open dashboard
                 </Button>
               </Link>
             </div>
@@ -255,3 +255,4 @@ export default function LandingPage() {
     </main>
   )
 }
+
