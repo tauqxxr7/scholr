@@ -5,17 +5,39 @@ from datetime import datetime
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 load_dotenv()
 
-configured_database_url = os.getenv("DATABASE_URL", "").strip()
-sqlite_path = os.getenv("SQLITE_PATH", "/data/scholr.db").strip()
-# Render's persistent disk should be mounted at /data so SQLite survives deploys.
-DATABASE_URL = configured_database_url if configured_database_url.startswith("postgresql") else f"sqlite:///{sqlite_path}"
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+def _create_engine():
+    url = os.getenv(
+        "DATABASE_URL",
+        f"sqlite:///{os.getenv('SQLITE_PATH', '/data/scholr.db')}"
+    )
+    if not url.strip():
+        # Render's persistent disk should be mounted at /data so SQLite survives deploys.
+        url = f"sqlite:///{os.getenv('SQLITE_PATH', '/data/scholr.db')}"
+    if url.startswith("sqlite"):
+        return create_engine(
+            url,
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+    # PostgreSQL - production connection pooling.
+    if url.startswith("postgres://"):
+        # Render provides postgres:// but SQLAlchemy needs postgresql://.
+        url = url.replace("postgres://", "postgresql://", 1)
+    return create_engine(
+        url,
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+engine = _create_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

@@ -93,6 +93,10 @@ Scholr supports two production-safe persistence paths:
 
 Do not rely on `./scholr.db` for production history on Render.
 
+## Database
+
+Set `DATABASE_URL` to a PostgreSQL connection string on Render to use PostgreSQL. If not set, Scholr defaults to SQLite at `SQLITE_PATH` (`/data/scholr.db`). Render provides `postgres://` URLs; the engine automatically rewrites these to `postgresql://` for SQLAlchemy compatibility.
+
 ## Redeploy Checklist
 
 1. push to `main`

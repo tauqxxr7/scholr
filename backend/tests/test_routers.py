@@ -1,5 +1,6 @@
 import os
 import tempfile
+import uuid
 
 os.environ["SQLITE_PATH"] = os.path.join(tempfile.gettempdir(), "scholr-router-tests.db")
 
@@ -103,7 +104,7 @@ def test_metrics_route_returns_aggregate_keys():
 
 def test_waitlist_route_accepts_new_email():
     client = TestClient(main.app)
-    email = "student-new@example.com"
+    email = f"student-new-{uuid.uuid4().hex}@example.com"
 
     response = client.post("/api/waitlist", json={"email": email})
 
@@ -113,7 +114,7 @@ def test_waitlist_route_accepts_new_email():
 
 def test_waitlist_route_reports_duplicate_email():
     client = TestClient(main.app)
-    email = "student-duplicate@example.com"
+    email = f"student-duplicate-{uuid.uuid4().hex}@example.com"
 
     first = client.post("/api/waitlist", json={"email": email})
     second = client.post("/api/waitlist", json={"email": email})
