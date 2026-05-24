@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
   ClipboardCheck,
   RotateCcw,
+  FileDown,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import ResponseFeedback from '@/components/ai/ResponseFeedback'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { trackEvent } from '@/lib/analytics'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
+import { exportResponseAsPdf } from '@/lib/exportPdf'
 
 const LOCAL_RESPONSE_CACHE_KEY = 'scholr-local-response-cache-v1'
 
@@ -378,6 +380,13 @@ function AiModulePageContent({
     window.setTimeout(() => setCopied(false), 1500)
   }
 
+  const handleExportPdf = () => {
+    if (!output || loading) {
+      return
+    }
+    exportResponseAsPdf(moduleName[0].toUpperCase() + moduleName.slice(1), primaryValue, output)
+  }
+
   const handleClear = () => {
     setOutput('')
     setError('')
@@ -586,6 +595,16 @@ function AiModulePageContent({
                 <Copy className="mr-2 h-4 w-4" />
                 {copied ? 'Copied' : 'Copy'}
               </Button>
+              {output && !loading ? (
+                <Button
+                  variant="outline"
+                  onClick={handleExportPdf}
+                  className="min-h-12 w-full rounded-2xl border-slate-200 sm:w-auto"
+                >
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export PDF
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>
