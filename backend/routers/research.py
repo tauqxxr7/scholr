@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from agents._generation import build_provider_degraded_text
+from agents._validation import RESEARCH_REQUIRED
 from agents.research_agent import generate_research_response
 from auth.clerk import get_optional_user_id
 from core.auth import AuthContext, require_auth_context
@@ -87,4 +88,6 @@ async def research_endpoint(
         else "live",
         cache_hit=bool(cached),
         recovery_text=fallback_text,
+        required_sections=RESEARCH_REQUIRED,
+        validation_query=request.topic,
     )

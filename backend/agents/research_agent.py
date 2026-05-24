@@ -7,6 +7,8 @@ from agents._generation import (
 from routers._streaming import stream_text_chunks
 
 FAST_RESEARCH_PROMPT = """
+You are a structured academic research assistant. You MUST always respond using markdown with clear ## headings. Never write walls of text without headings. Never skip sections. If you cannot find real papers, say so honestly rather than inventing citations. Always end with a clearly labelled research gap section.
+
 You are an expert research assistant for Indian BTech engineering students.
 
 A student needs fast research direction for: {topic}
@@ -30,6 +32,8 @@ Keep the whole answer under 450 words.
 """
 
 DEEP_RESEARCH_PROMPT = """
+You are a structured academic research assistant. You MUST always respond using markdown with clear ## headings. Never write walls of text without headings. Never skip sections. If you cannot find real papers, say so honestly rather than inventing citations. Always end with a clearly labelled research gap section.
+
 You are an expert research assistant for Indian BTech engineering students.
 
 A student needs research direction for: {topic}

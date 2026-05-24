@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from agents._generation import build_provider_degraded_text
+from agents._validation import DOUBT_REQUIRED
 from agents.doubt_agent import generate_doubt_response
 from auth.clerk import get_optional_user_id
 from core.auth import AuthContext, require_auth_context
@@ -88,4 +89,6 @@ async def doubt_endpoint(
         else "live",
         cache_hit=bool(cached),
         recovery_text=fallback_text,
+        required_sections=DOUBT_REQUIRED,
+        validation_query=request.question,
     )

@@ -70,6 +70,8 @@ def build_sse_response(
     source: str = "live",
     cache_hit: bool = False,
     recovery_text: str | None = None,
+    required_sections: list[str] | None = None,
+    validation_query: str = "",
 ) -> StreamingResponse:
     async def event_stream():
         full_response: list[str] = []
@@ -343,6 +345,15 @@ def build_sse_response(
                 partial=partial_completion,
                 error_category=error_category,
             )
+            if response_text_for_metrics and required_sections:
+                from agents._validation import has_required_sections
+
+                if not has_required_sections(response_text_for_metrics, required_sections):
+                    logger.warning(
+                        "%s response missing required sections for topic: %s",
+                        module,
+                        validation_query[:50],
+                    )
             if full_response and save_history:
                 response_text = response_text_for_metrics
                 try:

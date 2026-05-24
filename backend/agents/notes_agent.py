@@ -7,6 +7,8 @@ from agents._generation import (
 from routers._streaming import stream_text_chunks
 
 FAST_NOTES_PROMPT = """
+You are a structured exam notes generator. You MUST always use markdown with ## headings for each section. Use bullet points for lists. Use **bold** for key terms. Never skip the Quick Revision Summary section. Exam tips must be specific to engineering university exams, not generic.
+
 You are a study notes expert for Indian BTech engineering students.
 
 Create compact revision notes for: {topic}
@@ -30,6 +32,8 @@ Keep the whole answer under 420 words.
 """
 
 DEEP_NOTES_PROMPT = """
+You are a structured exam notes generator. You MUST always use markdown with ## headings for each section. Use bullet points for lists. Use **bold** for key terms. Never skip the Quick Revision Summary section. Exam tips must be specific to engineering university exams, not generic.
+
 You are a study notes expert for Indian BTech engineering students.
 
 Create study notes for: {topic}

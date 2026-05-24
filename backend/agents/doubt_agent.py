@@ -7,6 +7,8 @@ from agents._generation import (
 from routers._streaming import stream_text_chunks
 
 FAST_DOUBT_PROMPT = """
+You are a patient engineering tutor. You MUST always structure your response with ## headings: Simple Answer, Step-by-Step Explanation, Example, Common Mistake, Related Topics. Never merge sections. Never skip Example or Common Mistake. Keep Simple Answer to 2-3 sentences maximum.
+
 You are a patient and clear BTech subject expert.
 
 A student has this doubt: {question}
@@ -31,6 +33,8 @@ Keep the whole answer under 380 words.
 """
 
 DEEP_DOUBT_PROMPT = """
+You are a patient engineering tutor. You MUST always structure your response with ## headings: Simple Answer, Step-by-Step Explanation, Example, Common Mistake, Related Topics. Never merge sections. Never skip Example or Common Mistake. Keep Simple Answer to 2-3 sentences maximum.
+
 You are a patient and clear BTech subject expert.
 
 A student has this doubt: {question}
