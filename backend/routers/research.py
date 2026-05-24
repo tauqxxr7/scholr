@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from agents._generation import build_provider_degraded_text
 from agents.research_agent import generate_research_response
+from auth.clerk import get_optional_user_id
 from core.auth import AuthContext, require_auth_context
 from db import crud
 from db.database import get_db
@@ -27,6 +28,7 @@ async def research_endpoint(
     http_request: Request,
     db: Session = Depends(get_db),
     auth_context: AuthContext = Depends(require_auth_context),
+    clerk_user_id: str | None = Depends(get_optional_user_id),
 ):
     rate_limit_response = enforce_rate_limit(http_request, "research")
     if rate_limit_response:
@@ -42,13 +44,14 @@ async def research_endpoint(
     if quota_response:
         return quota_response
     record_usage_event(db, auth_context=auth_context, scope="research")
+    effective_user_id = clerk_user_id or "anonymous"
     response_mode = (request.mode or request.response_mode or "fast").strip().lower()
     cached = None
     if response_mode != "deep":
         cached = find_cached_response(
             db,
             module="research",
-            user_id=auth_context.user_id,
+            user_id=effective_user_id,
             query=request.topic,
             request_id=request_id,
         )
@@ -68,7 +71,7 @@ async def research_endpoint(
             module="research",
             query=request.topic,
             response=response,
-            user_id=auth_context.user_id,
+            user_id=effective_user_id,
             session_id=auth_context.session_id,
         ),
         empty_message="Scholr could not find a usable research response for that topic. Try making the topic more specific.",

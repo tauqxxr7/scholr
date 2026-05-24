@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from agents._generation import build_provider_degraded_text
 from agents.doubt_agent import generate_doubt_response
+from auth.clerk import get_optional_user_id
 from core.auth import AuthContext, require_auth_context
 from db import crud
 from db.database import get_db
@@ -27,6 +28,7 @@ async def doubt_endpoint(
     http_request: Request,
     db: Session = Depends(get_db),
     auth_context: AuthContext = Depends(require_auth_context),
+    clerk_user_id: str | None = Depends(get_optional_user_id),
 ):
     rate_limit_response = enforce_rate_limit(http_request, "doubt")
     if rate_limit_response:
@@ -43,13 +45,14 @@ async def doubt_endpoint(
     if quota_response:
         return quota_response
     record_usage_event(db, auth_context=auth_context, scope="doubt")
+    effective_user_id = clerk_user_id or "anonymous"
     response_mode = request.response_mode.strip().lower()
     cached = None
     if response_mode != "deep":
         cached = find_cached_response(
             db,
             module="doubt",
-            user_id=auth_context.user_id,
+            user_id=effective_user_id,
             query=query,
             request_id=request_id,
         )
@@ -69,7 +72,7 @@ async def doubt_endpoint(
             module="doubt",
             query=query,
             response=response,
-            user_id=auth_context.user_id,
+            user_id=effective_user_id,
             session_id=auth_context.session_id,
         ),
         empty_message="Scholr could not produce a doubt explanation for that prompt. Try adding more detail or a subject.",

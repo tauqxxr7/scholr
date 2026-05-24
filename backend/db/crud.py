@@ -83,6 +83,17 @@ def get_recent_searches(db: Session, *, user_id: str, limit: int = 20, page: int
     )
 
 
+def get_all_recent_searches(db: Session, *, limit: int = 20, page: int = 1) -> list[SearchHistory]:
+    offset = max(page - 1, 0) * limit
+    return (
+        db.query(SearchHistory)
+        .order_by(SearchHistory.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
 def get_searches_by_module(
     db: Session,
     module: str,
@@ -94,6 +105,23 @@ def get_searches_by_module(
     return (
         db.query(SearchHistory)
         .filter(SearchHistory.user_id == user_id, SearchHistory.module == module)
+        .order_by(SearchHistory.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_all_searches_by_module(
+    db: Session,
+    module: str,
+    limit: int = 20,
+    page: int = 1,
+) -> list[SearchHistory]:
+    offset = max(page - 1, 0) * limit
+    return (
+        db.query(SearchHistory)
+        .filter(SearchHistory.module == module)
         .order_by(SearchHistory.created_at.desc())
         .offset(offset)
         .limit(limit)

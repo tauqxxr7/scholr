@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { ClerkProvider } from '@clerk/nextjs'
 
 import PostHogProvider from '@/components/PostHogProvider'
 
@@ -60,16 +61,24 @@ export const viewport: Viewport = {
   themeColor: '#020617',
 }
 
+const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return (
+  const shell = (
     <html lang="en">
       <body className="antialiased">
         <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   )
+
+  if (clerkKey) {
+    return <ClerkProvider>{shell}</ClerkProvider>
+  }
+
+  return shell
 }
