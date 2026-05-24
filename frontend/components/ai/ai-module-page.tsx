@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import ResponseFeedback from '@/components/ai/ResponseFeedback'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { trackEvent } from '@/lib/analytics'
 import { StreamModuleError, streamModuleResponse } from '@/lib/api'
 
@@ -403,6 +404,13 @@ function AiModulePageContent({
     }
   }
 
+  useKeyboardShortcuts({
+    onSubmit: handleSubmit,
+    onClear: handleClear,
+    onCopy: handleCopy,
+    isLoading: loading,
+  })
+
   const hasContent = output || error
   const isOptimisticOutput =
     output.startsWith('## Generating short answer')
@@ -546,6 +554,10 @@ function AiModulePageContent({
                 </div>
               </div>
             </div>
+
+            <p className="text-sm leading-6 text-slate-500">
+              Ctrl+Enter to submit  •  Escape to clear  •  Ctrl+K to copy
+            </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button
