@@ -214,3 +214,114 @@ Date: 2026-05-24
   - `/api/metrics`
   - `/api/waitlist`
 - Sprint 2 separate commits visible in this pass: 1 implementation commit plus this verification commit.
+
+# Sprint 2 Retry
+
+Date: 2026-05-24
+
+## Task Results
+
+### Task 1 - SEO sitemap + robots
+
+- Status: completed.
+- Commit: `d9ad944`
+- Message: `feat: add sitemap.xml and robots.txt for SEO`
+- Files changed:
+  - `frontend/app/sitemap.ts`
+  - `frontend/app/robots.ts`
+
+### Task 2 - `/api/metrics` endpoint
+
+- Status: completed.
+- Commit: `69bb95f`
+- Message: `feat: add /api/metrics endpoint for aggregate usage and feedback stats`
+- Files changed:
+  - `backend/routers/metrics.py`
+  - `backend/main.py`
+  - `backend/tests/test_routers.py`
+
+### Task 3 - Waitlist endpoint + landing form
+
+- Status: completed.
+- Commit: `cd1405f`
+- Message: `feat: add email waitlist with backend endpoint and landing page capture form`
+- Files changed:
+  - `backend/db/database.py`
+  - `backend/routers/waitlist.py`
+  - `backend/main.py`
+  - `backend/requirements.txt`
+  - `backend/tests/test_routers.py`
+  - `frontend/app/page.tsx`
+
+### Task 4 - Landing page CTA improvements
+
+- Status: completed.
+- Commit: `829bca6`
+- Message: `feat: improve landing page CTA copy and add how-it-works section`
+- Files changed:
+  - `frontend/app/page.tsx`
+
+### Task 5 - First-time onboarding
+
+- Status: completed.
+- Commit: `64e7aeb`
+- Message: `feat: add first-time user onboarding cards on empty dashboard`
+- Files changed:
+  - `frontend/app/(dashboard)/dashboard/page.tsx`
+  - `frontend/components/ai/ai-module-page.tsx`
+
+### Task 6 - Keyboard shortcuts hook
+
+- Status: completed.
+- Commit: `97f27f5`
+- Message: `feat: add useKeyboardShortcuts hook standardised across all modules`
+- Files changed:
+  - `frontend/hooks/useKeyboardShortcuts.ts`
+  - `frontend/components/ai/ai-module-page.tsx`
+
+### Task 7 - PDF export
+
+- Status: completed.
+- Commit: `6700601`
+- Message: `feat: add PDF export of AI responses with Scholr branding`
+- Files changed:
+  - `frontend/package.json`
+  - `frontend/package-lock.json`
+  - `frontend/lib/exportPdf.ts`
+  - `frontend/components/ai/ai-module-page.tsx`
+
+### Task 8 - PostgreSQL engine upgrade
+
+- Status: completed.
+- Commit: `9f57def`
+- Message: `feat: PostgreSQL-ready engine with connection pooling and postgres:// URL rewrite`
+- Files changed:
+  - `backend/db/database.py`
+  - `backend/tests/test_routers.py`
+  - `DEPLOYMENT.md`
+
+### Final verification
+
+- Status: completed.
+- Commit: this commit.
+- Message: `chore: sprint 2 retry — final verification and commit summary`
+- Files changed:
+  - `COMMIT_SUMMARY.md`
+
+## Sprint 2 Retry Verification
+
+- `python -m pytest backend/tests/ -v`: passed, 16 tests.
+- `python -m compileall backend`: passed.
+- `npm run lint`: passed.
+- `npx tsc --noEmit`: passed.
+- `npm run build`: passed.
+- Built frontend routes returning 200:
+  - `/`
+  - `/research`
+  - `/notes`
+  - `/doubt`
+  - `/documents`
+  - `/dashboard`
+- `GET /api/metrics`: passed, returned `searches` and `feedback`.
+- `POST /api/waitlist`: passed with valid email.
+- `git log --oneline -10`: shows all 8 Sprint 2 retry implementation commits.
