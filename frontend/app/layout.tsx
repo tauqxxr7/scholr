@@ -10,20 +10,20 @@ export const metadata: Metadata = {
   applicationName: 'Scholr',
   manifest: '/manifest.webmanifest',
   title: {
-    default: 'Scholr | AI Academic Platform for BTech Students',
+    default: 'Scholr — AI Academic Platform for BTech Students',
     template: '%s | Scholr',
   },
   description:
-    'Scholr is an AI academic workspace for BTech students with research guidance, structured notes, doubt solving, and saved history.',
+    'Free AI tool for BTech students. Get research papers, study notes, and doubt solving in 60 seconds.',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
     apple: '/favicon.ico',
   },
   openGraph: {
-    title: 'Scholr | AI Academic Platform for BTech Students',
+    title: 'Scholr — AI Academic Platform for BTech Students',
     description:
-      'Research faster, generate revision notes, and solve doubts in one focused academic workspace.',
+      'Free AI tool for BTech students. Get research papers, study notes, and doubt solving in 60 seconds.',
     url: 'https://scholr-coral.vercel.app',
     siteName: 'Scholr',
     type: 'website',
@@ -38,9 +38,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Scholr | AI Academic Platform for BTech Students',
+    title: 'Scholr — AI Academic Platform for BTech Students',
     description:
-      'A recruiter-grade MVP for research, notes, doubt solving, and academic history.',
+      'Free AI tool for BTech students. Get research papers, study notes, and doubt solving in 60 seconds.',
     images: ['/screenshots/landing.png'],
   },
   robots: {

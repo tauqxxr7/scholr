@@ -1,3 +1,21 @@
+<div align="center">
+
+# Scholr
+
+### AI Academic Platform for BTech Students
+
+**Live product** -> [scholr-coral.vercel.app](https://scholr-coral.vercel.app)
+
+Research papers • Study notes • Doubt solving • Document intelligence
+
+[![Backend CI](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml)
+[![Vercel](https://img.shields.io/badge/Live_Frontend-Vercel-black?logo=vercel)](https://scholr-coral.vercel.app)
+
+*If Scholr helped you, please star this repo*
+
+</div>
+
 # Scholr
 
 Scholr is an AI-powered academic intelligence platform for BTech students, combining streaming generation, multi-provider resilience, and retrieval-grounded document intelligence.
