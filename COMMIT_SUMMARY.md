@@ -126,3 +126,91 @@ Date: 2026-05-24
 - Backend CI now installs dependencies, compiles the backend, runs `python -m pytest tests/ -v`, imports the app, and performs a route smoke check.
 - Frontend CI-equivalent local checks passed with lint, TypeScript, and production build.
 - Remote GitHub Actions and Vercel deployment are verified after the final summary commit is pushed.
+
+# Sprint 2 Verification Addendum
+
+Date: 2026-05-24
+
+## Sprint 2 Task Status
+
+### Task 1 - Clerk authentication
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+- Verification result: `/sign-in` and `/sign-up` returned 404 in the built local frontend.
+- Note: Active Clerk authentication was previously removed to restore stable public MVP access.
+
+### Task 2 - PostgreSQL migration
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+- Verification result: existing backend remains SQLite with PostgreSQL-ready `DATABASE_URL` support.
+
+### Task 3 - Landing page conversion
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+
+### Task 4 - First-time onboarding
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+
+### Task 5 - Keyboard shortcuts
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+
+### Task 6 - PDF export
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+
+### Task 7 - SEO sitemap + robots
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+
+### Task 8 - Metrics and waitlist endpoints
+
+- Status: Not implemented in this visible request.
+- Commit: none in this Sprint 2 pass.
+- Verification result: `/api/metrics` and `/api/waitlist` returned 404 via FastAPI TestClient.
+
+### Task 9 - README update
+
+- Status: completed.
+- Commit: `0c406d7`
+- Message: `docs: update README with quick demo, architecture diagram, and local setup guide`
+- Files changed:
+  - `README.md`
+
+### Task 10 - Final verification
+
+- Status: completed with documented route gaps.
+- Commit: this commit.
+- Message: `chore: sprint 2 final verification and commit summary update`
+- Files changed:
+  - `COMMIT_SUMMARY.md`
+
+## Sprint 2 Test Results
+
+- `python -m pytest backend/tests/ -v`: passed, 12 tests.
+- `python -m compileall backend`: passed.
+- `npm run lint`: passed.
+- `npx tsc --noEmit`: passed.
+- `npm run build`: passed.
+- Built frontend routes returning 200:
+  - `/`
+  - `/research`
+  - `/notes`
+  - `/doubt`
+  - `/documents`
+  - `/dashboard`
+- Built frontend routes missing:
+  - `/sign-in`
+  - `/sign-up`
+- Backend API routes missing:
+  - `/api/metrics`
+  - `/api/waitlist`
+- Sprint 2 separate commits visible in this pass: 1 implementation commit plus this verification commit.
