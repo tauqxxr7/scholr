@@ -318,6 +318,24 @@ See:
 - [docs/proof/provider-proof.png](docs/proof/provider-proof.png)
 - [docs/proof/document-proof.png](docs/proof/document-proof.png)
 
+## Run locally in 60 seconds
+
+```bash
+# Terminal 1 - backend
+cd backend
+pip install -r requirements.txt
+cp .env.example .env   # add your OPENROUTER_API_KEY
+uvicorn main:app --reload --port 8000
+
+# Terminal 2 - frontend
+cd frontend
+npm install
+cp .env.example .env.local   # add your API URL and Clerk keys
+npm run dev
+```
+
+Open http://localhost:3000
+
 ## How To Run Locally
 
 ### Backend
