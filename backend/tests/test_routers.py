@@ -143,6 +143,15 @@ def test_metrics_route_returns_aggregate_keys():
     assert {"total", "last_24h", "last_7d", "by_module"}.issubset(body["searches"].keys())
 
 
+def test_status_route_returns_operational_status():
+    client = TestClient(main.app)
+
+    response = client.get("/api/status")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "operational"
+
+
 def test_response_cache_returns_none_for_unknown_key():
     cache = ResponseCache()
 

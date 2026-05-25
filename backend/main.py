@@ -23,7 +23,7 @@ from core.logging_utils import configure_logging, log_event
 from core.slowapi_limiter import limiter
 from db import crud
 from db.database import SessionLocal, init_db
-from routers import documents, doubt, evidence, feedback, history, linkedin, metrics, notes, research, search, validation, waitlist
+from routers import documents, doubt, evidence, feedback, history, linkedin, metrics, notes, research, search, status, validation, waitlist
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
 
@@ -102,6 +102,7 @@ app.include_router(validation.router, tags=["validation"])
 app.include_router(evidence.router, tags=["evidence"])
 app.include_router(linkedin.router, tags=["linkedin"])
 app.include_router(search.router, tags=["search"])
+app.include_router(status.router, tags=["status"])
 
 logger = logging.getLogger("scholr.api")
 
