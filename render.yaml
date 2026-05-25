@@ -3,6 +3,9 @@ services:
     name: scholr-backend
     runtime: python
     plan: free
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /health
     buildCommand: cd backend && pip install -r requirements.txt
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
