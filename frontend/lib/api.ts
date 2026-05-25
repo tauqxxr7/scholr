@@ -384,6 +384,10 @@ export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
   return response.json()
 }
 
+export function getHistoryExportUrl(): string {
+  return `${getApiUrl()}/api/history/export`
+}
+
 export async function searchHistory(query: string, limit = 5): Promise<SearchResultItem[]> {
   const response = await fetch(
     `${getApiUrl()}/api/search?q=${encodeURIComponent(query)}&limit=${limit}`,

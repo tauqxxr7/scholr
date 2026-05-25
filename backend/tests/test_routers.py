@@ -97,6 +97,15 @@ def test_history_route_returns_ok():
     assert response.status_code == 200
 
 
+def test_history_export_returns_csv():
+    client = TestClient(main.app)
+
+    response = client.get("/api/history/export")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+
+
 def test_health_route_returns_status_key():
     client = TestClient(main.app)
 

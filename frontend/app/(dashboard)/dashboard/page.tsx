@@ -16,7 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { trackEvent } from '@/lib/analytics'
 import type { HistoryItem, SearchResultItem } from '@/lib/api'
-import { getHistory, searchHistory } from '@/lib/api'
+import { getHistory, getHistoryExportUrl, searchHistory } from '@/lib/api'
 
 const modules = [
   {
@@ -54,6 +54,7 @@ function DashboardPageContent() {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const isSearching = searchQuery.trim().length > 0
+  const historyExportUrl = history.length > 0 ? getHistoryExportUrl() : ''
 
   useEffect(() => {
     setHasUsedBefore(localStorage.getItem('scholr_has_used') === 'true')
@@ -336,25 +337,35 @@ function DashboardPageContent() {
         ) : showHistoryList ? (
           <div className="mt-6 space-y-3">
             {history.length ? (
-              history.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-[1.5rem] border border-slate-200 bg-slate-50/45 p-4 transition hover:border-slate-300 hover:bg-white"
-                >
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant="outline" className="capitalize">
-                      {item.module}
-                    </Badge>
-                    <span className="text-xs text-slate-400">
-                      {new Date(item.created_at).toLocaleString()}
-                    </span>
+              <>
+                {history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-[1.5rem] border border-slate-200 bg-slate-50/45 p-4 transition hover:border-slate-300 hover:bg-white"
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      <Badge variant="outline" className="capitalize">
+                        {item.module}
+                      </Badge>
+                      <span className="text-xs text-slate-400">
+                        {new Date(item.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="mt-3 font-medium text-slate-900">{item.query}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {item.response.length > 220 ? `${item.response.slice(0, 220)}...` : item.response}
+                    </p>
                   </div>
-                  <p className="mt-3 font-medium text-slate-900">{item.query}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {item.response.length > 220 ? `${item.response.slice(0, 220)}...` : item.response}
-                  </p>
-                </div>
-              ))
+                ))}
+                <a
+                  href={historyExportUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex text-sm font-medium text-slate-500 transition hover:text-slate-900"
+                >
+                  Export history as CSV
+                </a>
+              </>
             ) : (
               <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
                 Generate your next research, notes, or doubt answer and it will appear here.

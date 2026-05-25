@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from core.auth import AuthContext, require_auth_context
@@ -9,6 +10,33 @@ from db.database import get_db
 from models.schemas import SearchHistoryItem
 
 router = APIRouter()
+
+
+@router.get("/history/export")
+def export_history_csv(db: Session = Depends(get_db)):
+    import csv
+    import io
+
+    records = crud.get_all_recent_searches(db, limit=1000)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "module", "query", "created_at", "response_length"])
+    for record in records:
+        writer.writerow(
+            [
+                record.id,
+                record.module,
+                record.query,
+                record.created_at.isoformat(),
+                len(record.response),
+            ]
+        )
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=scholr-history.csv"},
+    )
 
 
 @router.get("/history", response_model=list[SearchHistoryItem])
