@@ -557,3 +557,30 @@ Date: 2026-05-25
 - Verified frontend build routes include `/research`, `/notes`, `/doubt`, `/documents`, `/dashboard`, `/topics`, `/status`, `/outreach`, `/demo`, and `/feedback`.
 - Verified backend source imports and includes the `feedback_form` router.
 - `git log --oneline -15` shows all Sprint 7 commits on current head.
+
+# Sprint 8
+
+Date: 2026-05-25
+
+## Task Results
+
+- Issue Fix A - duplicate hero text: completed. Commit `c00402f`. Verified line-by-line that only one hero subheading remains and conversion pills are correct.
+- Issue Fix B - generate-test endpoint: completed. Commit `8db9f59`; follow-up `0d1bbf6` ensures the provider stream completes so success telemetry can increment.
+- Task 1 - backend status indicator: completed. Commit `878c43b`. Added module-page backend health check and cold-start warning banner.
+- Task 2 - Try an example button: completed. Commit `382b0e9`. Added one-click examples for Research, Notes, and Doubt.
+- Task 3 - better error messages: completed. Commit `01bc1c2`. Replaced generic failure copy with network, partial-stream, and empty-response recovery guidance.
+- Task 4 - GitHub discoverability: completed. Commit `28e7533`. Updated README topics, student audience section, and search-friendly description.
+- Task 5 - `/changelog` page: completed. Commit `2d11f15`. Added changelog route, sitemap entry, and footer link.
+- Task 6 - startup logging + dynamic version: completed. Commit `4c90da6`. Added startup diagnostics and `APP_VERSION`-driven API versioning.
+- Final verification: completed. Commit: this commit. Message: `chore: sprint 8 final verification and summary`.
+
+## Sprint 8 Verification
+
+- `python -m pytest backend/tests/ -v`: passed, 31 tests.
+- `python -m compileall backend`: passed.
+- `npm run lint`: passed.
+- `npx tsc --noEmit`: passed.
+- `npm run build`: passed with Next.js middleware deprecation warning only.
+- Verified frontend build routes include `/research`, `/notes`, `/doubt`, `/demo`, `/feedback`, `/changelog`, `/status`, and `/topics`.
+- Live `/health/generate-test` returned `ai_working: true` with generated text after deployment.
+- `git log --oneline -10` shows all Sprint 8 commits on current head.
