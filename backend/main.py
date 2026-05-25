@@ -23,7 +23,7 @@ from core.logging_utils import configure_logging, log_event
 from core.slowapi_limiter import limiter
 from db import crud
 from db.database import SessionLocal, init_db
-from routers import documents, doubt, evidence, feedback, history, linkedin, metrics, notes, research, search, status, validation, waitlist
+from routers import documents, doubt, evidence, feedback, feedback_form, history, linkedin, metrics, notes, research, search, status, validation, waitlist
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
 
@@ -96,6 +96,7 @@ app.include_router(doubt.router, prefix="/api", tags=["doubt"])
 app.include_router(history.router, prefix="/api", tags=["history"])
 app.include_router(documents.router, prefix="/api", tags=["documents"])
 app.include_router(feedback.router, prefix="/api", tags=["feedback"])
+app.include_router(feedback_form.router, tags=["feedback-form"])
 app.include_router(metrics.router, tags=["metrics"])
 app.include_router(waitlist.router, tags=["waitlist"])
 app.include_router(validation.router, tags=["validation"])

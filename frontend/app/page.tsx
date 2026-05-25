@@ -255,6 +255,9 @@ export default function LandingPage() {
               <Link href="/status" className="transition hover:text-slate-900">
                 Status
               </Link>
+              <Link href="/feedback" className="transition hover:text-slate-900">
+                Feedback
+              </Link>
               <Link href="/topics" className="transition hover:text-slate-900">
                 Browse topics
               </Link>

@@ -89,6 +89,24 @@ def test_feedback_route_accepts_valid_payload():
     assert response.json() == {"received": True}
 
 
+def test_feedback_form_route_accepts_valid_payload():
+    client = TestClient(main.app)
+
+    response = client.post(
+        "/api/feedback-form",
+        json={
+            "name": "Student",
+            "college_year": "Third year",
+            "module_used": "Research",
+            "was_useful": "Yes",
+            "would_use_again": "Definitely",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["submitted"] is True
+
+
 def test_history_route_returns_ok():
     client = TestClient(main.app)
 
