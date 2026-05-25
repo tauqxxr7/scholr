@@ -32,6 +32,8 @@ Scholr is an AI-powered academic intelligence platform for BTech students, combi
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Live_MVP-16A34A)
 
+**Topics:** `ai` `edtech` `fastapi` `nextjs` `btech` `india` `students` `gemini` `openrouter` `academic`
+
 Live links:
 - Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 - Backend health: [https://scholr-k9sj.onrender.com/health](https://scholr-k9sj.onrender.com/health)
@@ -40,6 +42,18 @@ Live links:
 - Document health: [https://scholr-k9sj.onrender.com/health/documents](https://scholr-k9sj.onrender.com/health/documents)
 
 ![Scholr hero preview](screenshots/landing.png)
+
+## In Numbers
+
+| Metric | Value |
+|--------|-------|
+| Backend tests | 28 passing |
+| API endpoints | 15+ registered |
+| CI pipelines | Backend + Frontend + Repo Hygiene |
+| Modules | Research, Notes, Doubt, Documents |
+| Deployment | Vercel (frontend) + Render (backend) |
+| AI provider | OpenRouter → Gemini 2.0 Flash Lite |
+| Free to use | Yes — no signup required |
 
 ## What Scholr Is
 
@@ -443,6 +457,8 @@ Tauqeer Bharde is a BTech AI and Data Science student building practical AI syst
 - GitHub: [https://github.com/tauqxxr7](https://github.com/tauqxxr7)
 - LinkedIn: [https://www.linkedin.com/in/tauqeer-sameer-85b868235](https://www.linkedin.com/in/tauqeer-sameer-85b868235)
 - Email: [tauqeerplayer@gmail.com](mailto:tauqeerplayer@gmail.com)
+
+Currently applying to Microsoft for Startups. Open to feedback from engineers, founders, and students.
 
 ## Roadmap
 
