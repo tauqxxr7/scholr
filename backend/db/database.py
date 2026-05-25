@@ -113,6 +113,7 @@ class SearchHistory(Base):
     module = Column(String, nullable=False)
     query = Column(Text, nullable=False)
     response = Column(Text, nullable=False)
+    embedding_json = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
@@ -217,6 +218,7 @@ def init_db() -> None:
         "search_history": [
             ("user_id", f"ALTER TABLE search_history ADD COLUMN user_id VARCHAR DEFAULT '{DEFAULT_TENANT_USER_ID}' NOT NULL"),
             ("session_id", f"ALTER TABLE search_history ADD COLUMN session_id VARCHAR DEFAULT '{DEFAULT_TENANT_SESSION_ID}' NOT NULL"),
+            ("embedding_json", "ALTER TABLE search_history ADD COLUMN embedding_json TEXT"),
         ],
         "document_assets": [
             ("user_id", f"ALTER TABLE document_assets ADD COLUMN user_id VARCHAR DEFAULT '{DEFAULT_TENANT_USER_ID}' NOT NULL"),

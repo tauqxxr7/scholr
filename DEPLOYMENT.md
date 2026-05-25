@@ -97,6 +97,10 @@ Do not rely on `./scholr.db` for production history on Render.
 
 Set `DATABASE_URL` to a PostgreSQL connection string on Render to use PostgreSQL. If not set, Scholr defaults to SQLite at `SQLITE_PATH` (`/data/scholr.db`). Render provides `postgres://` URLs; the engine automatically rewrites these to `postgresql://` for SQLAlchemy compatibility.
 
+## Semantic History Search
+
+The first `/api/search` request after a cold start may take 10-15 seconds while `sentence-transformers` lazy-loads the `all-MiniLM-L6-v2` model.
+
 ## Redeploy Checklist
 
 1. push to `main`

@@ -22,6 +22,12 @@ def save_search(
         query=query,
         response=response,
     )
+    try:
+        from agents.embeddings import embed_text
+        import json
+        record.embedding_json = json.dumps(embed_text(query[:512]))
+    except Exception:
+        pass
     db.add(record)
     db.commit()
     db.refresh(record)

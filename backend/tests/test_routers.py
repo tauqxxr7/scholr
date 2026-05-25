@@ -11,6 +11,7 @@ from cache.response_cache import ResponseCache
 from routers import doubt as doubt_router
 from routers import notes as notes_router
 from routers import research as research_router
+from routers import search as search_router
 
 
 def test_app_import_smoke_does_not_crash():
@@ -208,3 +209,16 @@ def test_evidence_route_returns_technical_package():
     assert {"product", "tech_stack", "engineering_features", "production_stats"}.issubset(body.keys())
     assert isinstance(body["engineering_features"], list)
     assert len(body["engineering_features"]) > 5
+
+
+def test_semantic_search_route_returns_results_list(monkeypatch):
+    monkeypatch.setattr(search_router, "embed_text", lambda text: [1.0, 0.0])
+
+    client = TestClient(main.app)
+    response = client.get("/api/search?q=machine+learning")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "query" in body
+    assert "results" in body
+    assert isinstance(body["results"], list)
