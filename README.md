@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 # Scholr
 
@@ -6,7 +6,7 @@
 
 **Live product** -> [scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 
-Research papers • Study notes • Doubt solving • Document intelligence
+Research papers â€¢ Study notes â€¢ Doubt solving â€¢ Document intelligence
 
 [![Backend CI](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml)
@@ -65,7 +65,7 @@ Scholr is a live academic AI product for BTech students who need:
 The walkthrough assets live here:
 - demo placeholder: [docs/demo/demo.gif](docs/demo/demo.gif)
 - optimized iOS demo clip: [docs/demo/ios-response.mp4](docs/demo/ios-response.mp4)
-- script: [DEMO_SCRIPT.md](DEMO_SCRIPT.md)
+- script: [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
 - asset notes: [docs/demo/README.md](docs/demo/README.md)
 
 ### Mobile demo section
@@ -306,10 +306,10 @@ flowchart LR
 ```
 
 Core docs:
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md)
-- [REQUEST_FLOW.md](REQUEST_FLOW.md)
-- [ENGINEERING_DECISIONS.md](ENGINEERING_DECISIONS.md)
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md)
+- [REQUEST_FLOW.md](docs/REQUEST_FLOW.md)
+- [ENGINEERING_DECISIONS.md](docs/ENGINEERING_DECISIONS.md)
 - [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ## Tech Stack
@@ -326,7 +326,7 @@ Core docs:
 ## Production Evidence
 
 See:
-- [PRODUCTION_EVIDENCE.md](PRODUCTION_EVIDENCE.md)
+- [PRODUCTION_EVIDENCE.md](docs/PRODUCTION_EVIDENCE.md)
 - [METRICS.md](METRICS.md)
 - [docs/proof/research-sample.md](docs/proof/research-sample.md)
 - [docs/proof/notes-sample.md](docs/proof/notes-sample.md)
@@ -397,7 +397,7 @@ Environment examples:
 - Optional embedding envs: `EMBEDDING_PROVIDER` and `EMBEDDING_MODEL`
 
 Detailed runbook:
-- [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md)
+- [DEPLOY_CHECKLIST.md](docs/DEPLOY_CHECKLIST.md)
 - [render.yaml](render.yaml)
 
 ## User Validation
@@ -405,9 +405,9 @@ Detailed runbook:
 The next milestone is not random feature growth. It is 10 to 15 student validation with real usage.
 
 Validation assets:
-- [USER_VALIDATION_PLAN.md](USER_VALIDATION_PLAN.md)
-- [USER_TEST_RESULTS.md](USER_TEST_RESULTS.md)
-- [FEEDBACK_FORM.md](FEEDBACK_FORM.md)
+- [USER_VALIDATION_PLAN.md](docs/USER_VALIDATION_PLAN.md)
+- [USER_TEST_RESULTS.md](docs/USER_TEST_RESULTS.md)
+- [FEEDBACK_FORM.md](docs/FEEDBACK_FORM.md)
 - [METRICS.md](METRICS.md)
 - [docs/research/student-validation-report.md](docs/research/student-validation-report.md)
 - [docs/research/student-validation-report-v2.md](docs/research/student-validation-report-v2.md)
@@ -419,8 +419,8 @@ Validation assets:
 Scholr now includes a frontend-first document workflow on top of a backend-first document intelligence foundation.
 
 See:
-- [RAG_ROADMAP.md](RAG_ROADMAP.md)
-- [DOCUMENT_INTELLIGENCE.md](DOCUMENT_INTELLIGENCE.md)
+- [RAG_ROADMAP.md](docs/RAG_ROADMAP.md)
+- [DOCUMENT_INTELLIGENCE.md](docs/DOCUMENT_INTELLIGENCE.md)
 
 Backend validation assets:
 - [backend/scripts/test_documents.py](backend/scripts/test_documents.py)
@@ -429,9 +429,9 @@ Backend validation assets:
 ## Legal And Ownership
 
 - [LICENSE](LICENSE)
-- [TERMS.md](TERMS.md)
-- [PRIVACY.md](PRIVACY.md)
-- [DISCLAIMER.md](DISCLAIMER.md)
+- [TERMS.md](docs/TERMS.md)
+- [PRIVACY.md](docs/PRIVACY.md)
+- [DISCLAIMER.md](docs/DISCLAIMER.md)
 
 Scholr is owned by Tauqeer Bharde.  
 Copyright (c) 2026 Tauqeer Bharde. All rights reserved.
@@ -473,8 +473,8 @@ Tauqeer Bharde is a BTech AI and Data Science student building practical AI syst
 
 ## Supporting Docs
 
-- [BLUEPRINT.md](BLUEPRINT.md)
-- [PROJECT_PROGRESS.md](PROJECT_PROGRESS.md)
+- [BLUEPRINT.md](docs/BLUEPRINT.md)
+- [PROJECT_PROGRESS.md](docs/PROJECT_PROGRESS.md)
 - [docs/demo/README.md](docs/demo/README.md)
 - [docs/screenshots/desktop/README.md](docs/screenshots/desktop/README.md)
 - [docs/screenshots/mobile/README.md](docs/screenshots/mobile/README.md)
@@ -492,3 +492,4 @@ Never commit:
 - provider keys or secrets
 
 Scholr(TM) is an academic AI platform created by Tauqeer Bharde.
+
