@@ -99,7 +99,7 @@ Set `DATABASE_URL` to a PostgreSQL connection string on Render to use PostgreSQL
 
 ## Semantic History Search
 
-The first `/api/search` request after a cold start may take 10-15 seconds while `sentence-transformers` lazy-loads the `all-MiniLM-L6-v2` model.
+`/api/search` uses lightweight deterministic embeddings by default so Render health checks stay fast. Set `ENABLE_SENTENCE_TRANSFORMERS=true` only on a larger instance where model downloads and memory are acceptable.
 
 ## Redeploy Checklist
 
