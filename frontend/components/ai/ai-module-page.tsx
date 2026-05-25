@@ -19,8 +19,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import ResponseFeedback from '@/components/ai/ResponseFeedback'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useBackendStatus } from '@/hooks/useBackendStatus'
 import { trackEvent } from '@/lib/analytics'
-import { StreamModuleError, streamModuleResponse } from '@/lib/api'
+import { getApiBaseUrl, StreamModuleError, streamModuleResponse } from '@/lib/api'
 import { exportResponseAsPdf } from '@/lib/exportPdf'
 
 const LOCAL_RESPONSE_CACHE_KEY = 'scholr-local-response-cache-v1'
@@ -81,6 +82,8 @@ function AiModulePageContent({
   const [slowStreamHint, setSlowStreamHint] = useState(false)
   const [retrying, setRetrying] = useState(false)
   const [shared, setShared] = useState(false)
+  const [statusDismissed, setStatusDismissed] = useState(false)
+  const backendStatus = useBackendStatus(getApiBaseUrl())
 
   const getCacheKey = () =>
     [
@@ -324,6 +327,7 @@ function AiModulePageContent({
       }
       if (result.hadChunks && typeof window !== 'undefined') {
         window.localStorage.setItem('scholr_has_used', 'true')
+        setStatusDismissed(true)
       }
       setHasGeneratedOnce(true)
     } catch (submissionError) {
@@ -498,9 +502,31 @@ function AiModulePageContent({
       : activeMode === 'cache' || activeMode === 'warm_cache'
         ? 'bg-sky-50 text-sky-800 border border-sky-200'
         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+  const showBackendBanner = !statusDismissed && (backendStatus === 'slow' || backendStatus === 'down')
+  const backendBannerClass =
+    backendStatus === 'down'
+      ? 'border-red-200 bg-red-50 text-red-700'
+      : 'border-amber-200 bg-amber-50 text-amber-800'
+  const backendBannerMessage =
+    backendStatus === 'down'
+      ? 'Backend is starting. Please wait 30 seconds and try again.'
+      : 'Starting up... first request may take 15-30 seconds on free hosting'
 
   return (
     <div className="space-y-5 lg:space-y-8">
+      {showBackendBanner ? (
+        <div className={`flex items-start justify-between gap-3 rounded-2xl border px-4 py-3 text-sm ${backendBannerClass}`}>
+          <span>{backendBannerMessage}</span>
+          <button
+            type="button"
+            onClick={() => setStatusDismissed(true)}
+            className="font-semibold opacity-70 transition hover:opacity-100"
+            aria-label="Dismiss backend status warning"
+          >
+            X
+          </button>
+        </div>
+      ) : null}
       <section className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,251,235,0.95),rgba(255,255,255,0.98),rgba(240,249,255,0.98))] p-5 shadow-sm sm:rounded-[2rem] sm:p-8">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">

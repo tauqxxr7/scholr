@@ -173,6 +173,10 @@ function getApiUrl() {
   )
 }
 
+export function getApiBaseUrl() {
+  return getApiUrl()
+}
+
 function describeNetworkFailure(error: unknown) {
   if (error instanceof StreamModuleError) {
     return error
