@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import AiModulePage from '@/components/ai/ai-module-page'
 
@@ -13,9 +14,24 @@ const topicSuggestions = [
   'Computer Networks TCP/IP',
 ]
 
-export default function ResearchPage() {
-  const [topic, setTopic] = useState('')
+function ResearchPageContent() {
+  const searchParams = useSearchParams()
+  const linkedTopic = searchParams.get('topic')?.trim() || ''
+  const hasLinkedTopic = linkedTopic.length > 3
+  const [topic, setTopic] = useState(hasLinkedTopic ? linkedTopic : '')
   const [output, setOutput] = useState('')
+  const [autoSubmitMessage, setAutoSubmitMessage] = useState(
+    hasLinkedTopic ? 'Auto-loading topic from link...' : '',
+  )
+
+  useEffect(() => {
+    if (!hasLinkedTopic) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setAutoSubmitMessage(''), 1400)
+    return () => window.clearTimeout(timer)
+  }, [hasLinkedTopic])
 
   return (
     <AiModulePage
@@ -31,6 +47,8 @@ export default function ResearchPage() {
       setOutput={setOutput}
       loadingLabel="Searching papers..."
       idleLabel="Find Research Papers"
+      autoSubmitSignal={hasLinkedTopic ? 1 : 0}
+      autoSubmitMessage={autoSubmitMessage}
       promptExtras={
         <div className="space-y-2">
           <p className="text-sm text-slate-500">Try one of these:</p>
@@ -49,5 +67,13 @@ export default function ResearchPage() {
         </div>
       }
     />
+  )
+}
+
+export default function ResearchPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResearchPageContent />
+    </Suspense>
   )
 }

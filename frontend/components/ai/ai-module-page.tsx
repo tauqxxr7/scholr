@@ -46,6 +46,8 @@ type AiModulePageProps = {
   loadingLabel: string
   idleLabel: string
   promptExtras?: ReactNode
+  autoSubmitSignal?: number
+  autoSubmitMessage?: string
 }
 
 function AiModulePageContent({
@@ -63,6 +65,8 @@ function AiModulePageContent({
   loadingLabel,
   idleLabel,
   promptExtras,
+  autoSubmitSignal,
+  autoSubmitMessage,
 }: AiModulePageProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -370,6 +374,19 @@ function AiModulePageContent({
     await runRequest()
   }
 
+  useEffect(() => {
+    if (!autoSubmitSignal || loading || primaryValue.trim().length <= 3) {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      void handleSubmit()
+    }, 500)
+
+    return () => window.clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSubmitSignal])
+
   const handleCopy = async () => {
     if (!output) {
       return
@@ -576,6 +593,12 @@ function AiModulePageContent({
                 className="min-h-[180px] resize-none rounded-[1.5rem] border-slate-200 bg-slate-50/70 px-4 py-3 text-base leading-7 shadow-none sm:min-h-[220px] md:text-base"
               />
             </div>
+
+            {autoSubmitMessage ? (
+              <p className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                {autoSubmitMessage}
+              </p>
+            ) : null}
 
             {promptExtras}
 

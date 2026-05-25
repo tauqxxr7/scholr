@@ -1,13 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import AiModulePage from '@/components/ai/ai-module-page'
 
-export default function DoubtPage() {
+function DoubtPageContent() {
+  const searchParams = useSearchParams()
+  const linkedQuestion = searchParams.get('question')?.trim() || ''
+  const hasLinkedQuestion = linkedQuestion.length > 3
   const [subject, setSubject] = useState('')
-  const [question, setQuestion] = useState('')
+  const [question, setQuestion] = useState(hasLinkedQuestion ? linkedQuestion : '')
   const [output, setOutput] = useState('')
+  const [autoSubmitMessage, setAutoSubmitMessage] = useState(
+    hasLinkedQuestion ? 'Auto-loading topic from link...' : '',
+  )
+
+  useEffect(() => {
+    if (!hasLinkedQuestion) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setAutoSubmitMessage(''), 1400)
+    return () => window.clearTimeout(timer)
+  }, [hasLinkedQuestion])
 
   return (
     <AiModulePage
@@ -28,6 +44,16 @@ export default function DoubtPage() {
       setOutput={setOutput}
       loadingLabel="Solving doubt..."
       idleLabel="Solve My Doubt"
+      autoSubmitSignal={hasLinkedQuestion ? 1 : 0}
+      autoSubmitMessage={autoSubmitMessage}
     />
+  )
+}
+
+export default function DoubtPage() {
+  return (
+    <Suspense fallback={null}>
+      <DoubtPageContent />
+    </Suspense>
   )
 }

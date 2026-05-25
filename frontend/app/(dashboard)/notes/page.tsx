@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 import AiModulePage from '@/components/ai/ai-module-page'
 
@@ -15,13 +16,28 @@ const subjectChips = [
   'Signals & Systems',
 ]
 
-export default function NotesPage() {
-  const [topic, setTopic] = useState('')
+function NotesPageContent() {
+  const searchParams = useSearchParams()
+  const linkedTopic = searchParams.get('topic')?.trim() || ''
+  const hasLinkedTopic = linkedTopic.length > 3
+  const [topic, setTopic] = useState(hasLinkedTopic ? linkedTopic : '')
   const [output, setOutput] = useState('')
+  const [autoSubmitMessage, setAutoSubmitMessage] = useState(
+    hasLinkedTopic ? 'Auto-loading topic from link...' : '',
+  )
 
   const selectSubject = (subject: string) => {
     setTopic(`${subject}: `)
   }
+
+  useEffect(() => {
+    if (!hasLinkedTopic) {
+      return
+    }
+
+    const timer = window.setTimeout(() => setAutoSubmitMessage(''), 1400)
+    return () => window.clearTimeout(timer)
+  }, [hasLinkedTopic])
 
   return (
     <AiModulePage
@@ -37,6 +53,8 @@ export default function NotesPage() {
       setOutput={setOutput}
       loadingLabel="Writing notes..."
       idleLabel="Generate Notes"
+      autoSubmitSignal={hasLinkedTopic ? 1 : 0}
+      autoSubmitMessage={autoSubmitMessage}
       promptExtras={
         <div className="space-y-2">
           <p className="text-sm text-slate-500">Choose a subject:</p>
@@ -55,5 +73,13 @@ export default function NotesPage() {
         </div>
       }
     />
+  )
+}
+
+export default function NotesPage() {
+  return (
+    <Suspense fallback={null}>
+      <NotesPageContent />
+    </Suspense>
   )
 }
