@@ -11,6 +11,7 @@ import {
   Clock3,
   Database,
   FileText,
+  Share2,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -54,6 +55,7 @@ function DashboardPageContent() {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [metrics, setMetrics] = useState<MetricsResult | null>(null)
+  const [shareStatus, setShareStatus] = useState('')
   const isSearching = searchQuery.trim().length > 0
   const historyExportUrl = history.length > 0 ? getHistoryExportUrl() : ''
 
@@ -143,6 +145,29 @@ function DashboardPageContent() {
   const showOnboarding = !historyLoading && history.length === 0 && hasUsedBefore === false
   const showHistoryList = !historyLoading && !showOnboarding
 
+  const handleShareScholr = async () => {
+    const shareData = {
+      title: 'Scholr — AI study tool',
+      text: 'Free AI tool for BTech students — research papers, notes, and doubt solving in 60 seconds. No signup needed.',
+      url: 'https://scholr-coral.vercel.app',
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+        setShareStatus('Shared!')
+      } else {
+        await navigator.clipboard.writeText(shareData.url)
+        setShareStatus('Link copied!')
+      }
+    } catch {
+      await navigator.clipboard.writeText(shareData.url)
+      setShareStatus('Link copied!')
+    }
+
+    window.setTimeout(() => setShareStatus(''), 1800)
+  }
+
   const onboardingCards = (
     <div className="mt-6 rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-5 sm:p-7">
       <div className="text-center">
@@ -202,6 +227,19 @@ function DashboardPageContent() {
               dashboard is our operating room for keeping the product fast, readable, and
               demo-worthy.
             </p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleShareScholr}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-950"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Scholr
+              </button>
+              {shareStatus ? (
+                <span className="text-sm font-medium text-emerald-700">{shareStatus}</span>
+              ) : null}
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
