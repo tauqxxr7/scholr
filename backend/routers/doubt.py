@@ -11,6 +11,7 @@ from core.slowapi_limiter import limiter
 from db import crud
 from db.database import get_db
 from models.schemas import DoubtRequest
+from routers._input_safety import invalid_academic_topic_stream, is_likely_spam, sanitize_input
 from routers._runtime import (
     enforce_rate_limit,
     enforce_usage_quota,
@@ -38,7 +39,11 @@ async def doubt_endpoint(
     if rate_limit_response:
         return rate_limit_response
 
-    query = payload.question if not payload.subject else f"[{payload.subject}] {payload.question}"
+    question = sanitize_input(payload.question)
+    if is_likely_spam(question):
+        return invalid_academic_topic_stream()
+    subject = sanitize_input(payload.subject or "General")
+    query = question if not payload.subject else f"[{subject}] {question}"
     request_id = getattr(request.state, "request_id", None)
     quota_response = enforce_usage_quota(
         db,
@@ -70,7 +75,7 @@ async def doubt_endpoint(
             source="cache",
             cache_hit=True,
             required_sections=DOUBT_REQUIRED,
-            validation_query=payload.question,
+            validation_query=question,
         )
 
     cached = None
@@ -83,7 +88,7 @@ async def doubt_endpoint(
             request_id=request_id,
         )
     use_fallback = should_use_emergency_fallback() and not cached
-    fallback_text = build_provider_degraded_text("doubt", payload.question, subject=payload.subject or "General")
+    fallback_text = build_provider_degraded_text("doubt", question, subject=subject)
     if use_fallback:
         trigger_provider_recovery_if_needed()
 
@@ -92,7 +97,7 @@ async def doubt_endpoint(
         if cached
         else stream_text_chunks(fallback_text)
         if use_fallback
-        else generate_doubt_response(payload.question, payload.subject or "General", response_mode),
+        else generate_doubt_response(question, subject, response_mode),
         save_history=lambda response: crud.save_search(
             db=db,
             module="doubt",
@@ -115,6 +120,6 @@ async def doubt_endpoint(
         cache_hit=bool(cached),
         recovery_text=fallback_text,
         required_sections=DOUBT_REQUIRED,
-        validation_query=payload.question,
+        validation_query=question,
         on_complete=lambda response: response_cache.set("doubt", query, response_mode, response),
     )

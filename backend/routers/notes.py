@@ -11,6 +11,7 @@ from core.slowapi_limiter import limiter
 from db import crud
 from db.database import get_db
 from models.schemas import NotesRequest
+from routers._input_safety import invalid_academic_topic_stream, is_likely_spam, sanitize_input
 from routers._runtime import (
     enforce_rate_limit,
     enforce_usage_quota,
@@ -50,14 +51,17 @@ async def notes_endpoint(
     record_usage_event(db, auth_context=auth_context, scope="notes")
     effective_user_id = clerk_user_id or "anonymous"
     response_mode = payload.response_mode.strip().lower()
-    memory_cached = response_cache.get("notes", payload.topic, response_mode)
+    topic = sanitize_input(payload.topic)
+    if is_likely_spam(topic):
+        return invalid_academic_topic_stream()
+    memory_cached = response_cache.get("notes", topic, response_mode)
     if memory_cached:
         return build_sse_response(
             generator=stream_text_chunks(memory_cached),
             save_history=lambda response: crud.save_search(
                 db=db,
                 module="notes",
-                query=payload.topic,
+                query=topic,
                 response=response,
                 user_id=effective_user_id,
                 session_id=auth_context.session_id,
@@ -69,7 +73,7 @@ async def notes_endpoint(
             source="cache",
             cache_hit=True,
             required_sections=NOTES_REQUIRED,
-            validation_query=payload.topic,
+            validation_query=topic,
         )
 
     cached = None
@@ -78,11 +82,11 @@ async def notes_endpoint(
             db,
             module="notes",
             user_id=effective_user_id,
-            query=payload.topic,
+            query=topic,
             request_id=request_id,
         )
     use_fallback = should_use_emergency_fallback() and not cached
-    fallback_text = build_provider_degraded_text("notes", payload.topic)
+    fallback_text = build_provider_degraded_text("notes", topic)
     if use_fallback:
         trigger_provider_recovery_if_needed()
 
@@ -91,11 +95,11 @@ async def notes_endpoint(
         if cached
         else stream_text_chunks(fallback_text)
         if use_fallback
-        else generate_notes_response(payload.topic, response_mode),
+        else generate_notes_response(topic, response_mode),
         save_history=lambda response: crud.save_search(
             db=db,
             module="notes",
-            query=payload.topic,
+            query=topic,
             response=response,
             user_id=effective_user_id,
             session_id=auth_context.session_id,
@@ -114,6 +118,6 @@ async def notes_endpoint(
         cache_hit=bool(cached),
         recovery_text=fallback_text,
         required_sections=NOTES_REQUIRED,
-        validation_query=payload.topic,
-        on_complete=lambda response: response_cache.set("notes", payload.topic, response_mode, response),
+        validation_query=topic,
+        on_complete=lambda response: response_cache.set("notes", topic, response_mode, response),
     )

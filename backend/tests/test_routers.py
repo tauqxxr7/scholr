@@ -42,6 +42,16 @@ def test_research_route_returns_event_stream(monkeypatch):
     assert response.headers["content-type"].startswith("text/event-stream")
 
 
+def test_research_route_blocks_spam_topic():
+    client = TestClient(main.app)
+
+    response = client.post("/api/research", json={"topic": "buy now casino"})
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert "Please enter a valid academic topic." in response.text
+
+
 def test_notes_route_returns_event_stream(monkeypatch):
     _disable_provider_fallback(monkeypatch)
     client = TestClient(main.app)
@@ -174,6 +184,18 @@ def test_waitlist_route_rejects_invalid_email():
     response = client.post("/api/waitlist", json={"email": "not-an-email"})
 
     assert response.status_code == 422
+
+
+def test_waitlist_route_blocks_honeypot_submission():
+    client = TestClient(main.app)
+
+    response = client.post(
+        "/api/waitlist",
+        json={"email": f"bot-{uuid.uuid4().hex}@example.com", "honeypot": "bot-filled"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["blocked"] is True
 
 
 def test_validation_session_accepts_valid_payload():

@@ -27,6 +27,7 @@ const modules = [
 
 export default function LandingPage() {
   const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistHoneypot, setWaitlistHoneypot] = useState('')
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const handleWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -45,7 +46,7 @@ export default function LandingPage() {
       const response = await fetch(`${apiUrl}/api/waitlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: waitlistEmail.trim() }),
+        body: JSON.stringify({ email: waitlistEmail.trim(), honeypot: waitlistHoneypot }),
       })
 
       if (!response.ok) {
@@ -211,6 +212,15 @@ export default function LandingPage() {
             ) : (
               <form onSubmit={handleWaitlistSubmit} className="space-y-3">
                 <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    name="honeypot"
+                    value={waitlistHoneypot}
+                    onChange={(event) => setWaitlistHoneypot(event.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    className="absolute -left-[9999px] h-px w-px"
+                    aria-hidden="true"
+                  />
                   <input
                     type="email"
                     value={waitlistEmail}

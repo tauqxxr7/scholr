@@ -15,6 +15,7 @@ router = APIRouter()
 class WaitlistRequest(BaseModel):
     email: EmailStr
     source: str = "landing_page"
+    honeypot: str = ""
 
 
 @router.post("/api/waitlist")
@@ -27,6 +28,8 @@ def join_waitlist(
 ):
     del request
     del response
+    if payload.honeypot:
+        return {"added": False, "blocked": True}
     existing = db.query(Waitlist).filter(Waitlist.email == payload.email).first()
     if existing:
         return {"added": False, "already_registered": True}
