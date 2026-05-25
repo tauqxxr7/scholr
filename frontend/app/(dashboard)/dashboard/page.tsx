@@ -15,8 +15,8 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { trackEvent } from '@/lib/analytics'
-import type { HistoryItem, SearchResultItem } from '@/lib/api'
-import { getHistory, getHistoryExportUrl, searchHistory } from '@/lib/api'
+import type { HistoryItem, MetricsResult, SearchResultItem } from '@/lib/api'
+import { getHistory, getHistoryExportUrl, getMetrics, searchHistory } from '@/lib/api'
 
 const modules = [
   {
@@ -53,6 +53,7 @@ function DashboardPageContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
+  const [metrics, setMetrics] = useState<MetricsResult | null>(null)
   const isSearching = searchQuery.trim().length > 0
   const historyExportUrl = history.length > 0 ? getHistoryExportUrl() : ''
 
@@ -102,6 +103,18 @@ function DashboardPageContent() {
     }
 
     void loadHistory()
+  }, [])
+
+  useEffect(() => {
+    const loadMetrics = async () => {
+      try {
+        setMetrics(await getMetrics())
+      } catch {
+        setMetrics(null)
+      }
+    }
+
+    void loadMetrics()
   }, [])
 
   useEffect(() => {
@@ -257,6 +270,20 @@ function DashboardPageContent() {
           )
         })}
       </section>
+
+      {metrics ? (
+        <section className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+            {metrics.searches.total} total queries
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+            {metrics.searches.last_7d} this week
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+            {metrics.feedback.total} feedback given
+          </span>
+        </section>
+      ) : null}
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-[2rem] sm:p-7">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

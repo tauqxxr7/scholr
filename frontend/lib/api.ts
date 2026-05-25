@@ -18,6 +18,21 @@ export type SearchResultItem = {
   created_at: string
 }
 
+export type MetricsResult = {
+  searches: {
+    total: number
+    last_24h: number
+    last_7d: number
+    by_module: Record<string, number>
+  }
+  feedback: {
+    total: number
+    helpful: number
+    not_helpful: number
+    helpful_rate: number | null
+  }
+}
+
 export type DocumentUploadResult = {
   document_id: string
   title: string
@@ -386,6 +401,14 @@ export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
 
 export function getHistoryExportUrl(): string {
   return `${getApiUrl()}/api/history/export`
+}
+
+export async function getMetrics(): Promise<MetricsResult> {
+  const response = await fetch(`${getApiUrl()}/api/metrics`, { cache: 'no-store' })
+  if (!response.ok) {
+    throw new Error('Failed to fetch metrics')
+  }
+  return response.json()
 }
 
 export async function searchHistory(query: string, limit = 5): Promise<SearchResultItem[]> {
