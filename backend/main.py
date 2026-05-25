@@ -14,7 +14,6 @@ from starlette.requests import Request
 from agents._generation import (
     ensure_provider_recovery_task,
     get_provider_status,
-    run_provider_smoke_test,
     shutdown_provider_recovery_task,
     validate_provider_startup,
 )
@@ -75,7 +74,7 @@ ALLOWED_ORIGIN_REGEX = os.getenv("ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.a
 app = FastAPI(
     title="Scholr API",
     description="AI Academic Platform for BTech Students",
-    version="1.5.0",
+    version=os.getenv("APP_VERSION", "1.5.0"),
 )
 
 app.add_middleware(
@@ -110,6 +109,17 @@ logger = logging.getLogger("scholr.api")
 
 @app.on_event("startup")
 async def validate_provider_on_startup():
+    version = os.getenv("APP_VERSION", "1.5.0")
+    logger.info("Scholr API starting - version %s", version)
+    logger.info("Environment: %s", os.getenv("ENVIRONMENT", "production"))
+    logger.info("Database: %s...", os.getenv("DATABASE_URL", "sqlite")[:20])
+    logger.info("Sentry: %s", "configured" if os.getenv("SENTRY_DSN") else "not configured")
+    logger.info(
+        "OpenRouter: %s",
+        "configured" if os.getenv("OPENROUTER_API_KEY") else "NOT CONFIGURED - AI will use fallback",
+    )
+    logger.info("Gemini: %s", "configured" if os.getenv("GEMINI_API_KEY") else "not configured")
+
     ensure_provider_recovery_task()
     provider_status = await validate_provider_startup()
 
@@ -207,7 +217,7 @@ def health_check():
     provider_status = get_provider_status()
     return {
         "status": "Scholr API is running",
-        "version": "1.5.0",
+        "version": os.getenv("APP_VERSION", "1.5.0"),
         **get_runtime_diagnostics(),
         **provider_status,
     }
@@ -237,7 +247,7 @@ def list_routes():
     return {
         "total_routes": len(routes),
         "routes": sorted(routes, key=lambda r: r["path"]),
-        "version": "1.5.0",
+        "version": os.getenv("APP_VERSION", "1.5.0"),
     }
 
 
