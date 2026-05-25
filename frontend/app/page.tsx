@@ -248,6 +248,9 @@ export default function LandingPage() {
               <Link href="/terms" className="transition hover:text-slate-900">
                 Terms
               </Link>
+              <Link href="/topics" className="transition hover:text-slate-900">
+                Browse topics
+              </Link>
             </div>
           </div>
         </footer>
