@@ -91,6 +91,21 @@ def test_health_route_returns_status_key():
     assert "status" in response.json()
 
 
+def test_health_routes_lists_registered_api_paths():
+    client = TestClient(main.app)
+
+    response = client.get("/health/routes")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body["routes"], list)
+    assert body["total_routes"] > 5
+    paths = {route["path"] for route in body["routes"]}
+    assert "/api/metrics" in paths
+    assert "/api/waitlist" in paths
+    assert "/api/research" in paths
+
+
 def test_metrics_route_returns_aggregate_keys():
     client = TestClient(main.app)
 

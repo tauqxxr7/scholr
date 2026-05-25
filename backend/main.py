@@ -217,6 +217,24 @@ def provider_health_check():
     }
 
 
+@app.get("/health/routes")
+def list_routes():
+    routes = []
+    for route in app.routes:
+        if hasattr(route, "path") and hasattr(route, "methods"):
+            routes.append(
+                {
+                    "path": route.path,
+                    "methods": list(route.methods) if route.methods else [],
+                }
+            )
+    return {
+        "total_routes": len(routes),
+        "routes": sorted(routes, key=lambda r: r["path"]),
+        "version": "1.4.0",
+    }
+
+
 @app.get("/health/generate-test")
 async def provider_generate_test():
     smoke_test = await run_provider_smoke_test()
