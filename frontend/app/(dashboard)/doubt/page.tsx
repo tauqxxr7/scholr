@@ -12,9 +12,15 @@ function DoubtPageContent() {
   const [subject, setSubject] = useState('')
   const [question, setQuestion] = useState(hasLinkedQuestion ? linkedQuestion : '')
   const [output, setOutput] = useState('')
+  const [exampleSubmitSignal, setExampleSubmitSignal] = useState(0)
   const [autoSubmitMessage, setAutoSubmitMessage] = useState(
     hasLinkedQuestion ? 'Auto-loading topic from link...' : '',
   )
+
+  const runExample = () => {
+    setQuestion('What is the difference between stack and queue data structure?')
+    setExampleSubmitSignal(Date.now())
+  }
 
   useEffect(() => {
     if (!hasLinkedQuestion) {
@@ -44,8 +50,20 @@ function DoubtPageContent() {
       setOutput={setOutput}
       loadingLabel="Solving doubt..."
       idleLabel="Solve My Doubt"
-      autoSubmitSignal={hasLinkedQuestion ? 1 : 0}
+      autoSubmitSignal={exampleSubmitSignal || (hasLinkedQuestion ? 1 : 0)}
       autoSubmitMessage={autoSubmitMessage}
+      autoSubmitDelayMs={exampleSubmitSignal ? 0 : 500}
+      promptExtras={
+        !question && !output ? (
+          <button
+            type="button"
+            onClick={runExample}
+            className="min-h-11 w-full rounded-2xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700"
+          >
+            ▶ Try a live example
+          </button>
+        ) : null
+      }
     />
   )
 }

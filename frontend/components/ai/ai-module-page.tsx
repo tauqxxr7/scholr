@@ -49,6 +49,7 @@ type AiModulePageProps = {
   promptExtras?: ReactNode
   autoSubmitSignal?: number
   autoSubmitMessage?: string
+  autoSubmitDelayMs?: number
 }
 
 function AiModulePageContent({
@@ -68,6 +69,7 @@ function AiModulePageContent({
   promptExtras,
   autoSubmitSignal,
   autoSubmitMessage,
+  autoSubmitDelayMs = 500,
 }: AiModulePageProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -385,7 +387,7 @@ function AiModulePageContent({
 
     const timer = window.setTimeout(() => {
       void handleSubmit()
-    }, 500)
+    }, autoSubmitDelayMs)
 
     return () => window.clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
