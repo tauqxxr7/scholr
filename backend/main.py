@@ -75,7 +75,7 @@ ALLOWED_ORIGIN_REGEX = os.getenv("ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.a
 app = FastAPI(
     title="Scholr API",
     description="AI Academic Platform for BTech Students",
-    version="1.0.0",
+    version="1.4.0",
 )
 
 app.add_middleware(
@@ -201,7 +201,7 @@ def health_check():
     provider_status = get_provider_status()
     return {
         "status": "Scholr API is running",
-        "version": "1.0.0",
+        "version": "1.4.0",
         **get_runtime_diagnostics(),
         **provider_status,
     }
