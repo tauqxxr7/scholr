@@ -260,8 +260,6 @@ async def test_generation():
         chunks = []
         async for chunk in generate_research_response("binary search"):
             chunks.append(chunk)
-            if len("".join(chunks)) > 200:
-                break
         text = "".join(chunks)
         return {
             "ai_working": len(text) > 50,
