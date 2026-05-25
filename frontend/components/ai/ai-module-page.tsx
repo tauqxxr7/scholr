@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   RotateCcw,
   FileDown,
+  Share2,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -75,6 +76,7 @@ function AiModulePageContent({
   const [progressStage, setProgressStage] = useState<'connecting' | 'thinking' | 'writing' | 'finalizing'>('connecting')
   const [slowStreamHint, setSlowStreamHint] = useState(false)
   const [retrying, setRetrying] = useState(false)
+  const [shared, setShared] = useState(false)
 
   const getCacheKey = () =>
     [
@@ -389,6 +391,30 @@ function AiModulePageContent({
     exportResponseAsPdf(moduleName[0].toUpperCase() + moduleName.slice(1), primaryValue, output)
   }
 
+  const handleShareAnswer = async () => {
+    if (!output || loading) {
+      return
+    }
+
+    const shareText = `${output.slice(0, 200)}${output.length > 200 ? '...' : ''}`
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Scholr — ${moduleName} result`,
+          text: shareText,
+          url: `https://scholr-coral.vercel.app/${moduleName}`,
+        })
+      } else {
+        await navigator.clipboard.writeText(output)
+      }
+      setShared(true)
+    } catch {
+      await navigator.clipboard.writeText(output)
+      setShared(true)
+    }
+    window.setTimeout(() => setShared(false), 1500)
+  }
+
   const handleClear = () => {
     setOutput('')
     setError('')
@@ -607,6 +633,16 @@ function AiModulePageContent({
                 >
                   <FileDown className="mr-2 h-4 w-4" />
                   Export PDF
+                </Button>
+              ) : null}
+              {output && !loading ? (
+                <Button
+                  variant="outline"
+                  onClick={handleShareAnswer}
+                  className="min-h-12 w-full rounded-2xl border-slate-200 sm:w-auto"
+                >
+                  <Share2 className="mr-2 h-4 w-4" />
+                  {shared ? 'Copied!' : 'Share'}
                 </Button>
               ) : null}
             </div>
