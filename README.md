@@ -2,7 +2,7 @@
 
 # Scholr
 
-### AI Academic Platform for BTech Students
+### Free AI study tool for BTech engineering students — research papers, notes, doubt solving
 
 **Live product** -> [scholr-coral.vercel.app](https://scholr-coral.vercel.app)
 
@@ -18,7 +18,7 @@ Research papers â€¢ Study notes â€¢ Doubt solving â€¢ Document intel
 
 # Scholr
 
-Scholr is an AI-powered academic intelligence platform for BTech students, combining streaming generation, multi-provider resilience, and retrieval-grounded document intelligence.
+Scholr is a free AI study tool for BTech engineering students — research papers, notes, doubt solving, streaming generation, multi-provider resilience, and retrieval-grounded document intelligence.
 
 [![Backend CI](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/backend-ci.yml)
 [![Frontend CI](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/tauqxxr7/scholr/actions/workflows/frontend-ci.yml)
@@ -32,7 +32,7 @@ Scholr is an AI-powered academic intelligence platform for BTech students, combi
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Live_MVP-16A34A)
 
-**Topics:** `ai` `edtech` `fastapi` `nextjs` `btech` `india` `students` `gemini` `openrouter` `academic`
+**Topics:** `ai` `edtech` `fastapi` `nextjs` `btechstudents` `india` `gemini` `openrouter` `academic` `studytool` `researchassistant` `machinelearning`
 
 Live links:
 - Frontend: [https://scholr-coral.vercel.app](https://scholr-coral.vercel.app)
@@ -54,6 +54,17 @@ Live links:
 | Deployment | Vercel (frontend) + Render (backend) |
 | AI provider | OpenRouter → Gemini 2.0 Flash Lite |
 | Free to use | Yes — no signup required |
+
+## Designed for
+
+BTech students across India studying:
+- Computer Science & Engineering
+- Electronics & Communication
+- Information Technology
+- Artificial Intelligence & Data Science
+- Mechanical Engineering (core subjects)
+
+Free. No account required. Works on mobile.
 
 ## What Scholr Is
 
