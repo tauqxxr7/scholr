@@ -56,6 +56,35 @@ function DashboardPageContent() {
   }, [])
 
   useEffect(() => {
+    const recordValidationSession = async () => {
+      if (localStorage.getItem('scholr_validation_recorded') === 'true') {
+        return
+      }
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/+$/, '')
+      if (!apiUrl) {
+        return
+      }
+
+      try {
+        const response = await fetch(`${apiUrl}/api/validation/session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ referred_by: document.referrer || 'direct' }),
+        })
+
+        if (response.ok) {
+          localStorage.setItem('scholr_validation_recorded', 'true')
+        }
+      } catch {
+        // Silent validation tracking should never interrupt the dashboard.
+      }
+    }
+
+    void recordValidationSession()
+  }, [])
+
+  useEffect(() => {
     const loadHistory = async () => {
       try {
         const items = await getHistory(6, 1)

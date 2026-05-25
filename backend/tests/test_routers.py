@@ -169,3 +169,26 @@ def test_waitlist_route_rejects_invalid_email():
     response = client.post("/api/waitlist", json={"email": "not-an-email"})
 
     assert response.status_code == 422
+
+
+def test_validation_session_accepts_valid_payload():
+    client = TestClient(main.app)
+
+    response = client.post(
+        "/api/validation/session",
+        json={"college": "Test Engineering College", "year": "third_year", "referred_by": "pytest"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["recorded"] is True
+
+
+def test_validation_summary_returns_goal():
+    client = TestClient(main.app)
+
+    response = client.get("/api/validation/summary")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "total_validation_sessions" in body
+    assert body["validation_goal"] == 10
