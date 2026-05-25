@@ -13,6 +13,10 @@ from routers import notes as notes_router
 from routers import research as research_router
 
 
+def test_app_import_smoke_does_not_crash():
+    assert main.app.title == "Scholr API"
+
+
 async def _fake_stream(*args, **kwargs):
     del args, kwargs
     yield "mocked academic response"

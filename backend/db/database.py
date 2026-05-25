@@ -1,24 +1,81 @@
 import os
 import uuid
 from datetime import datetime
+import logging
+import tempfile
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, create_engine, inspect, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+DEFAULT_SQLITE_PATH = os.path.join(tempfile.gettempdir(), "scholr.db")
+
+
+def _sqlite_url_from_path(path: str) -> str:
+    normalized = os.path.abspath(path).replace("\\", "/")
+    return f"sqlite:///{normalized}"
+
+
+def _build_database_url() -> str:
+    configured_url = os.getenv("DATABASE_URL", "").strip()
+    if configured_url:
+        return configured_url
+
+    sqlite_path = os.getenv("SQLITE_PATH", DEFAULT_SQLITE_PATH).strip() or DEFAULT_SQLITE_PATH
+    return _sqlite_url_from_path(sqlite_path)
+
+
+def _ensure_sqlite_parent_dir(url: str) -> str:
+    parsed = make_url(url)
+    database_path = parsed.database
+    if not database_path or database_path == ":memory:":
+        return url
+
+    parent = os.path.dirname(os.path.abspath(database_path))
+    if parent:
+        try:
+            os.makedirs(parent, exist_ok=True)
+            probe_path = os.path.join(parent, ".scholr-write-probe")
+            with open(probe_path, "w", encoding="utf-8") as probe:
+                probe.write("ok")
+            os.remove(probe_path)
+        except OSError:
+            fallback_url = _sqlite_url_from_path(DEFAULT_SQLITE_PATH)
+            logger.warning(
+                "database_startup sqlite_parent_unwritable path=%s fallback=%s",
+                parent,
+                os.path.abspath(DEFAULT_SQLITE_PATH),
+            )
+            return fallback_url
+    return url
+
+
+def _log_database_startup(url: str) -> None:
+    parsed = make_url(url)
+    if parsed.drivername.startswith("sqlite"):
+        database_path = parsed.database or ":memory:"
+        safe_path = database_path if database_path == ":memory:" else os.path.abspath(database_path)
+        logger.info("database_startup dialect=sqlite path=%s", safe_path)
+        return
+
+    logger.info("database_startup dialect=%s path=<credentials-hidden>", parsed.drivername)
+
 
 def _create_engine():
-    url = os.getenv(
-        "DATABASE_URL",
-        f"sqlite:///{os.getenv('SQLITE_PATH', '/data/scholr.db')}"
-    )
+    url = _build_database_url()
     if not url.strip():
-        # Render's persistent disk should be mounted at /data so SQLite survives deploys.
-        url = f"sqlite:///{os.getenv('SQLITE_PATH', '/data/scholr.db')}"
+        url = f"sqlite:///{DEFAULT_SQLITE_PATH}"
+    if url.startswith("sqlite:///data/"):
+        # Render persistent disks are mounted at /data; tolerate the common three-slash form.
+        url = url.replace("sqlite:///data/", "sqlite:////data/", 1)
     if url.startswith("sqlite"):
+        url = _ensure_sqlite_parent_dir(url)
+        _log_database_startup(url)
         return create_engine(
             url,
             connect_args={"check_same_thread": False},
@@ -28,6 +85,7 @@ def _create_engine():
     if url.startswith("postgres://"):
         # Render provides postgres:// but SQLAlchemy needs postgresql://.
         url = url.replace("postgres://", "postgresql://", 1)
+    _log_database_startup(url)
     return create_engine(
         url,
         pool_size=5,
