@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import {
   Copy,
@@ -44,6 +44,7 @@ type AiModulePageProps = {
   setOutput: (value: string | ((current: string) => string)) => void
   loadingLabel: string
   idleLabel: string
+  promptExtras?: ReactNode
 }
 
 function AiModulePageContent({
@@ -60,6 +61,7 @@ function AiModulePageContent({
   setOutput,
   loadingLabel,
   idleLabel,
+  promptExtras,
 }: AiModulePageProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -548,6 +550,8 @@ function AiModulePageContent({
                 className="min-h-[180px] resize-none rounded-[1.5rem] border-slate-200 bg-slate-50/70 px-4 py-3 text-base leading-7 shadow-none sm:min-h-[220px] md:text-base"
               />
             </div>
+
+            {promptExtras}
 
             <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-4">
               <div className="flex items-start gap-3">

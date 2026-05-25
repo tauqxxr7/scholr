@@ -4,6 +4,15 @@ import { useState } from 'react'
 
 import AiModulePage from '@/components/ai/ai-module-page'
 
+const topicSuggestions = [
+  'Binary Search Trees',
+  'Machine Learning for beginners',
+  'Operating System scheduling',
+  'VLSI Design basics',
+  'Neural Networks',
+  'Computer Networks TCP/IP',
+]
+
 export default function ResearchPage() {
   const [topic, setTopic] = useState('')
   const [output, setOutput] = useState('')
@@ -22,6 +31,23 @@ export default function ResearchPage() {
       setOutput={setOutput}
       loadingLabel="Searching papers..."
       idleLabel="Find Research Papers"
+      promptExtras={
+        <div className="space-y-2">
+          <p className="text-sm text-slate-500">Try one of these:</p>
+          <div className="flex flex-wrap gap-2">
+            {topicSuggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setTopic(suggestion)}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      }
     />
   )
 }
