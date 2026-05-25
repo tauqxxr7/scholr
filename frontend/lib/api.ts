@@ -183,12 +183,16 @@ function describeNetworkFailure(error: unknown) {
   }
 
   if (error instanceof DOMException && error.name === 'AbortError') {
-    return new StreamModuleError('Backend is waking up. Please retry in 20-30 seconds.', true, 'cold_start')
+    return new StreamModuleError(
+      "Cannot reach Scholr's AI server. It may be starting up — please wait 30 seconds and try again.",
+      true,
+      'cold_start',
+    )
   }
 
   if (error instanceof TypeError) {
     return new StreamModuleError(
-      'Scholr could not reach the backend. This can happen if the backend is waking up, the network is unstable, or the browser blocked the request.',
+      "Cannot reach Scholr's AI server. It may be starting up — please wait 30 seconds and try again.",
       true,
       'network_or_cors',
     )
@@ -279,7 +283,9 @@ export async function streamModuleResponse(
 
       if (parsed.type === 'error') {
         if (hadChunks) {
-          partialMessage = parsed.message || 'Answer completed partially. Tap retry for deeper version.'
+          partialMessage =
+            parsed.message ||
+            'The response was cut short. Here is what was generated so far. Tap retry for a complete answer.'
           partialCategory = parsed.category || 'stream_error_after_tokens'
           return
         }
@@ -293,12 +299,14 @@ export async function streamModuleResponse(
       if (parsed.type === 'empty') {
         emptyMessage =
           parsed.message ||
-          'Scholr did not return any output for this prompt. Try rephrasing it and run again.'
+          "The AI didn't generate a response. This sometimes happens with very short topics — try being more specific."
         return
       }
 
       if (parsed.type === 'partial') {
-        partialMessage = parsed.message || 'Answer completed partially. Tap retry for deeper version.'
+        partialMessage =
+          parsed.message ||
+          'The response was cut short. Here is what was generated so far. Tap retry for a complete answer.'
         partialCategory = parsed.category || 'partial_stream'
         onProgress?.({ stage: 'finalizing', elapsedMs: Math.round(performance.now() - startedAt) })
         return
@@ -360,7 +368,8 @@ export async function streamModuleResponse(
         emptyMessage: emptyMessage || undefined,
         mode,
         modeLabel: modeLabel || undefined,
-        partialMessage: 'Answer completed partially. Tap retry for deeper version.',
+        partialMessage:
+          'The response was cut short. Here is what was generated so far. Tap retry for a complete answer.',
         partialCategory: error instanceof DOMException && error.name === 'AbortError' ? 'frontend_timeout' : 'stream_interrupted',
       }
     }

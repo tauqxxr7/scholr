@@ -271,7 +271,8 @@ function AiModulePageContent({
 
       if (!result.hadChunks) {
         setEmptyStateMessage(
-          result.emptyMessage || 'Scholr did not return any output for this prompt. Try refining it and run again.',
+          result.emptyMessage ||
+            "The AI didn't generate a response. This sometimes happens with very short topics — try being more specific.",
         )
       }
       if (result.mode) {
@@ -359,9 +360,9 @@ function AiModulePageContent({
         error: friendlyError,
       })
       if (options.isRetry) {
-        setError('Still having trouble. Try again later.')
+        setError("Cannot reach Scholr's AI server. It may be starting up — please wait 30 seconds and try again.")
       } else if (finalResponse.trim()) {
-        setError('Answer completed partially. Tap retry for deeper version.')
+        setError('The response was cut short. Here is what was generated so far. Tap retry for a complete answer.')
       } else {
         setError(friendlyError)
       }
@@ -766,7 +767,11 @@ function AiModulePageContent({
                   className="mt-4 min-h-11 w-full rounded-2xl border-red-200 bg-white text-red-700 hover:bg-red-100 hover:text-red-800 sm:w-auto"
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
-                  {retrying ? 'Retrying...' : 'Retry request'}
+                  {retrying
+                    ? 'Retrying...'
+                    : error.includes('cut short')
+                      ? 'Retry for complete answer'
+                      : 'Retry request'}
                 </Button>
               ) : null}
             </div>
