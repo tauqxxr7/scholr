@@ -15,8 +15,8 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { trackEvent } from '@/lib/analytics'
-import type { HistoryItem } from '@/lib/api'
-import { getHistory } from '@/lib/api'
+import type { HistoryItem, SearchResultItem } from '@/lib/api'
+import { getHistory, searchHistory } from '@/lib/api'
 
 const modules = [
   {
@@ -50,6 +50,10 @@ function DashboardPageContent() {
   const [historyError, setHistoryError] = useState('')
   const [historyLoading, setHistoryLoading] = useState(true)
   const [hasUsedBefore, setHasUsedBefore] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const isSearching = searchQuery.trim().length > 0
 
   useEffect(() => {
     setHasUsedBefore(localStorage.getItem('scholr_has_used') === 'true')
@@ -98,6 +102,29 @@ function DashboardPageContent() {
 
     void loadHistory()
   }, [])
+
+  useEffect(() => {
+    const query = searchQuery.trim()
+    if (!query) {
+      setSearchResults([])
+      setSearchLoading(false)
+      return
+    }
+
+    setSearchLoading(true)
+    const timer = window.setTimeout(async () => {
+      try {
+        const results = await searchHistory(query)
+        setSearchResults(results)
+      } catch {
+        setSearchResults([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 400)
+
+    return () => window.clearTimeout(timer)
+  }, [searchQuery])
 
   const showOnboarding = !historyLoading && history.length === 0 && hasUsedBefore === false
   const showHistoryList = !historyLoading && !showOnboarding
@@ -241,13 +268,56 @@ function DashboardPageContent() {
           {showHistoryList && history.length > 0 ? <Badge variant="outline">{history.length} items</Badge> : null}
         </div>
 
+        <div className="mt-5">
+          <div className="relative">
+            <input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search your history..."
+              className="min-h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pr-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:bg-white"
+            />
+            {searchLoading ? (
+              <span className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
+            ) : null}
+          </div>
+        </div>
+
         {historyError ? (
           <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
             {historyError}
           </div>
         ) : null}
 
-        {historyLoading ? (
+        {isSearching ? (
+          <div className="mt-6 space-y-3">
+            {searchLoading ? (
+              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                Searching history...
+              </div>
+            ) : searchResults.length ? (
+              searchResults.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[1.5rem] border border-slate-200 bg-slate-50/45 p-4 transition hover:border-slate-300 hover:bg-white"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge variant="outline" className="capitalize">
+                      {item.module}
+                    </Badge>
+                    <span className="text-xs text-slate-400">
+                      {Math.round(item.score * 100)}% match
+                    </span>
+                  </div>
+                  <p className="mt-3 font-medium text-slate-900">{item.query}</p>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                No matching history found
+              </div>
+            )}
+          </div>
+        ) : historyLoading ? (
           <div className="mt-6 grid gap-3">
             {Array.from({ length: 3 }).map((_, index) => (
               <div

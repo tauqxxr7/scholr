@@ -10,6 +10,14 @@ export type HistoryItem = {
   created_at: string
 }
 
+export type SearchResultItem = {
+  id: string
+  module: string
+  query: string
+  score: number
+  created_at: string
+}
+
 export type DocumentUploadResult = {
   document_id: string
   title: string
@@ -374,6 +382,18 @@ export async function getHistory(limit = 6, page = 1): Promise<HistoryItem[]> {
   }
 
   return response.json()
+}
+
+export async function searchHistory(query: string, limit = 5): Promise<SearchResultItem[]> {
+  const response = await fetch(
+    `${getApiUrl()}/api/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    { cache: 'no-store' },
+  )
+  if (!response.ok) {
+    throw new Error('Search failed')
+  }
+  const data = (await response.json()) as { results: SearchResultItem[] }
+  return data.results
 }
 
 export async function uploadDocument(
