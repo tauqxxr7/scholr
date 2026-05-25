@@ -1,9 +1,12 @@
+import os
 from typing import Optional
 from fastapi import Header
 
 
 async def get_optional_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
     """Extract user_id from Clerk JWT if present. Returns None for unauthenticated requests."""
+    if not os.getenv("CLERK_PUBLISHABLE_KEY"):
+        return None
     if not authorization or not authorization.startswith("Bearer "):
         return None
     try:

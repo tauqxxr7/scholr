@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { UserButton, useUser } from '@clerk/nextjs'
 import { BookOpen, BrainCircuit, FileText, Home, Menu, NotebookPen, Sparkles, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
   const sidebarContent = (
     <div className="flex h-full flex-col gap-5 px-4 py-5 sm:px-6 lg:px-6 lg:py-6">
@@ -74,6 +76,10 @@ export default function Sidebar() {
           Responsive MVP with streaming AI, saved history, and cross-device polish.
         </p>
       </div>
+
+      {clerkKey ? (
+        <SidebarAccount />
+      ) : null}
     </div>
   )
 
@@ -113,5 +119,24 @@ export default function Sidebar() {
         {sidebarContent}
       </aside>
     </>
+  )
+}
+
+function SidebarAccount() {
+  const { isSignedIn } = useUser()
+
+  return (
+    <div className="mt-auto flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-3">
+      {isSignedIn ? (
+        <>
+          <span className="text-sm font-medium text-slate-700">Account</span>
+          <UserButton />
+        </>
+      ) : (
+        <Link href="/sign-in" className="text-sm font-medium text-slate-700 hover:text-slate-950">
+          Sign in
+        </Link>
+      )}
+    </div>
   )
 }
