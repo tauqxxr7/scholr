@@ -481,3 +481,27 @@ Date: 2026-05-25
 - `npm run build`: passed with Next.js middleware deprecation warning only.
 - Verified backend source includes `/health/routes`, `/api/metrics`, `/api/waitlist`, `/api/evidence`, `/api/validation/session`, `/api/validation/summary`, and `/api/linkedin/post-data` through router registration.
 - Root markdown files now limited to `README.md`, `DEPLOYMENT.md`, `METRICS.md`, and `COMMIT_SUMMARY.md`.
+
+# Sprint 5
+
+Date: 2026-05-25
+
+## Task Results
+
+- Issue Fix - render.yaml autoDeploy: completed. Commit `da90184`. Enabled Render `autoDeploy`, pinned `branch: main`, added `/health` health check, and bumped backend version to `1.5.0`.
+- Task 1 - Clerk hardening: completed. Commit `d344722`. Clerk now protects dashboard/module routes only when keys are configured and preserves public access without keys.
+- Task 2 - Semantic search backend: completed. Commit `176b85c`. Added lazy sentence-transformers embeddings, optional history embeddings, `/api/search`, and deployment note for first-load model latency.
+- Task 3 - Search UI dashboard: completed. Commit `a211f35`. Added debounced dashboard history search with similarity scores.
+- Task 4 - Abuse prevention: completed. Commit `5d3d26a`. Added input sanitisation, spam-topic SSE response, and waitlist honeypot blocking.
+- Task 5 - CSV export: completed. Commit `bacbb41`. Added `/api/history/export`, dashboard CSV link, and test coverage.
+- Final verification: completed. Commit: this commit. Message: `chore: sprint 5 final verification and summary`.
+
+## Sprint 5 Verification
+
+- `python -m pytest backend/tests/ -v`: passed, 28 tests.
+- `python -m compileall backend`: passed.
+- `npm run lint`: passed.
+- `npx tsc --noEmit`: passed.
+- `npm run build`: passed with Next.js middleware deprecation warning only.
+- Verified backend source includes `/health/routes`, `metrics`, `waitlist`, `evidence`, `validation`, `linkedin`, `search`, and `history` router registration.
+- `git log --oneline -15` shows all Sprint 5 implementation commits on the current branch.
