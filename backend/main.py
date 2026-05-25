@@ -242,13 +242,25 @@ def list_routes():
 
 
 @app.get("/health/generate-test")
-async def provider_generate_test():
-    smoke_test = await run_provider_smoke_test()
-    return {
-        "status": "provider_generate_test",
-        **get_runtime_diagnostics(),
-        **smoke_test,
-    }
+@app.get("/api/health/generate-test")
+async def test_generation():
+    try:
+        from agents.research_agent import generate_research_response
+
+        chunks = []
+        async for chunk in generate_research_response("binary search"):
+            chunks.append(chunk)
+            if len("".join(chunks)) > 200:
+                break
+        text = "".join(chunks)
+        return {
+            "ai_working": len(text) > 50,
+            "chars_received": len(text),
+            "preview": text[:100],
+            "provider": "live",
+        }
+    except Exception as exc:
+        return {"ai_working": False, "error": str(exc)}
 
 
 @app.get("/health/documents")

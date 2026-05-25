@@ -133,6 +133,22 @@ def test_health_route_returns_status_key():
     assert "status" in response.json()
 
 
+def test_generate_test_route_uses_live_generation_path(monkeypatch):
+    async def fake_research_response(*args, **kwargs):
+        del args, kwargs
+        yield "This mocked generated response proves the endpoint collects enough live AI text."
+
+    monkeypatch.setattr("agents.research_agent.generate_research_response", fake_research_response)
+    client = TestClient(main.app)
+
+    response = client.get("/health/generate-test")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ai_working"] is True
+    assert body["chars_received"] > 50
+
+
 def test_health_routes_lists_registered_api_paths():
     client = TestClient(main.app)
 
