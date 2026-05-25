@@ -90,12 +90,6 @@ export default function LandingPage() {
 
         <section className="grid gap-6 py-8 sm:gap-8 sm:py-12 md:py-14 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-10 lg:py-20">
           <div className="min-w-0">
-            <Badge className="inline-flex max-w-full rounded-full bg-white px-3 py-1 text-left text-[0.72rem] leading-5 text-slate-700 shadow-sm sm:text-xs">
-              <span className="min-w-0 whitespace-normal break-words sm:hidden">Free for every BTech student</span>
-              <span className="hidden whitespace-nowrap sm:inline">
-                Free for every BTech student. Get research papers, exam notes, and doubt solving in 60 seconds.
-              </span>
-            </Badge>
             <h1 className="mt-4 max-w-[18ch] text-balance text-[clamp(2rem,8vw,2.45rem)] font-semibold leading-[1.05] text-slate-950 sm:mt-5 sm:max-w-4xl sm:text-[clamp(3rem,6vw,4.35rem)] sm:leading-[1.02] lg:text-[clamp(3.55rem,5vw,4.75rem)]">
               Turn any BTech topic into exam-ready notes, research direction, and doubt solving.
             </h1>
@@ -106,13 +100,13 @@ export default function LandingPage() {
               <div className="min-w-0 rounded-2xl border border-white/70 bg-white/80 p-3.5 shadow-sm sm:p-4">
                 <div className="flex items-center gap-3">
                   <Sparkles className="h-4 w-4 shrink-0 text-amber-700" />
-                  <p className="text-sm font-medium leading-5 text-slate-900">Streaming AI responses</p>
+                  <p className="text-sm font-medium leading-5 text-slate-900">No signup needed</p>
                 </div>
               </div>
               <div className="min-w-0 rounded-2xl border border-white/70 bg-white/80 p-3.5 shadow-sm sm:p-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700" />
-                  <p className="text-sm font-medium leading-5 text-slate-900">Public-access study workspace</p>
+                  <p className="text-sm font-medium leading-5 text-slate-900">Results in 60 seconds</p>
                 </div>
               </div>
             </div>
