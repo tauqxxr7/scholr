@@ -192,3 +192,15 @@ def test_validation_summary_returns_goal():
     body = response.json()
     assert "total_validation_sessions" in body
     assert body["validation_goal"] == 10
+
+
+def test_evidence_route_returns_technical_package():
+    client = TestClient(main.app)
+
+    response = client.get("/api/evidence")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert {"product", "tech_stack", "engineering_features", "production_stats"}.issubset(body.keys())
+    assert isinstance(body["engineering_features"], list)
+    assert len(body["engineering_features"]) > 5
