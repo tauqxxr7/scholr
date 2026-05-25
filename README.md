@@ -150,6 +150,9 @@ Live product has been verified through responsive mobile viewport checks and the
 - OpenRouter AI generation: active as the validated production generation provider
 - Semantic retrieval: supported when the embedding provider/vector store are healthy
 - Lexical fallback: preserved for grounded document answers if semantic retrieval degrades
+- Documents UX: degraded health states are presented as retrieval fallback instead of broken loading/unavailable labels
+- Observability: PostHog events, backend structured stream logs, Sentry hooks, and answer feedback are wired for production triage
+- AI quality signal: thumbs up/down captures module, prompt, mode, latency, and response length
 - Auth: postponed until a custom-domain-ready auth plan is reintroduced safely
 - Persistence roadmap: PostgreSQL plus pgvector is the next infrastructure step
 - Student validation: pending; no student feedback or validation scores are fabricated

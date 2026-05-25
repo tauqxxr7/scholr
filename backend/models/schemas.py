@@ -25,6 +25,8 @@ class FeedbackRequest(BaseModel):
     query: str
     rating: str
     response_length: int
+    mode: str | None = None
+    latency_ms: int | None = None
 
 
 class SearchHistoryItem(BaseModel):

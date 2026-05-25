@@ -20,5 +20,7 @@ async def feedback_endpoint(request: FeedbackRequest, db: Session = Depends(get_
         query=request.query.strip(),
         rating=rating,
         response_length=max(request.response_length, 0),
+        mode=request.mode.strip().lower() if request.mode else None,
+        latency_ms=max(request.latency_ms, 0) if request.latency_ms is not None else None,
     )
     return {"received": True}

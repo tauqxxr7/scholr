@@ -41,12 +41,16 @@ def save_feedback(
     query: str,
     rating: str,
     response_length: int,
+    mode: str | None = None,
+    latency_ms: int | None = None,
 ) -> Feedback:
     record = Feedback(
         module=module,
         query=query,
         rating=rating,
         response_length=response_length,
+        mode=mode,
+        latency_ms=latency_ms,
     )
     db.add(record)
     db.commit()

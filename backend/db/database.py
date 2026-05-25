@@ -169,6 +169,8 @@ class Feedback(Base):
     query = Column(Text, nullable=False)
     rating = Column(String, nullable=False)
     response_length = Column(Integer, nullable=False, default=0)
+    mode = Column(String, nullable=True)
+    latency_ms = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
@@ -223,6 +225,10 @@ def init_db() -> None:
         "document_assets": [
             ("user_id", f"ALTER TABLE document_assets ADD COLUMN user_id VARCHAR DEFAULT '{DEFAULT_TENANT_USER_ID}' NOT NULL"),
             ("session_id", f"ALTER TABLE document_assets ADD COLUMN session_id VARCHAR DEFAULT '{DEFAULT_TENANT_SESSION_ID}' NOT NULL"),
+        ],
+        "feedback": [
+            ("mode", "ALTER TABLE feedback ADD COLUMN mode VARCHAR"),
+            ("latency_ms", "ALTER TABLE feedback ADD COLUMN latency_ms INTEGER"),
         ],
     }
 

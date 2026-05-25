@@ -11,9 +11,11 @@ type ResponseFeedbackProps = {
   module: 'research' | 'notes' | 'doubt'
   query: string
   responseLength: number
+  mode: 'fast' | 'deep'
+  latencyMs: number
 }
 
-export default function ResponseFeedback({ module, query, responseLength }: ResponseFeedbackProps) {
+export default function ResponseFeedback({ module, query, responseLength, mode, latencyMs }: ResponseFeedbackProps) {
   const [submitted, setSubmitted] = useState(false)
   const [sending, setSending] = useState(false)
 
@@ -29,11 +31,21 @@ export default function ResponseFeedback({ module, query, responseLength }: Resp
         query,
         rating,
         response_length: responseLength,
+        mode,
+        latency_ms: latencyMs,
       })
       trackEvent('feedback_submitted', {
         module,
         rating,
         response_length: responseLength,
+        response_mode: mode,
+        latency_ms: latencyMs,
+      })
+      trackEvent(rating === 'helpful' ? 'answer_helpful' : 'answer_not_helpful', {
+        module,
+        response_length: responseLength,
+        response_mode: mode,
+        latency_ms: latencyMs,
       })
       setSubmitted(true)
     } finally {

@@ -246,6 +246,8 @@ export async function streamModuleResponse(
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
+  const firstTokenTimeout = window.setTimeout(() => controller.abort(), 5000)
+  const streamHardTimeout = window.setTimeout(() => controller.abort(), 22000)
   let buffer = ''
   let hadChunks = false
   let malformedEvents = 0
@@ -276,6 +278,7 @@ export async function streamModuleResponse(
 
       if (parsed.type === 'chunk' && typeof parsed.chunk === 'string') {
         hadChunks = true
+        window.clearTimeout(firstTokenTimeout)
         onProgress?.({ stage: 'writing', elapsedMs: Math.round(performance.now() - startedAt) })
         onChunk(parsed.chunk)
         return
@@ -374,6 +377,9 @@ export async function streamModuleResponse(
       }
     }
     throw describeNetworkFailure(error)
+  } finally {
+    window.clearTimeout(firstTokenTimeout)
+    window.clearTimeout(streamHardTimeout)
   }
 
   if (buffer.trim()) {
@@ -523,6 +529,8 @@ export async function submitFeedback(payload: {
   query: string
   rating: 'helpful' | 'not_helpful'
   response_length: number
+  mode?: 'fast' | 'deep'
+  latency_ms?: number
 }): Promise<{ received: boolean }> {
   const response = await fetch(`${getApiUrl()}/api/feedback`, {
     method: 'POST',

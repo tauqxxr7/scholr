@@ -197,14 +197,22 @@ function DocumentWorkspaceContent() {
     }
   }, [answerResult, documentHealth])
 
-  const renderHealthValue = (value: string) =>
+  const safeHealthText = (value: string | undefined | null, fallback: string) => {
+    const normalized = value?.toLowerCase() || ''
+    if (!value || normalized === 'loading' || normalized.includes('unavailable')) {
+      return fallback
+    }
+    return value
+  }
+
+  const renderHealthValue = (value: string | undefined | null, fallback: string) =>
     healthChecking ? (
       <div className="mt-3 space-y-2" aria-label="Checking system status">
         <div className="h-3 w-28 animate-pulse rounded-full bg-slate-200" />
         <div className="h-3 w-20 animate-pulse rounded-full bg-slate-200" />
       </div>
     ) : (
-      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+      <p className="mt-2 text-sm font-medium text-slate-900">{safeHealthText(value, fallback)}</p>
     )
 
   const uploadDocumentFile = async (file: File) => {
@@ -366,7 +374,7 @@ function DocumentWorkspaceContent() {
                     {retrievalBadge.label}
                   </span>
                 ) : (
-                  <span className="text-sm font-medium text-slate-500">Loading</span>
+                  <span className="text-sm font-medium text-slate-500">Checking system status...</span>
                 )}
               </div>
             </div>
@@ -703,11 +711,14 @@ function DocumentWorkspaceContent() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">PDF parsing</p>
-                {renderHealthValue(documentHealth?.pdf_parsing_available ? 'Available' : 'Unavailable')}
+                {renderHealthValue(
+                  documentHealth?.pdf_parsing_available ? 'Available' : 'Upload path warming up',
+                  'Upload path warming up',
+                )}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Embeddings</p>
-                {renderHealthValue(documentHealth?.embedding_health || 'Unavailable')}
+                {renderHealthValue(documentHealth?.embedding_health, 'Retrieval fallback active')}
                 {!healthChecking && documentHealth?.embedding_provider ? (
                   <p className="mt-2 text-xs leading-5 text-slate-500">
                     Provider: {documentHealth.embedding_provider}
@@ -732,11 +743,12 @@ function DocumentWorkspaceContent() {
                     : documentHealth?.vector_store_available
                       ? 'Standing by'
                       : 'Lexical fallback active',
+                  'Lexical fallback active',
                 )}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Default mode</p>
-                {renderHealthValue(documentHealth?.retrieval_default_mode || 'Unavailable')}
+                {renderHealthValue(documentHealth?.retrieval_default_mode, 'Lexical fallback active')}
                 {!healthChecking && documentHealth?.retrieval_health ? (
                   <p className="mt-2 text-xs leading-5 text-slate-500">
                     Retrieval health: {documentHealth.retrieval_health}

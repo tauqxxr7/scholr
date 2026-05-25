@@ -1,5 +1,8 @@
 type ScholrEventName =
   | 'module_opened'
+  | 'request_started'
+  | 'request_completed'
+  | 'request_failed'
   | 'search_started'
   | 'search_completed'
   | 'search_failed'
@@ -14,13 +17,17 @@ type ScholrEventName =
   | 'document_answer_failed'
   | 'first_token_received'
   | 'fallback_activated'
+  | 'provider_fallback_used'
   | 'cache_hydrated'
   | 'provider_recovery_success'
   | 'partial_output_recovered'
+  | 'partial_answer_recovered'
   | 'copy_clicked'
   | 'clear_clicked'
   | 'retry_clicked'
   | 'feedback_submitted'
+  | 'answer_helpful'
+  | 'answer_not_helpful'
 
 type ScholrEventPayload = {
   module?: string
@@ -42,6 +49,7 @@ type ScholrEventPayload = {
   frontend_stream_parse_latency_ms?: number
   request_sequence?: 'first' | 'second_or_later'
   response_mode?: 'fast' | 'deep'
+  latency_ms?: number
   output_token_estimate?: number
   citations_count?: number
   upload_pages?: number

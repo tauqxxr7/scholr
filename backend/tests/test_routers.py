@@ -7,6 +7,7 @@ os.environ["SQLITE_PATH"] = os.path.join(tempfile.gettempdir(), "scholr-router-t
 from fastapi.testclient import TestClient
 
 import main
+from agents._generation import ScholrGenerationError
 from cache.response_cache import ResponseCache
 from routers import doubt as doubt_router
 from routers import notes as notes_router
@@ -72,6 +73,24 @@ def test_doubt_route_returns_event_stream(monkeypatch):
     assert response.headers["content-type"].startswith("text/event-stream")
 
 
+def test_stream_partial_recovery_preserves_generated_tokens(monkeypatch):
+    async def partial_stream(*args, **kwargs):
+        del args, kwargs
+        yield "partial useful answer"
+        raise ScholrGenerationError("provider interrupted", category="provider_timeout")
+
+    monkeypatch.setattr(research_router, "generate_research_response", partial_stream)
+    monkeypatch.setattr(research_router, "should_use_emergency_fallback", lambda: False)
+    client = TestClient(main.app)
+
+    response = client.post("/api/research", json={"topic": f"partial recovery {uuid.uuid4().hex}"})
+
+    assert response.status_code == 200
+    assert "partial useful answer" in response.text
+    assert '"type": "partial"' in response.text
+    assert "data: [DONE]" in response.text
+
+
 def test_feedback_route_accepts_valid_payload():
     client = TestClient(main.app)
 
@@ -82,11 +101,29 @@ def test_feedback_route_accepts_valid_payload():
             "query": "operating systems",
             "rating": "helpful",
             "response_length": 128,
+            "mode": "fast",
+            "latency_ms": 1400,
         },
     )
 
     assert response.status_code == 200
     assert response.json() == {"received": True}
+
+
+def test_feedback_route_rejects_invalid_rating():
+    client = TestClient(main.app)
+
+    response = client.post(
+        "/api/feedback",
+        json={
+            "module": "notes",
+            "query": "operating systems",
+            "rating": "maybe",
+            "response_length": 128,
+        },
+    )
+
+    assert response.status_code == 400
 
 
 def test_feedback_form_route_accepts_valid_payload():
@@ -131,6 +168,18 @@ def test_health_route_returns_status_key():
 
     assert response.status_code == 200
     assert "status" in response.json()
+
+
+def test_document_health_route_returns_safe_capability_flags():
+    client = TestClient(main.app)
+
+    response = client.get("/health/documents")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "status" in body
+    assert "lexical_fallback_ready" in body
+    assert "retrieval_default_mode" in body
 
 
 def test_generate_test_route_uses_live_generation_path(monkeypatch):

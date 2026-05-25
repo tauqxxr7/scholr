@@ -85,6 +85,7 @@ function AiModulePageContent({
   const [retrying, setRetrying] = useState(false)
   const [shared, setShared] = useState(false)
   const [statusDismissed, setStatusDismissed] = useState(false)
+  const [lastCompletionMs, setLastCompletionMs] = useState(0)
   const backendStatus = useBackendStatus(getApiBaseUrl())
 
   const getCacheKey = () =>
@@ -222,6 +223,11 @@ function AiModulePageContent({
       request_sequence: requestSequence,
       response_mode: answerDepth,
     })
+    trackEvent('request_started', {
+      module: moduleName,
+      request_sequence: requestSequence,
+      response_mode: answerDepth,
+    })
     trackEvent('search_started', {
       module: moduleName,
       query: primaryValue,
@@ -287,6 +293,11 @@ function AiModulePageContent({
           mode: result.mode,
           response_length: responseLength,
         })
+        trackEvent('provider_fallback_used', {
+          module: moduleName,
+          mode: result.mode,
+          response_length: responseLength,
+        })
       }
       if (result.mode === 'ai') {
         trackEvent('provider_recovery_success', {
@@ -306,15 +317,34 @@ function AiModulePageContent({
           request_sequence: requestSequence,
           response_mode: answerDepth,
         })
+        trackEvent('partial_answer_recovered', {
+          module: moduleName,
+          response_length: responseLength,
+          duration_ms: Math.round(performance.now() - startedAt),
+          error_category: result.partialCategory,
+          request_sequence: requestSequence,
+          response_mode: answerDepth,
+        })
       }
 
+      const completionMs = Math.round(performance.now() - startedAt)
+      setLastCompletionMs(completionMs)
       trackEvent('generation_completed', {
         module: moduleName,
         success: result.hadChunks,
         response_length: responseLength,
-        duration_ms: Math.round(performance.now() - startedAt),
+        duration_ms: completionMs,
         output_token_estimate: Math.ceil(responseLength / 4),
         frontend_stream_parse_latency_ms: frontendStreamParseLatencyMs,
+        request_sequence: requestSequence,
+        response_mode: answerDepth,
+      })
+      trackEvent('request_completed', {
+        module: moduleName,
+        success: result.hadChunks,
+        response_length: responseLength,
+        duration_ms: completionMs,
+        first_token_ms: firstTokenLatencyMs,
         request_sequence: requestSequence,
         response_mode: answerDepth,
       })
@@ -322,7 +352,7 @@ function AiModulePageContent({
         module: moduleName,
         mode: answerDepth,
         first_token_ms: firstTokenLatencyMs,
-        completion_ms: Math.round(performance.now() - startedAt),
+        completion_ms: completionMs,
         output_length: responseLength,
       })
       if (finalResponse.trim()) {
@@ -347,6 +377,15 @@ function AiModulePageContent({
           : 'unexpected'
 
       trackEvent('generation_failed', {
+        module: moduleName,
+        success: false,
+        response_length: responseLength,
+        duration_ms: Math.round(performance.now() - startedAt),
+        error_category: errorCategory,
+        request_sequence: requestSequence,
+        response_mode: answerDepth,
+      })
+      trackEvent('request_failed', {
         module: moduleName,
         success: false,
         response_length: responseLength,
@@ -513,7 +552,7 @@ function AiModulePageContent({
   const backendBannerMessage =
     backendStatus === 'down'
       ? 'Backend is starting. Please wait 30 seconds and try again.'
-      : 'Starting up... first request may take 15-30 seconds on free hosting'
+      : 'Waking up the AI engine... first request may take a few seconds.'
 
   return (
     <div className="space-y-5 lg:space-y-8">
@@ -787,6 +826,8 @@ function AiModulePageContent({
                   module={moduleName}
                   query={primaryValue}
                   responseLength={output.length}
+                  mode={answerDepth}
+                  latencyMs={lastCompletionMs}
                 />
               ) : null}
             </div>

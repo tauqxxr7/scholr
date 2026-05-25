@@ -59,6 +59,13 @@ Scholr now follows a fast-first response contract for mobile reliability.
 | Frontend stream parse latency | Instrumented per generation | Client records stream parsing latency without blocking rendering. |
 | Provider latency | Exposed through provider diagnostics/logs | Provider runtime cutoff is tuned for mobile responsiveness. |
 
+## Production hardening update
+
+- Client stream guard now has a 5s first-token timeout and a 22s client hard cutoff; partial output is preserved if any useful tokens arrived.
+- Documents health cards no longer show broken `Unavailable` or endless `Loading` states; degraded retrieval is labelled as lexical/retrieval fallback.
+- Feedback now records module, prompt, rating, mode, response length, and latency for the first AI quality signal.
+- PostHog event aliases are aligned with production monitoring vocabulary: `request_started`, `first_token_received`, `request_completed`, `request_failed`, `provider_fallback_used`, `partial_answer_recovered`, `retry_clicked`, `answer_helpful`, and `answer_not_helpful`.
+
 ## Public MVP verification checklist
 
 | Surface / System | Measurement Type | Latest Evidence | Status |
