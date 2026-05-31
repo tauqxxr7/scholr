@@ -170,6 +170,15 @@ def test_health_route_returns_status_key():
     assert "status" in response.json()
 
 
+def test_ping_route_returns_ok():
+    client = TestClient(main.app)
+
+    response = client.get("/ping")
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}
+
+
 def test_document_health_route_returns_safe_capability_flags():
     client = TestClient(main.app)
 

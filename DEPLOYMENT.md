@@ -61,6 +61,10 @@ Scholr currently ships as a public-access academic workspace. These routes shoul
 
 This does not expose secrets, but it makes production incidents easier to triage.
 
+## Cold Start Prevention
+
+To eliminate Render cold starts: set up a free UptimeRobot monitor pinging `https://scholr-k9sj.onrender.com/ping` every 5 minutes.
+
 ## Provider Troubleshooting
 
 If the live app shows `AI provider error. Please retry.`:

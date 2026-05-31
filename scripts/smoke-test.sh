@@ -15,6 +15,7 @@ check() {
 
 FAILED=0
 check "/health"
+check "/ping"
 check "/health/routes"
 check "/api/metrics"
 check "/api/history"

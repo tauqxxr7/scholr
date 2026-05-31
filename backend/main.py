@@ -223,6 +223,11 @@ def health_check():
     }
 
 
+@app.get("/ping")
+def ping():
+    return {"ok": True}
+
+
 @app.get("/health/provider")
 def provider_health_check():
     provider_status = get_provider_status()
