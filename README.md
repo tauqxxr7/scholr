@@ -118,7 +118,7 @@ Open [http://localhost:3000](http://localhost:3000).
 Useful env vars:
 - `NEXT_PUBLIC_API_URL=http://localhost:8000`
 - `OPENROUTER_API_KEY=...`
-- `GEMINI_API_KEY=...`
+- `GEMINI_API_KEY` for Gemini provider access
 - `DATABASE_URL=...` for PostgreSQL
 - `SQLITE_PATH=/data/scholr.db` for Render persistent disk fallback
 
