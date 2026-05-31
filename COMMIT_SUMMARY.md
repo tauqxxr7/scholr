@@ -605,3 +605,15 @@ Date: 2026-05-31
 - `python -m compileall backend`: passed after `/ping`.
 - `npm run lint`: passed for frontend polish tasks.
 - `npx tsc --noEmit`: passed for frontend polish tasks.
+
+## Sprint 9 Final Verification
+
+- Final status: completed. Commit: this commit. Message: `chore: sprint 9 final verification`.
+- `python -m pytest backend/tests/ -v`: passed, 35 tests.
+- `python -m compileall backend`: passed.
+- `npm run lint`: passed.
+- `npx tsc --noEmit`: passed.
+- `npm run build`: passed with Next.js middleware deprecation warning only.
+- Frontend routes verified in source/build: `/research`, `/notes`, `/doubt`, `/dashboard`, `/topics`, `/status`, `/changelog`, `/feedback`, `/demo`, `/outreach`.
+- Backend endpoints verified with TestClient: `/ping`, `/health`, `/health/generate-test`, `/api/metrics`, `/api/evidence`.
+- `git log --oneline -10` shows all Sprint 9 commits on current head.
