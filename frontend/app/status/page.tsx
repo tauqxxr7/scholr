@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import { SkeletonCard } from '@/components/ui/skeleton-card'
+
 type StatusResponse = {
   status: string
   services: Record<string, string>
@@ -39,9 +41,13 @@ export default function StatusPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
       <section className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         {!status ? (
-          <div className="flex items-center gap-3 text-slate-600">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
-            Checking status...
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-slate-600">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
+              Checking status...
+            </div>
+            <SkeletonCard lines={4} />
+            <SkeletonCard lines={2} />
           </div>
         ) : (
           <div>

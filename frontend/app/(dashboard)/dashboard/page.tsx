@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { trackEvent } from '@/lib/analytics'
 import type { HistoryItem, MetricsResult, SearchResultItem } from '@/lib/api'
 import { getHistory, getHistoryExportUrl, getMetrics, searchHistory } from '@/lib/api'
@@ -55,6 +56,7 @@ function DashboardPageContent() {
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
   const [metrics, setMetrics] = useState<MetricsResult | null>(null)
+  const [metricsLoading, setMetricsLoading] = useState(true)
   const [shareStatus, setShareStatus] = useState('')
   const isSearching = searchQuery.trim().length > 0
   const historyExportUrl = history.length > 0 ? getHistoryExportUrl() : ''
@@ -113,6 +115,8 @@ function DashboardPageContent() {
         setMetrics(await getMetrics())
       } catch {
         setMetrics(null)
+      } finally {
+        setMetricsLoading(false)
       }
     }
 
@@ -309,7 +313,16 @@ function DashboardPageContent() {
         })}
       </section>
 
-      {metrics ? (
+      {metricsLoading ? (
+        <section className="flex flex-wrap gap-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <span
+              key={index}
+              className="h-8 w-32 animate-pulse rounded-full border border-slate-200 bg-white"
+            />
+          ))}
+        </section>
+      ) : metrics ? (
         <section className="flex flex-wrap gap-2">
           <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
             {metrics.searches.total} total queries
@@ -386,17 +399,7 @@ function DashboardPageContent() {
         ) : historyLoading ? (
           <div className="mt-6 grid gap-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="animate-pulse rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="h-4 w-20 rounded-full bg-slate-200" />
-                <div className="mt-4 h-4 w-3/4 rounded-full bg-slate-200" />
-                <div className="mt-3 space-y-2">
-                  <div className="h-3 w-full rounded-full bg-slate-200" />
-                  <div className="h-3 w-[88%] rounded-full bg-slate-200" />
-                </div>
-              </div>
+              <SkeletonCard key={index} lines={3} />
             ))}
           </div>
         ) : showHistoryList ? (
