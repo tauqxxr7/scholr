@@ -2,26 +2,23 @@
 
 import { FormEvent, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, BookOpen, BrainCircuit, NotebookPen, CheckCircle2, Sparkles } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
-const modules = [
+const studentBenefits = [
   {
-    title: 'Research',
-    description: 'Get papers, reading order, and project-worthy research gaps in under a minute.',
-    icon: BookOpen,
+    title: 'Saves 3 hours per topic',
+    description: 'No more searching through 10 tabs. Get structured research guidance in one place.',
   },
   {
-    title: 'Notes',
-    description: 'Generate clean revision notes that actually help for internal exams and viva prep.',
-    icon: NotebookPen,
+    title: 'Exam-ready in minutes',
+    description: 'Notes formatted for university exams, not generic summaries.',
   },
   {
-    title: 'Doubt',
-    description: 'Turn confusing concepts into step-by-step explanations with examples.',
-    icon: BrainCircuit,
+    title: 'Free, always',
+    description: 'Core features are free forever. No credit card. No hidden limits.',
   },
 ]
 
@@ -127,33 +124,25 @@ export default function LandingPage() {
 
           <div className="min-w-0 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-amber-100/30 sm:rounded-[2rem] sm:p-7">
             <div className="rounded-2xl bg-slate-950 p-4 text-white sm:rounded-[1.5rem] sm:p-6">
-              <p className="text-sm text-slate-300">Promise</p>
+              <p className="text-sm text-slate-300">Why students use Scholr</p>
               <p className="mt-2 text-lg font-semibold leading-6 sm:mt-3 sm:text-2xl sm:leading-8">
-                India-first academic operating system
+                Study faster without losing academic structure.
               </p>
               <p className="mt-3 text-sm leading-6 text-slate-300 sm:mt-4">
-                Start with research, notes, doubt solving, and document intelligence. Layer in
-                accounts, governance, and monetization only after the core feels solid.
+                Designed for BTech students who need fast, exam-useful answers instead of generic
+                chatbot paragraphs.
               </p>
             </div>
             <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
-              {modules.map((module) => {
-                const Icon = module.icon
-                return (
-                  <div
-                    key={module.title}
-                    className="min-w-0 rounded-2xl border border-slate-200 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm sm:rounded-[1.5rem] sm:p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="shrink-0 rounded-xl bg-amber-100 p-2 text-amber-800">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <p className="font-medium leading-5 text-slate-900">{module.title}</p>
-                    </div>
-                    <p className="mt-2.5 text-sm leading-6 text-slate-600 sm:mt-3">{module.description}</p>
-                  </div>
-                )
-              })}
+              {studentBenefits.map((benefit) => (
+                <div
+                  key={benefit.title}
+                  className="min-w-0 rounded-2xl border border-slate-200 p-3.5 transition hover:-translate-y-0.5 hover:shadow-sm sm:rounded-[1.5rem] sm:p-4"
+                >
+                  <p className="font-medium leading-5 text-slate-900">{benefit.title}</p>
+                  <p className="mt-2.5 text-sm leading-6 text-slate-600 sm:mt-3">{benefit.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
