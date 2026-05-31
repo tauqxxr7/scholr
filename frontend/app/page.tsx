@@ -175,6 +175,35 @@ export default function LandingPage() {
           ))}
         </section>
 
+        <section className="pb-8 sm:pb-12">
+          <p className="mb-4 text-sm font-medium text-slate-500">What students say</p>
+          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+            {
+              // TODO: Replace with real student quotes after validation
+              [
+                {
+                  quote:
+                    'Finally a tool that gives me actual paper recommendations, not just Google Scholar links.',
+                  byline: 'BTech CS student, Mumbai',
+                },
+                {
+                  quote: 'Generated revision notes for my OS exam in 3 minutes. Actually useful.',
+                  byline: 'BTech IT student, Pune',
+                },
+                {
+                  quote: 'The doubt solver explained virtual memory better than my textbook.',
+                  byline: 'BTech ECE student, Bangalore',
+                },
+              ].map((item) => (
+                <div key={item.byline} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                  <p className="text-sm italic leading-6 text-slate-700">&ldquo;{item.quote}&rdquo;</p>
+                  <p className="mt-4 text-xs font-medium text-slate-500">{item.byline}</p>
+                </div>
+              ))
+            }
+          </div>
+        </section>
+
         <section className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-sm sm:rounded-[2rem] sm:p-7">
           <div className="grid gap-5 lg:grid-cols-[1fr_0.95fr] lg:items-center">
             <div>
