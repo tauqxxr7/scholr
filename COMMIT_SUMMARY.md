@@ -584,3 +584,24 @@ Date: 2026-05-25
 - Verified frontend build routes include `/research`, `/notes`, `/doubt`, `/demo`, `/feedback`, `/changelog`, `/status`, and `/topics`.
 - Live `/health/generate-test` returned `ai_working: true` with generated text after deployment.
 - `git log --oneline -10` shows all Sprint 8 commits on current head.
+
+# Sprint 9
+
+Date: 2026-05-31
+
+## Task Results
+
+- Task 1 - Promise section fix: completed. Commit `bbf83bd`. Replaced internal product strategy language with student-benefit copy.
+- Task 2 - Testimonial section: completed. Commit `ce999f1`. Added subtle testimonial placeholders with TODO for real validation quotes.
+- Task 3 - Topics page SEO: completed. Commit `eca5a01`. Added generated metadata, popular topic cards, and accurate topic count.
+- Task 4 - Loading skeletons: completed. Commit `82d9e9b`. Added reusable skeleton card plus dashboard/status loading states.
+- Task 5 - 404 page: completed. Commit `081c597`. Added custom 404 navigation back to Research, Notes, and Home.
+- Task 6 - `/ping` endpoint: completed. Commit `6dfafbc`. Added uptime-monitor endpoint, smoke-test coverage, docs note, and backend test.
+- Task 7 - Version bump: completed. Commit: this commit. Message: `chore: bump version to 1.6.0 and update commit summary`.
+
+## Sprint 9 Verification So Far
+
+- `python -m pytest backend/tests/ -v`: passed, 35 tests after `/ping`.
+- `python -m compileall backend`: passed after `/ping`.
+- `npm run lint`: passed for frontend polish tasks.
+- `npx tsc --noEmit`: passed for frontend polish tasks.

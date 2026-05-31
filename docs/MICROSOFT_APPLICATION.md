@@ -22,9 +22,10 @@ We are applying to Microsoft for Startups to:
 
 - Frontend: Next.js 14 + TypeScript, live on Vercel
 - Backend: Python FastAPI, live on Render
+- Current version: 1.6.0
 - AI: OpenRouter (google/gemini-2.0-flash-lite-001) with fallback engine
 - Database: SQLite with PostgreSQL-ready architecture
-- Tests: 29 backend unit tests, CI green on every push
+- Tests: 35 backend unit tests, CI green on every push
 - API endpoints: 15+ registered, all returning 200
 - Evidence endpoint: https://scholr-k9sj.onrender.com/api/evidence
 
