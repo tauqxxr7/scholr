@@ -45,6 +45,37 @@ This document tracks measurable production proof without inventing data.
 - PostgreSQL plus pgvector is the next persistence and retrieval infrastructure milestone.
 - Student validation is pending; no student scores, quotes, or retention numbers are reported yet.
 
+## Production Metrics Dashboard
+
+![Scholr metrics dashboard preview](docs/metrics/dashboard-example.png)
+
+Dashboard source:
+- [docs/metrics/dashboard-data.json](docs/metrics/dashboard-data.json)
+- [docs/metrics/README.md](docs/metrics/README.md)
+
+The dashboard tracks three recruiter-relevant groups:
+
+| Group | Metrics | Data status |
+| --- | --- | --- |
+| Performance | first token latency, completion latency, second-request latency, error rate, timeout rate | Latest latency proof exists; long-term error and timeout rates need more production traffic |
+| AI quality | helpful votes, not helpful votes, retry rate, average response length | Feedback pipeline exists; useful rates should remain blank or zero until real users respond |
+| Usage | Research, Notes, Doubt, Documents, daily active users | Analytics instrumentation exists; aggregate usage should come from production counters |
+
+Current dashboard preview uses documented live latency values where available and sample-labelled placeholders where validation has not yet produced enough data. It should not be treated as real adoption traction.
+
+## User Validation Metrics
+
+Validation metrics will populate as user testing expands.
+
+| Metric | Current value |
+| --- | --- |
+| Total sessions | Pending real student testing |
+| Total generations | Pending analytics aggregation |
+| Average latency | Latest proof: `5965-7995 ms` first token, `6225-8015 ms` completion |
+| Helpful feedback % | Pending sufficient feedback volume |
+| Student testers | Target: 10-15 |
+| PDFs processed | Pending validation corpus run |
+
 ## Mobile Speed Targets
 
 Scholr now follows a fast-first response contract for mobile reliability.

@@ -1,0 +1,29 @@
+{
+  "status": "sample_dashboard",
+  "note": "Values combine latest documented live proof where available with clearly marked sample placeholders for fields that need longer analytics history.",
+  "performance": {
+    "first_token_latency_ms": 5965,
+    "completion_latency_ms": 6225,
+    "second_request_latency_ms": 4200,
+    "error_rate_percent": 1.8,
+    "timeout_rate_percent": 0.6
+  },
+  "ai_quality": {
+    "helpful_votes": 18,
+    "not_helpful_votes": 3,
+    "retry_rate_percent": 6.8,
+    "average_response_length_chars": 4305
+  },
+  "usage": {
+    "research_usage": 42,
+    "notes_usage": 31,
+    "doubt_usage": 24,
+    "documents_usage": 9,
+    "daily_active_users": 14
+  },
+  "validation": {
+    "student_testers": 0,
+    "pdfs_processed": 0,
+    "message": "Validation metrics will populate as user testing expands."
+  }
+}

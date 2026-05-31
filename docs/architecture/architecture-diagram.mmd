@@ -1,0 +1,29 @@
+flowchart TB
+    user["User"]
+    frontend["Next.js Frontend"]
+    api["API Layer"]
+    agents["Research / Notes / Doubt Agents"]
+    openrouter["OpenRouter"]
+    models["Provider Models"]
+
+    docs["Documents"]
+    pdf["PDF Extraction"]
+    chunks["Chunking"]
+    retrieval["Retrieval Layer"]
+    citations["Citation Engine"]
+    answer["Answer Generation"]
+
+    sse["SSE Streaming Flow"]
+    fallback["Fallback Path"]
+    cache["Cache Layer"]
+    analytics["Analytics Layer (future-ready)"]
+
+    user --> frontend --> api --> agents --> openrouter --> models
+    api --> sse --> frontend
+    agents --> cache
+    openrouter --> fallback --> agents
+    api --> analytics
+
+    docs --> pdf --> chunks --> retrieval --> citations --> answer
+    retrieval --> cache
+    answer --> sse

@@ -42,20 +42,9 @@ All supporting screenshots and proof assets live under [docs/screenshots](docs/s
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A["Next.js frontend"] --> B["SSE stream client"]
-    B --> C["FastAPI backend"]
-    C --> D["Provider router"]
-    D --> E["Gemini primary"]
-    D --> F["OpenRouter fallback"]
-    D --> G["Academic fallback engine"]
-    C --> H["History + cache"]
-    C --> I["Document retrieval"]
-    I --> J["Embedding provider"]
-    I --> K["Lexical fallback"]
-    C --> L["Telemetry + health endpoints"]
-```
+![Scholr architecture diagram](docs/architecture/architecture-diagram.png)
+
+Editable source: [docs/architecture/architecture-diagram.mmd](docs/architecture/architecture-diagram.mmd)
 
 ## Workflow
 
@@ -81,6 +70,8 @@ flowchart LR
 
 ## Performance Metrics
 
+![Scholr metrics dashboard preview](docs/metrics/dashboard-example.png)
+
 | Metric | Current production proof |
 | --- | --- |
 | First token latency | Research `6967 ms`, Notes `7995 ms`, Doubt `5965 ms` from latest recorded proof |
@@ -90,12 +81,44 @@ flowchart LR
 | Document retrieval | Semantic retrieval supported; lexical fallback preserved for grounded citation answers |
 | Backend tests | 35 passing in the latest local verification pass |
 
+### Metrics Dashboard
+
+The dashboard preview tracks the metrics Scholr needs for production trust:
+
+- **Performance:** first token latency, completion latency, second-request latency, error rate, timeout rate
+- **AI quality:** helpful votes, not helpful votes, retry rate, average response length
+- **Usage:** Research usage, Notes usage, Doubt usage, Documents usage, daily active users
+
+Live latency values are taken from the latest documented proof capture. Usage, quality, error-rate, timeout-rate, and second-request values in the dashboard image are sample-labelled placeholders until production analytics have enough real traffic.
+
 More evidence:
 - [METRICS.md](METRICS.md)
 - [docs/PRODUCTION_EVIDENCE.md](docs/PRODUCTION_EVIDENCE.md)
 - [docs/proof/research-sample.md](docs/proof/research-sample.md)
 - [docs/proof/notes-sample.md](docs/proof/notes-sample.md)
 - [docs/proof/doubt-sample.md](docs/proof/doubt-sample.md)
+- [docs/metrics/dashboard-data.json](docs/metrics/dashboard-data.json)
+
+## User Validation
+
+Validation metrics will populate as user testing expands.
+
+| Metric | Current status |
+| --- | --- |
+| Total sessions | Pending real student testing |
+| Total generations | Pending analytics aggregation |
+| Average latency | Latest proof range: `5965-7995 ms` first token, `6225-8015 ms` completion |
+| Helpful feedback % | Pending sufficient feedback volume |
+| Student testers | Target: 10-15 BTech students |
+| PDFs processed | Pending validation corpus run |
+
+## What Students Use Scholr For
+
+- Exam revision
+- PYQ preparation
+- Concept clarification
+- Research assistance
+- PDF note summarization
 
 ## Local Setup
 
