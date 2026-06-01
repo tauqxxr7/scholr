@@ -25,6 +25,7 @@ from db.database import SessionLocal, init_db
 from routers import documents, doubt, evidence, feedback, feedback_form, history, linkedin, metrics, notes, research, search, status, validation, waitlist
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
+from telemetry import get_all as get_telemetry_counters
 
 sentry_dsn = os.getenv("SENTRY_DSN")
 if sentry_dsn:
@@ -220,6 +221,8 @@ def health_check():
         "version": os.getenv("APP_VERSION", "1.6.0"),
         **get_runtime_diagnostics(),
         **provider_status,
+        **get_telemetry_counters(),
+        "telemetry": get_telemetry_counters(),
     }
 
 

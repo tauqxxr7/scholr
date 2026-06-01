@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 
 from agents._generation import ScholrGenerationError, get_provider_status
 from core.logging_utils import log_event
+from telemetry import increment
 
 logger = logging.getLogger(__name__)
 STREAM_OBSERVABILITY: dict[str, int] = {
@@ -367,6 +368,13 @@ def build_sse_response(
                         source=source,
                     )
                     logger.exception("Stream completion callback failed for module %s", module)
+            if response_text_for_metrics:
+                if source == "live" and not partial_completion and error_category is None:
+                    increment("provider_generation_success_count")
+                elif source in {"fallback", "recovering"}:
+                    increment("fallback_count")
+                elif cache_hit or source in {"cache", "warm_cache"}:
+                    increment("cache_hit_count")
             if full_response and save_history:
                 response_text = response_text_for_metrics
                 try:
