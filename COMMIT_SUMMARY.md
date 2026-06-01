@@ -617,3 +617,16 @@ Date: 2026-05-31
 - Frontend routes verified in source/build: `/research`, `/notes`, `/doubt`, `/dashboard`, `/topics`, `/status`, `/changelog`, `/feedback`, `/demo`, `/outreach`.
 - Backend endpoints verified with TestClient: `/ping`, `/health`, `/health/generate-test`, `/api/metrics`, `/api/evidence`.
 - `git log --oneline -10` shows all Sprint 9 commits on current head.
+
+## Sprint 10 - Production polish and repository cleanup
+
+- Fix A - Promise section: DONE - 0797d0d
+- Fix B - Remove local Windows file paths from README: DONE - ff48a7f
+- Fix C - Root docs cleanup: DONE - 130e59a
+- Task 1 - Telemetry counter fix: DONE - bc3a855
+- Task 2 - v1.6.0 release notes: DONE - c856c1f
+- Task 3 - CONTRIBUTING.md: DONE - 083792b
+- Task 4 - Issue templates: DONE - 57d0c8b
+- Task 5 - Startup API key warning: DONE - 49b47f0
+- Final verification: pytest backend/tests 35 passed; python -m compileall backend passed; npm run lint passed; npx tsc --noEmit passed; npm run build passed.
+- Verification notes: landing copy no longer contains Promise or India-first academic operating system; README has no local Windows video paths; root generated junk removed; /health includes telemetry counters locally.
