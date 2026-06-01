@@ -120,6 +120,17 @@ async def validate_provider_on_startup():
         "configured" if os.getenv("OPENROUTER_API_KEY") else "NOT CONFIGURED - AI will use fallback",
     )
     logger.info("Gemini: %s", "configured" if os.getenv("GEMINI_API_KEY") else "not configured")
+    if not os.getenv("OPENROUTER_API_KEY") and not os.getenv("GEMINI_API_KEY"):
+        logger.warning("=" * 60)
+        logger.warning("WARNING: No AI provider key configured.")
+        logger.warning("OPENROUTER_API_KEY and GEMINI_API_KEY are both missing.")
+        logger.warning("All requests will use the fallback academic engine.")
+        logger.warning("Set OPENROUTER_API_KEY in Render Environment to enable real AI.")
+        logger.warning("=" * 60)
+    elif os.getenv("OPENROUTER_API_KEY"):
+        logger.info("OpenRouter key: configured")
+    elif os.getenv("GEMINI_API_KEY"):
+        logger.info("Gemini key: configured")
 
     ensure_provider_recovery_task()
     provider_status = await validate_provider_startup()
