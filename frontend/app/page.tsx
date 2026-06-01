@@ -63,7 +63,7 @@ export default function LandingPage() {
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Scholr</p>
             <p className="mt-1.5 max-w-[20rem] text-sm font-semibold leading-5 text-slate-950 sm:mt-2 sm:max-w-none sm:text-lg">
-              Academic operating system for BTech students
+              AI study workspace for BTech students
             </p>
           </div>
           <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
@@ -143,6 +143,24 @@ export default function LandingPage() {
                   <p className="mt-2.5 text-sm leading-6 text-slate-600 sm:mt-3">{benefit.description}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 px-6 max-w-4xl mx-auto">
+          <h2 className="text-xl font-semibold text-gray-900 text-center mb-10">Why students use Scholr</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="bg-white border rounded-xl p-6">
+              <p className="font-medium text-gray-900 mb-2">Saves 3 hours per topic</p>
+              <p className="text-sm text-gray-500">No more searching through 10 tabs. Get structured research guidance in one place.</p>
+            </div>
+            <div className="bg-white border rounded-xl p-6">
+              <p className="font-medium text-gray-900 mb-2">Exam-ready in minutes</p>
+              <p className="text-sm text-gray-500">Notes formatted for university exams, not generic summaries.</p>
+            </div>
+            <div className="bg-white border rounded-xl p-6">
+              <p className="font-medium text-gray-900 mb-2">Free, always</p>
+              <p className="text-sm text-gray-500">Core features are free forever. No credit card. No hidden limits.</p>
             </div>
           </div>
         </section>
