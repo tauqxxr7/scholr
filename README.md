@@ -18,6 +18,16 @@ Free AI study tool for BTech engineering students: research papers, exam notes, 
 
 </div>
 
+## GitHub Meta
+
+Use the helper script to update the repository description, homepage, and topics from one place:
+
+```bash
+GITHUB_TOKEN=your_token ./scripts/update-github-meta.sh
+```
+
+The token needs repository metadata write access. Do not commit real tokens.
+
 ![Scholr desktop hero](docs/screenshots/desktop/desktop-landing.png)
 
 ## Why Scholr
