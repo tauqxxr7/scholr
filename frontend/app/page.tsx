@@ -104,6 +104,11 @@ export default function LandingPage() {
                 Privacy
               </Button>
             </Link>
+            <Link href="/about" className="min-w-0">
+              <Button variant="ghost" className="min-h-10 w-full rounded-xl px-3 text-sm text-slate-600 hover:text-slate-950 sm:min-h-11 sm:w-auto">
+                About
+              </Button>
+            </Link>
             <Link href="/dashboard" className="col-span-2 min-w-0 sm:col-span-1">
               <Button className="min-h-10 w-full rounded-xl bg-slate-950 px-3 text-sm text-white hover:bg-slate-800 sm:min-h-11 sm:w-auto">
                 Open dashboard
@@ -319,6 +324,9 @@ export default function LandingPage() {
               </Link>
               <Link href="/terms" className="transition hover:text-slate-900">
                 Terms
+              </Link>
+              <Link href="/about" className="transition hover:text-slate-900">
+                About
               </Link>
               <Link href="/status" className="transition hover:text-slate-900">
                 Status
