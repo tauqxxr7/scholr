@@ -63,6 +63,31 @@ export const viewport: Viewport = {
 
 const clerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Scholr',
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Web',
+  url: 'https://scholr-coral.vercel.app',
+  description:
+    'Free AI study tool for BTech students with research papers, study notes, doubt solving, and document intelligence.',
+  creator: {
+    '@type': 'Person',
+    name: 'Tauqeer Bharde',
+    url: 'https://www.linkedin.com/in/tauqeer-sameer-85b868235',
+  },
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'INR',
+  },
+  audience: {
+    '@type': 'EducationalAudience',
+    educationalRole: 'student',
+  },
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -70,6 +95,12 @@ export default function RootLayout({
 }>) {
   const shell = (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="antialiased">
         <PostHogProvider>{children}</PostHogProvider>
       </body>
