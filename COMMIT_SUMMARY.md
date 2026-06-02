@@ -630,3 +630,15 @@ Date: 2026-05-31
 - Task 5 - Startup API key warning: DONE - 49b47f0
 - Final verification: pytest backend/tests 35 passed; python -m compileall backend passed; npm run lint passed; npx tsc --noEmit passed; npm run build passed.
 - Verification notes: landing copy no longer contains Promise or India-first academic operating system; README has no local Windows video paths; root generated junk removed; /health includes telemetry counters locally.
+
+## Sprint 11 - SEO, social proof, and public stats
+
+- Verify duplicate section: DONE - 2feea39. `Why students use Scholr` count reduced from 2 to 1.
+- Task 1 - GitHub star prompt: DONE - fff21af. Added one-time dashboard prompt with sessionStorage dismissal.
+- Task 2 - Landing live query count: DONE - 2d46534. Added client-side `/api/metrics` usage count under hero CTAs.
+- Task 3 - About page: DONE - 8928b9d. Added `/about`, sitemap entry, and landing nav/footer links.
+- Task 4 - JSON-LD structured data: DONE - e6769bc. Added SoftwareApplication schema to the root layout.
+- Task 5 - GitHub meta script: DONE - 6f82c63. Added executable metadata helper script and README usage instructions.
+- Task 6 - Public stats endpoint: DONE - 23af317. Added `/api/stats`, router registration, and backend test coverage.
+- Final verification: DONE - this commit. `python -m pytest backend/tests/ -v` passed with 36 tests; `python -m compileall backend` passed; `npm run lint` passed; `npx tsc --noEmit` passed; `npm run build` passed.
+- Verification notes: `/about` is present in the production build route list; `/api/stats` returned 200 with `total_ai_queries` locally; landing duplicate section count is exactly 1.
