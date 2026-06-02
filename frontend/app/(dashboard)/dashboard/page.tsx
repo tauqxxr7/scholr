@@ -58,11 +58,16 @@ function DashboardPageContent() {
   const [metrics, setMetrics] = useState<MetricsResult | null>(null)
   const [metricsLoading, setMetricsLoading] = useState(true)
   const [shareStatus, setShareStatus] = useState('')
+  const [showStarPrompt, setShowStarPrompt] = useState(false)
   const isSearching = searchQuery.trim().length > 0
   const historyExportUrl = history.length > 0 ? getHistoryExportUrl() : ''
 
   useEffect(() => {
     setHasUsedBefore(localStorage.getItem('scholr_has_used') === 'true')
+  }, [])
+
+  useEffect(() => {
+    setShowStarPrompt(sessionStorage.getItem('scholr_star_prompted') !== 'true')
   }, [])
 
   useEffect(() => {
@@ -170,6 +175,11 @@ function DashboardPageContent() {
     }
 
     window.setTimeout(() => setShareStatus(''), 1800)
+  }
+
+  const dismissStarPrompt = () => {
+    sessionStorage.setItem('scholr_star_prompted', 'true')
+    setShowStarPrompt(false)
   }
 
   const onboardingCards = (
@@ -284,6 +294,51 @@ function DashboardPageContent() {
         </div>
       </section>
 
+      {metricsLoading ? (
+        <section className="flex flex-wrap gap-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <span
+              key={index}
+              className="h-8 w-32 animate-pulse rounded-full border border-slate-200 bg-white"
+            />
+          ))}
+        </section>
+      ) : metrics ? (
+        <section className="flex flex-wrap gap-2">
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+            {metrics.searches.total} total queries
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+            {metrics.searches.last_7d} this week
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
+            {metrics.feedback.total} feedback given
+          </span>
+        </section>
+      ) : null}
+
+      {showStarPrompt ? (
+        <section className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+          <a
+            href="https://github.com/tauqxxr7/scholr"
+            target="_blank"
+            rel="noreferrer"
+            onClick={dismissStarPrompt}
+            className="font-medium transition hover:text-amber-700"
+          >
+            ⭐ If Scholr helped you, star it on GitHub — it helps more students find it.
+          </a>
+          <button
+            type="button"
+            onClick={dismissStarPrompt}
+            className="self-start rounded-full px-2 text-lg leading-none text-amber-700 transition hover:bg-amber-100 sm:self-auto"
+            aria-label="Dismiss GitHub star prompt"
+          >
+            ×
+          </button>
+        </section>
+      ) : null}
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {modules.map((module) => {
           const Icon = module.icon
@@ -312,29 +367,6 @@ function DashboardPageContent() {
           )
         })}
       </section>
-
-      {metricsLoading ? (
-        <section className="flex flex-wrap gap-2">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <span
-              key={index}
-              className="h-8 w-32 animate-pulse rounded-full border border-slate-200 bg-white"
-            />
-          ))}
-        </section>
-      ) : metrics ? (
-        <section className="flex flex-wrap gap-2">
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
-            {metrics.searches.total} total queries
-          </span>
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
-            {metrics.searches.last_7d} this week
-          </span>
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600">
-            {metrics.feedback.total} feedback given
-          </span>
-        </section>
-      ) : null}
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:rounded-[2rem] sm:p-7">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
