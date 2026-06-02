@@ -124,7 +124,7 @@ export default function LandingPage() {
 
           <div className="min-w-0 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-amber-100/30 sm:rounded-[2rem] sm:p-7">
             <div className="rounded-2xl bg-slate-950 p-4 text-white sm:rounded-[1.5rem] sm:p-6">
-              <p className="text-sm text-slate-300">Why students use Scholr</p>
+              <p className="text-sm text-slate-300">Study workflow</p>
               <p className="mt-2 text-lg font-semibold leading-6 sm:mt-3 sm:text-2xl sm:leading-8">
                 Study faster without losing academic structure.
               </p>
