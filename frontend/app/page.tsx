@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 
@@ -26,6 +26,33 @@ export default function LandingPage() {
   const [waitlistEmail, setWaitlistEmail] = useState('')
   const [waitlistHoneypot, setWaitlistHoneypot] = useState('')
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [totalQueries, setTotalQueries] = useState<number | null>(null)
+
+  useEffect(() => {
+    const loadQueryCount = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, '')
+        if (!apiUrl) {
+          return
+        }
+
+        const response = await fetch(`${apiUrl}/api/metrics`)
+        if (!response.ok) {
+          return
+        }
+
+        const data = (await response.json()) as { searches?: { total?: number } }
+        const total = data.searches?.total ?? 0
+        if (total > 0) {
+          setTotalQueries(total)
+        }
+      } catch {
+        setTotalQueries(null)
+      }
+    }
+
+    void loadQueryCount()
+  }, [])
 
   const handleWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -120,6 +147,11 @@ export default function LandingPage() {
                 </Button>
               </Link>
             </div>
+            {totalQueries ? (
+              <p className="mt-3 text-center text-xs font-medium text-slate-500 sm:text-left">
+                Trusted by students — {totalQueries.toLocaleString('en-IN')} AI queries answered
+              </p>
+            ) : null}
           </div>
 
           <div className="min-w-0 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-amber-100/30 sm:rounded-[2rem] sm:p-7">
