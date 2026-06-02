@@ -235,6 +235,18 @@ def test_metrics_route_returns_aggregate_keys():
     assert {"total", "last_24h", "last_7d", "by_module"}.issubset(body["searches"].keys())
 
 
+def test_stats_route_returns_public_usage_keys():
+    client = TestClient(main.app)
+
+    response = client.get("/api/stats")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert "total_ai_queries" in body
+    assert "queries_this_week" in body
+    assert "total_feedback" in body
+
+
 def test_status_route_returns_operational_status():
     client = TestClient(main.app)
 
