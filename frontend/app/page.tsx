@@ -160,17 +160,7 @@ export default function LandingPage() {
           </div>
 
           <div className="min-w-0 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-amber-100/30 sm:rounded-[2rem] sm:p-7">
-            <div className="rounded-2xl bg-slate-950 p-4 text-white sm:rounded-[1.5rem] sm:p-6">
-              <p className="text-sm text-slate-300">Study workflow</p>
-              <p className="mt-2 text-lg font-semibold leading-6 sm:mt-3 sm:text-2xl sm:leading-8">
-                Study faster without losing academic structure.
-              </p>
-              <p className="mt-3 text-sm leading-6 text-slate-300 sm:mt-4">
-                Designed for BTech students who need fast, exam-useful answers instead of generic
-                chatbot paragraphs.
-              </p>
-            </div>
-            <div className="mt-4 space-y-3 sm:mt-6 sm:space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {studentBenefits.map((benefit) => (
                 <div
                   key={benefit.title}
