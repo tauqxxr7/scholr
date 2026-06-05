@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Changelog - Scholr',
-  description: 'What is new in Scholr - the AI academic platform for BTech students.',
+  description: 'What is new in Scholr - the free AI study tool for BTech students.',
 }
 
 const CHANGELOG = [

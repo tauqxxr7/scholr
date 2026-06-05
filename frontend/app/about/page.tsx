@@ -2,9 +2,9 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'About Scholr — AI Study Tool for BTech Students',
+  title: 'About Scholr - Built by Tauqeer Bharde',
   description:
-    'The story behind Scholr, a free AI study tool for BTech students built by Tauqeer Bharde.',
+    'Scholr is a free AI academic platform for BTech students built by Tauqeer Bharde, a BTech AI and Data Science student.',
 }
 
 export default function AboutPage() {
