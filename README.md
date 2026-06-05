@@ -78,6 +78,15 @@ flowchart LR
 | Observability | PostHog, Sentry, structured logs, health endpoints, response feedback |
 | Deployment | Vercel frontend, Render backend, GitHub Actions CI |
 
+## Production Status
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| AI Generation | Working | /health/generate-test confirmed ai_working: true |
+| Frontend | Live | Vercel deployment serves the public Scholr app |
+| Backend | Live | Render health endpoint responds at `/health` |
+| Streaming | Working | Research, Notes, and Doubt use SSE with `[DONE]` completion |
+
 ## Performance Metrics
 
 ![Scholr metrics dashboard preview](docs/metrics/dashboard-example.png)
