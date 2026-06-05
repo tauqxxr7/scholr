@@ -238,6 +238,11 @@ def health_check():
     }
 
 
+@app.get("/api/health")
+def api_health_alias():
+    return health_check()
+
+
 @app.get("/ping")
 def ping():
     return {"ok": True}

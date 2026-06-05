@@ -170,6 +170,15 @@ def test_health_route_returns_status_key():
     assert "status" in response.json()
 
 
+def test_api_health_alias_returns_status_key():
+    client = TestClient(main.app)
+
+    response = client.get("/api/health")
+
+    assert response.status_code == 200
+    assert "status" in response.json()
+
+
 def test_ping_route_returns_ok():
     client = TestClient(main.app)
 
