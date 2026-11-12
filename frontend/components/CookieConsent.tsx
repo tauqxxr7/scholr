@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 const CONSENT_KEY = 'scholr.analytics-consent.v1'
-
 type Consent = 'accepted' | 'rejected'
 
 export function readAnalyticsConsent(): Consent | null {
@@ -16,26 +15,31 @@ export function readAnalyticsConsent(): Consent | null {
   }
 }
 
-export default function CookieConsent() {
-  const [choice, setChoice] = useState<Consent | null>(null)
-  const [ready, setReady] = useState(false)
+function subscribe(callback: () => void) {
+  window.addEventListener('scholr:consent-change', callback)
+  window.addEventListener('storage', callback)
+  return () => {
+    window.removeEventListener('scholr:consent-change', callback)
+    window.removeEventListener('storage', callback)
+  }
+}
 
-  useEffect(() => {
-    setChoice(readAnalyticsConsent())
-    setReady(true)
-  }, [])
+export default function CookieConsent() {
+  const storedChoice = useSyncExternalStore(subscribe, readAnalyticsConsent, () => null)
+  const [sessionChoice, setSessionChoice] = useState<Consent | null>(null)
+  const choice = sessionChoice ?? storedChoice
 
   function decide(value: Consent) {
     try {
       window.localStorage.setItem(CONSENT_KEY, value)
     } catch {
-      // Consent is still respected for this session when storage is blocked.
+      // Respect the decision for this session even if storage is blocked.
     }
-    setChoice(value)
+    setSessionChoice(value)
     window.dispatchEvent(new Event('scholr:consent-change'))
   }
 
-  if (!ready || choice) return null
+  if (choice) return null
 
   return (
     <aside
