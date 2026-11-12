@@ -22,7 +22,7 @@ from core.logging_utils import configure_logging, log_event
 from core.slowapi_limiter import limiter
 from db import crud
 from db.database import SessionLocal, init_db
-from routers import documents, doubt, evidence, feedback, feedback_form, history, linkedin, metrics, notes, research, search, stats, status, validation, waitlist
+from routers import documents, doubt, evidence, exam_packs, feedback, feedback_form, history, linkedin, metrics, notes, research, search, stats, status, validation, waitlist
 from routers._runtime import get_runtime_diagnostics
 from services.document_rag import get_document_intelligence_health
 from telemetry import get_all as get_telemetry_counters
@@ -92,6 +92,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(research.router, prefix="/api", tags=["research"])
 app.include_router(notes.router, prefix="/api", tags=["notes"])
+app.include_router(exam_packs.router, prefix="/api", tags=["exam-packs"])
 app.include_router(doubt.router, prefix="/api", tags=["doubt"])
 app.include_router(history.router, prefix="/api", tags=["history"])
 app.include_router(documents.router, prefix="/api", tags=["documents"])
